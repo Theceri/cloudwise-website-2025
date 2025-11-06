@@ -181,9 +181,9 @@ export default function Portfolio() {
         </motion.div>
       </Section>
 
-      {/* Enhanced Project Cards */}
-      <Section className="bg-gradient-to-b from-white via-brand-accent1/5 to-brand-secondary/10">
-        <motion.div 
+          {/* Enhanced Project Cards */}
+          <Section className="bg-gradient-to-b from-white via-brand-accent1/5 to-brand-secondary/10">
+          <motion.div 
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -197,8 +197,7 @@ export default function Portfolio() {
             Discover how we've helped businesses transform their digital presence
           </p>
         </motion.div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {filteredProjects.map((project, index) => (
             <motion.div
               key={project.slug}
@@ -234,27 +233,28 @@ export default function Portfolio() {
                   </div>
                 </div>
 
-                {/* Description + CTA */}
-                <div className="p-8 flex flex-col justify-between h-full">
-                  <p className="text-gray-600 mb-6 line-clamp-3 leading-relaxed">{project.description}</p>
-                  
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Button className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-brand-secondary to-brand-accent1 text-white rounded-2xl py-4 shadow-lg hover:shadow-xl transition-all duration-300">
-                      <Link href={`/portfolio/${project.slug}`} className="flex items-center gap-2 no-underline">
-                        <span>View Case Study</span>
-                        <ArrowRight size={16} />
-                      </Link>
-                    </Button>
-                  </motion.div>
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    {/* <h3 className="text-2xl font-semibold text-brand-primary">{project.title}</h3>
+                    <span className="text-sm text-brand-secondary bg-brand-secondary/10 px-3 py-1 rounded-full">
+                      {project.category}
+                    </span> */}
+                  </div>
+                  <p className="text-text-body mb-4">{project.description}</p>
+
+                  <Button className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-brand-secondary to-brand-accent1 text-white rounded-2xl py-4 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Link href={`/portfolio/${project.slug}`} className="flex items-center gap-2 no-underline">
+                      <span>View Case Study</span>
+                      <ArrowRight size={16} />
+                    </Link>
+                  </Button>
                 </div>
               </Card>
             </motion.div>
           ))}
         </div>
       </Section>
+      
 
       {/* New Achievements Section */}
       <Section className="bg-gradient-to-r from-brand-accent1/10 via-white to-brand-accent2/10">
