@@ -12,12 +12,12 @@ export default function PostPage({ params }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const STRAPI_BASE_URL = 'http://139.59.64.136:54321'
+  const STRAPI_BASE_URL = 'https://blogadmin.cloudwise.co.ke'
 
   useEffect(() => {
     async function fetchPost() {
       try {
-        const apiUrl = `http://139.59.64.136:54321/api/posts?filters[slug][$eq]=${slug}` +
+        const apiUrl = `${STRAPI_BASE_URL}/api/posts?filters[slug][$eq]=${slug}` +
                        `&populate[category][fields][0]=name` +
                        `&populate[author][fields][0]=name&populate[author][fields][1]=role` +
                        `&populate[cover][fields][0]=url`
