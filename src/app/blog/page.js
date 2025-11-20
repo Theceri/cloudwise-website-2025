@@ -58,7 +58,7 @@ export default function BlogUI() {
   // Make sure this STRAPI_BASE_URL is correct for your Strapi instance
   // For local frontend targeting remote Strapi: 'http://139.59.64.136:54321'
   // For local frontend targeting local Strapi: 'http://localhost:1337' (or your Strapi's local port)
-  const STRAPI_BASE_URL = 'http://139.59.64.136:54321'; 
+  const STRAPI_BASE_URL = 'https://blogadmin.cloudwise.co.ke'; 
 
   useEffect(() => {
     async function fetchPosts() {
