@@ -18,7 +18,7 @@ export const COMPANY_INFO = {
   phone: '+254 712 658 775',
   phoneRaw: '+254712658775',
   address: {
-    line1: '4th Floor, Delta Annex',
+    line1: '4th Floor, Delta Annex, Delta Corner',
     line2: 'Waiyaki Way',
     city: 'Nairobi',
     country: 'Kenya',

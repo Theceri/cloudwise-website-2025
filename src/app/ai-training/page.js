@@ -74,7 +74,7 @@ const RESOURCES = [
 
 const FAQ_ITEMS = [
   { q: 'When does the training happen?', a: 'Every month. The two sessions run on the first Saturday and the second Saturday of each month, 9am–1pm each (4 hours per session). Message us on WhatsApp for the next cohort’s exact dates.' },
-  { q: 'Is it online or in person?', a: 'Both. You can join live online via Zoom, or attend in person at our Nairobi office (4th Floor, Delta Annex, Waiyaki Way). Choose whichever suits you when you register.' },
+  { q: 'Is it online or in person?', a: 'Both. You can join live online via Zoom, or attend in person at our Nairobi office (4th Floor, Delta Annex, Delta Corner, Waiyaki Way). Choose whichever suits you when you register.' },
   { q: 'How much does it cost and what’s included?', a: 'Ksh 13,500 per person (introductory price; normally Ksh 30,000). It includes 8 hours of live training, a 1-month Claude AI subscription, an AI toolkit & prompt library, session recordings, and access to our WhatsApp support community.' },
   { q: 'Do I need a tech background?', a: 'No. The training is designed for everyday business people. If you can use a browser and send an email, you can do this. Every session is hands-on with your real tasks.' },
   { q: 'What should I bring?', a: 'A laptop or tablet with internet access. Every session is hands-on — you’ll be practising live on real tools from minute one.' },
@@ -114,8 +114,8 @@ const courseJsonLd = {
     },
     location: {
       '@type': 'Place',
-      name: 'Cloudwise, Delta Annex',
-      address: '4th Floor, Delta Annex, Waiyaki Way, Nairobi, Kenya',
+      name: 'Cloudwise, Delta Annex, Delta Corner',
+      address: '4th Floor, Delta Annex, Delta Corner, Waiyaki Way, Nairobi, Kenya',
     },
   },
 };
