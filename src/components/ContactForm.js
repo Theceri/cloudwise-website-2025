@@ -24,7 +24,7 @@ export default function ContactForm() {
     
     // Open WhatsApp with the pre-filled message
     window.open(
-      `https://wa.me/254727754583?text=${whatsappMessage}`,
+      `https://wa.me/254712658775?text=${whatsappMessage}`,
       "_blank"
     );
     

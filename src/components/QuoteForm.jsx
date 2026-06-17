@@ -1,111 +1,65 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+'use client';
+
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
+import { ArrowUpRight } from 'lucide-react';
+import { WHATSAPP_NUMBER_RAW } from '@/lib/constants';
 
 export default function QuoteForm({ trigger }) {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    message: "",
-  });
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', service: '', message: '' });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Format the message for WhatsApp
     const whatsappMessage = encodeURIComponent(
-      `New Quote Request\n\nName: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nMessage: ${formData.message}`
+      `New Quote Request\n\nName: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nService: ${formData.service || 'General'}\nMessage: ${formData.message}`
     );
-    
-    // Open WhatsApp with the pre-filled message
-    window.open(
-      `https://wa.me/254712658775?text=${whatsappMessage}`,
-      "_blank"
-    );
-    
-    // Show success toast
-    toast.success("Quote request submitted successfully!");
-    
-    // Close the dialog
+    window.open(`https://wa.me/${WHATSAPP_NUMBER_RAW}?text=${whatsappMessage}`, '_blank');
+    toast.success('Opening WhatsApp to send your request…');
     setOpen(false);
-    
-    // Reset form
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      message: "",
-    });
+    setFormData({ name: '', email: '', phone: '', service: '', message: '' });
   };
+
+  const set = (k) => (e) => setFormData((p) => ({ ...p, [k]: e.target.value }));
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger || (
-          <Button className="bg-primary hover:bg-primary/90 text-white">
-            Get a Quote
-          </Button>
-        )}
+        {trigger || <button className="btn-ember text-sm">Get a Quote</button>}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-text-primary">
-            Get a Free Quote
-          </DialogTitle>
+          <p className="eyebrow mb-1">Free consultation</p>
+          <DialogTitle className="font-display text-2xl font-bold text-white">Get a free quote</DialogTitle>
+          <DialogDescription className="text-white/50">
+            Tell us about your project — we reply within 24 hours via WhatsApp or email.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div>
-            <Input
-              placeholder="Your Name"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              required
-            />
+        <form onSubmit={handleSubmit} className="mt-2 space-y-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Input placeholder="Your name" value={formData.name} onChange={set('name')} required />
+            <Input type="email" placeholder="Email" value={formData.email} onChange={set('email')} required />
           </div>
-          <div>
-            <Input
-              type="email"
-              placeholder="Your Email"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              required
-            />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Input type="tel" placeholder="Phone" value={formData.phone} onChange={set('phone')} />
+            <select
+              value={formData.service}
+              onChange={set('service')}
+              className="flex h-11 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white focus-visible:border-ember/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember/30"
+            >
+              <option value="" className="bg-ink-800">Service…</option>
+              {['AI Development', 'Web Development', 'Mobile App', 'E-commerce', 'AI Training', 'Other'].map((s) => (
+                <option key={s} value={s} className="bg-ink-800">{s}</option>
+              ))}
+            </select>
           </div>
-          <div>
-            <Input
-              type="tel"
-              placeholder="Your Phone"
-              value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
-              required
-            />
-          </div>
-          <div>
-            <Textarea
-              placeholder="Your Message"
-              value={formData.message}
-              onChange={(e) =>
-                setFormData({ ...formData, message: e.target.value })
-              }
-              required
-            />
-          </div>
-          <Button
-            type="submit"
-            className="w-full bg-primary hover:bg-primary/90 text-white"
-          >
-            Submit
+          <Textarea placeholder="What do you want to build?" value={formData.message} onChange={set('message')} required />
+          <Button type="submit" className="btn-ember w-full">
+            Send via WhatsApp <ArrowUpRight size={16} />
           </Button>
         </form>
       </DialogContent>

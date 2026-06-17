@@ -1,91 +1,88 @@
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import Image from 'next/image'
-import { ArrowLeft } from 'lucide-react'
-import { Section } from '@/components/ui/Section'
-import { projects } from '@/lib/projects'
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import { ArrowLeft } from 'lucide-react';
+import { Reveal } from '@/components/anim/Reveal';
+import { CtaBand } from '@/components/CtaBand';
+import { projects } from '@/lib/projects';
 
 export function generateStaticParams() {
-  return projects.map(project => ({ slug: project.slug }))
+  return projects.map((p) => ({ slug: p.slug }));
+}
+
+export function generateMetadata({ params }) {
+  const p = projects.find((x) => x.slug === params.slug);
+  if (!p) return {};
+  return { title: p.title, description: p.description, alternates: { canonical: `/portfolio/${p.slug}` } };
 }
 
 export default function ProjectPage({ params }) {
-  const project = projects.find(p => p.slug === params.slug)
-  if (!project) return notFound()
+  const project = projects.find((p) => p.slug === params.slug);
+  if (!project) return notFound();
 
   return (
-    <main className="pt-32 pb-16 md:pt-40 md:pb-24">
-      {/* Back Button */}
-      <div className="max-w-6xl mx-auto px-4 mb-8">
-        <Link href="/portfolio" className="inline-flex items-center text-brand-primary hover:text-brand-secondary transition">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Portfolio
-        </Link>
-      </div>
-
-      {/* Project Header */}
-      <Section>
-        <div className="max-w-4xl mx-auto text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-brand-primary mb-4">{project.title}</h1>
-          <p className="text-text-body text-lg">{project.description}</p>
+    <>
+      <section className="relative overflow-hidden pt-36 pb-12 md:pt-44">
+        <div className="pointer-events-none absolute inset-0 bg-ember-radial opacity-60" />
+        <div className="container-px relative">
+          <Link href="/portfolio" className="mb-8 inline-flex items-center gap-2 text-sm text-white/50 transition-colors hover:text-white">
+            <ArrowLeft size={16} /> Back to portfolio
+          </Link>
+          <Reveal as="p" className="eyebrow mb-4">{project.category}</Reveal>
+          <Reveal as="h1" delay={0.05} className="max-w-3xl text-balance font-display text-4xl font-bold text-white md:text-6xl">
+            {project.title}
+          </Reveal>
+          <Reveal as="p" delay={0.1} className="mt-5 max-w-2xl text-lg text-white/60">{project.description}</Reveal>
         </div>
+      </section>
 
-        {/* Image */}
-        <div className="max-w-5xl mx-auto mb-16">
-          <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg">
-            <Image
-              src={project.image}
-              alt={project.title}
-              fill
-              className="object-cover"
-              priority
-            />
-          </div>
+      <section className="bg-ink pb-8">
+        <div className="container-px">
+          <Reveal className="relative aspect-video overflow-hidden rounded-3xl border border-white/10">
+            <Image src={project.image} alt={project.title} fill className="object-cover" priority sizes="100vw" />
+          </Reveal>
         </div>
+      </section>
 
-        {/* Technologies */}
-        <div className="max-w-4xl mx-auto mb-12">
-          <h2 className="text-2xl font-semibold mb-4 text-brand-primary">Technologies Used</h2>
-          <div className="flex flex-wrap gap-3">
-            {project.technologies.map(tech => (
-              <span key={tech} className="px-4 py-1.5 bg-brand-accent1/10 text-brand-accent2 rounded-full text-sm">
-                {tech}
-              </span>
-            ))}
-          </div>
-        </div>
+      <section className="bg-ink py-20">
+        <div className="container-px grid gap-12 lg:grid-cols-3">
+          <Reveal>
+            <h2 className="eyebrow mb-5">Results</h2>
+            <ul className="space-y-3">
+              {Object.values(project.results).map((m, i) => (
+                <li key={i} className="rounded-2xl border border-white/10 bg-ink-800/50 p-5 font-display text-lg font-semibold text-gradient-ember">
+                  {m}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
 
-        {/* Results */}
-        <div className="max-w-4xl mx-auto mb-12">
-          <h2 className="text-2xl font-semibold mb-4 text-brand-primary">Results</h2>
-          <ul className="space-y-2 text-text-subheading list-disc list-inside">
-            {Object.values(project.results).map((metric, i) => (
-              <li key={i}>{metric}</li>
-            ))}
-          </ul>
-        </div>
+          <Reveal delay={0.06}>
+            <h2 className="eyebrow mb-5">Technologies</h2>
+            <div className="flex flex-wrap gap-2">
+              {project.technologies.map((t) => (
+                <span key={t} className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-white/70">{t}</span>
+              ))}
+            </div>
+          </Reveal>
 
-        {/* Client Info */}
-        <div className="max-w-4xl mx-auto mb-12">
-          <h2 className="text-2xl font-semibold mb-4 text-brand-primary">About the Client</h2>
-          <p className="mb-3 text-text-body">
-            <span className="font-semibold text-brand-secondary">{project.client.name}</span>: {project.client.about}
-          </p>
-          <ul className="list-disc list-inside text-sm text-brand-accent2 space-y-1">
-            {project.client.services.map((s, i) => (
-              <li key={i}>{s}</li>
-            ))}
-          </ul>
+          <Reveal delay={0.12}>
+            <h2 className="eyebrow mb-5">About the client</h2>
+            <p className="mb-4 leading-relaxed text-white/70">
+              <span className="font-semibold text-white">{project.client.name}</span> — {project.client.about}
+            </p>
+            <ul className="space-y-2 text-sm text-white/55">
+              {project.client.services.map((s, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-ember" /> {s}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
         </div>
+      </section>
 
-        {/* Custom Section */}
-        <div className="max-w-4xl mx-auto mt-16">
-          <h2 className="text-2xl font-semibold text-brand-primary mb-4">Unique Features & Behind-the-Scenes</h2>
-          <p className="text-text-body leading-relaxed">
-            This section is customizable for this specific project. You can add architecture diagrams, timeline details, or video walkthroughs here to show off what makes this solution special.
-          </p>
-        </div>
-      </Section>
-    </main>
-  )
+      <CtaBand title="Have a similar project in mind?" primary={{ label: 'Let’s talk', href: '/contact' }} />
+    </>
+  );
 }

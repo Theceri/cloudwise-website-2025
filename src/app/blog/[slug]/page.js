@@ -1,162 +1,100 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { Section } from '@/components/ui/Section'
-import { motion } from 'framer-motion'
-import { BlocksRenderer } from '@strapi/blocks-react-renderer'
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+import { BlocksRenderer } from '@strapi/blocks-react-renderer';
+
+const STRAPI_BASE_URL = 'https://blogadmin.cloudwise.co.ke';
 
 export default function PostPage({ params }) {
-  const { slug } = params
-  const [post, setPost] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
-  const STRAPI_BASE_URL = 'https://blogadmin.cloudwise.co.ke'
+  const { slug } = params;
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchPost() {
+    (async () => {
       try {
-        const apiUrl = `${STRAPI_BASE_URL}/api/posts?filters[slug][$eq]=${slug}` +
-                       `&populate[category][fields][0]=name` +
-                       `&populate[author][fields][0]=name&populate[author][fields][1]=role` +
-                       `&populate[cover][fields][0]=url`
-        const res = await fetch(apiUrl)
-        if (!res.ok) {
-          const errorText = await res.text()
-          throw new Error(`HTTP error! status: ${res.status}, message: ${errorText}`)
-        }
-        const json = await res.json()
+        const apiUrl =
+          `${STRAPI_BASE_URL}/api/posts?filters[slug][$eq]=${slug}` +
+          `&populate[category][fields][0]=name` +
+          `&populate[author][fields][0]=name&populate[author][fields][1]=role` +
+          `&populate[cover][fields][0]=url`;
+        const res = await fetch(apiUrl);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
         if (json.data && json.data.length > 0) {
-          const item = json.data[0]
-          const blocks = item?.content || []
-          const rawDate = item?.date
-          const formattedDate = rawDate
-            ? new Date(rawDate).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })
-            : ''
-
+          const item = json.data[0];
+          const date = item?.date ? new Date(item.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
           setPost({
-            id: item.id,
-            title: item.title || 'No Title',
-            date: formattedDate,
+            title: item.title || 'Untitled',
+            date,
             readtime: item.readtime || 'N/A',
-            content: blocks,
+            content: item?.content || [],
             category: item?.category?.name || 'Uncategorized',
-            authorName: item?.author?.name || 'Unknown Author',
+            authorName: item?.author?.name || 'Cloudwise',
             authorRole: item?.author?.role || '',
             coverUrl: item?.cover?.url || null,
-          })
-          setError(null)
+          });
         } else {
-          setPost(null)
-          setError('Post not found.')
+          setError('Post not found.');
         }
       } catch (err) {
-        setError(`Failed to load post: ${err.message || 'Unknown error'}`)
-        setPost(null)
+        setError('Failed to load this article.');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchPost()
-  }, [slug])
+    })();
+  }, [slug]);
 
   if (loading) {
     return (
-      <main className="max-w-4xl mx-auto px-4 py-20">
-        <p className="text-center text-gray-500 animate-pulse">Loading post...</p>
+      <main className="flex min-h-[60vh] items-center justify-center pt-32">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-ember" />
       </main>
-    )
+    );
   }
 
-  if (error) {
+  if (error || !post) {
     return (
-      <main className="max-w-4xl mx-auto px-4 py-20">
-        <p className="text-center text-red-600 font-medium">{error}</p>
-        <Link
-          href="/blog"
-          className="block text-center mt-6 text-gray-600 hover:text-brand-secondary transition-colors"
-        >
-          ← Back to Blogs
-        </Link>
+      <main className="container-px flex min-h-[60vh] flex-col items-center justify-center pt-32 text-center">
+        <p className="text-white/60">{error || 'Post not found.'}</p>
+        <Link href="/blog" className="mt-6 text-ember">← Back to blog</Link>
       </main>
-    )
-  }
-
-  if (!post) {
-    return (
-      <main className="max-w-4xl mx-auto px-4 py-20">
-        <p className="text-center text-gray-500">Post not found.</p>
-        <Link
-          href="/blog"
-          className="block text-center mt-6 text-gray-600 hover:text-brand-secondary transition-colors"
-        >
-          ← Back to Blogs
-        </Link>
-      </main>
-    )
+    );
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-20">
-      <Link
-        href="/blog"
-        className="inline-flex items-center mb-8 text-sm text-gray-500 hover:text-brand-secondary transition-colors"
-      >
-        ← Back to main page
-      </Link>
-      <Section>
-        <motion.article
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden"
-        >
-          {/* Cover Image */}
-          {post.coverUrl && (
-            <div className="w-full h-72 sm:h-96 overflow-hidden">
-              <img
-                src={`${STRAPI_BASE_URL}${post.coverUrl}`}
-                alt={post.title || 'Post Cover'}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
+    <main className="pt-36 pb-24 md:pt-44">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-96 bg-ember-radial opacity-50" />
+      <article className="container-px mx-auto max-w-3xl">
+        <Link href="/blog" className="mb-8 inline-flex items-center gap-2 text-sm text-white/50 transition-colors hover:text-white">
+          <ArrowLeft size={16} /> Back to blog
+        </Link>
+        <p className="font-mono text-[0.65rem] uppercase tracking-eyebrow text-ember">{post.category}</p>
+        <h1 className="mt-4 font-display text-4xl font-bold leading-tight text-white md:text-5xl">{post.title}</h1>
+        <p className="mt-4 text-sm text-white/45">{post.date} · {post.readtime} read · {post.authorName}</p>
 
-          {/* Content Body */}
-          <div className="px-6 sm:px-10 py-8">
-            <h1 className="text-4xl font-bold leading-tight mb-3 text-gray-900">
-              {post.title}
-            </h1>
-            <p className="text-sm text-gray-500 mb-6">
-              {post.date} · {post.readtime} read · {post.category}
-            </p>
-
-            <div className="prose max-w-none prose-lg prose-gray">
-              {post.content && post.content.length > 0 ? (
-                <BlocksRenderer content={post.content} />
-              ) : (
-                <p>No content available.</p>
-              )}
-            </div>
-
-            {/* Author */}
-            <div className="mt-10 pt-8 border-t border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                About the Author
-              </h3>
-              <p className="text-gray-800 font-medium">{post.authorName}</p>
-              {post.authorRole && (
-                <p className="text-gray-500 text-sm">{post.authorRole}</p>
-              )}
-            </div>
+        {post.coverUrl && (
+          <div className="mt-10 overflow-hidden rounded-3xl border border-white/10">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`${STRAPI_BASE_URL}${post.coverUrl}`} alt={post.title} className="w-full object-cover" />
           </div>
-        </motion.article>
-      </Section>
+        )}
+
+        <div className="prose prose-invert prose-lg mt-10 max-w-none prose-headings:font-display prose-a:text-ember prose-strong:text-white">
+          {post.content?.length ? <BlocksRenderer content={post.content} /> : <p>No content available.</p>}
+        </div>
+
+        {post.authorRole && (
+          <div className="mt-12 border-t border-white/10 pt-8">
+            <p className="font-mono text-[0.65rem] uppercase tracking-eyebrow text-white/40">Written by</p>
+            <p className="mt-1 font-display font-semibold text-white">{post.authorName}</p>
+            <p className="text-sm text-white/50">{post.authorRole}</p>
+          </div>
+        )}
+      </article>
     </main>
-  )
+  );
 }

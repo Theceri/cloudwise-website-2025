@@ -5,47 +5,25 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 240 6% 6%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 240 6% 6%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 240 6% 6%;
+    --primary: 13 100% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 188 53% 73%;
+    --secondary-foreground: 240 6% 6%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 187 30% 38%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --ring: 13 100% 55%;
+    --radius: 0.9rem;
   }
 }
 
@@ -53,62 +31,159 @@
   * {
     @apply border-border;
   }
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
   body {
-    @apply text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-ink text-white/90 font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+  ::selection {
+    background: #ff3f1a;
+    color: white;
+  }
+  /* Headings use the display grotesk */
+  h1, h2, h3, h4 {
+    @apply font-display;
+    letter-spacing: -0.02em;
   }
 }
 
-/* Custom Scrollbar */
+/* Lenis smooth-scroll required styles */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
+  height: 10px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #0a0a0b;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #FF3F1A;
-  border-radius: 5px;
+  background: #2a2a30;
+  border-radius: 999px;
+  border: 2px solid #0a0a0b;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #FF3F1A90;
+  background: #ff3f1a;
 }
 
-/* Selection Color */
-::selection {
-  background: #FF3F1A;
-  color: white;
-}
-
-/* Smooth Scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Background Pattern */
-.bg-dot-pattern {
-  background-size: 24px 24px;
-  background-image: radial-gradient(#97D6DF20 1px, transparent 1px);
-}
-
-/* Add custom animations here */
-@layer utilities {
-  @keyframes gradientShift {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
+@layer components {
+  /* Monospace uppercase eyebrow label — straight from the flier */
+  .eyebrow {
+    @apply font-mono text-[0.7rem] uppercase tracking-eyebrow text-ember;
+  }
+  .eyebrow-muted {
+    @apply font-mono text-[0.7rem] uppercase tracking-eyebrow text-white/40;
   }
 
-  .animate-gradient-shift {
-    animation: gradientShift 5s ease infinite;
+  /* Glass panel on dark */
+  .glass {
+    @apply border border-white/10 bg-white/[0.03] backdrop-blur-xl;
+  }
+  .glass-strong {
+    @apply border border-white/10 bg-white/[0.06] backdrop-blur-2xl;
+  }
+
+  /* Hairline card used across the site */
+  .card-dark {
+    @apply rounded-3xl border border-white/10 bg-ink-800/70 backdrop-blur-sm transition-all duration-300;
+  }
+  .card-dark:hover {
+    @apply border-white/20 bg-ink-700/70;
+  }
+
+  /* The primary ember button */
+  .btn-ember {
+    @apply relative inline-flex items-center justify-center gap-2 rounded-full bg-ember px-7 py-3.5
+      font-medium text-white shadow-ember-sm transition-all duration-300
+      hover:bg-ember-light hover:shadow-ember focus-visible:outline-none
+      focus-visible:ring-2 focus-visible:ring-ember/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ink;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-7 py-3.5
+      font-medium text-white/90 transition-all duration-300 hover:border-white/40 hover:bg-white/[0.04];
+  }
+
+  .container-px {
+    @apply mx-auto max-w-7xl px-5 sm:px-6 lg:px-8;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-gradient-ember {
+    @apply bg-gradient-to-r from-ember-light via-ember to-ember-dark bg-clip-text text-transparent;
+  }
+  .text-gradient-cool {
+    @apply bg-gradient-to-r from-ice via-ice to-teal bg-clip-text text-transparent;
+  }
+
+  /* Animated link underline */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .link-underline:hover {
+    background-size: 100% 1px;
+  }
+
+  /* Fade-up baseline for GSAP/IO reveals */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    will-change: transform, opacity;
+  }
+  .reveal.is-in {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Subtle film grain overlay */
+  .grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
