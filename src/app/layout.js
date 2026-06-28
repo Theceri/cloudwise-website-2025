@@ -1,10 +1,6 @@
 import './globals.css';
 import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google';
-import { Navbar } from '@/components/Navbar';
-import { Footer } from '@/components/Footer';
-import { Toaster } from 'sonner';
-import { WhatsAppButton } from '@/components/WhatsAppButton';
-import { SmoothScroll } from '@/components/SmoothScroll';
+import { SiteChrome } from '@/components/SiteChrome';
 import { SITE_URL, COMPANY_INFO, SOCIAL_LINKS } from '@/lib/constants';
 
 const inter = Inter({
@@ -96,13 +92,7 @@ export default function RootLayout({ children }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
         />
-        <SmoothScroll>
-          <Navbar />
-          <main id="main">{children}</main>
-          <Footer />
-        </SmoothScroll>
-        <Toaster position="top-right" theme="dark" richColors />
-        <WhatsAppButton phoneNumber="+254712658775" />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );
