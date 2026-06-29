@@ -10,14 +10,16 @@ export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
 }
 
-export function generateMetadata({ params }) {
-  const p = projects.find((x) => x.slug === params.slug);
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const p = projects.find((x) => x.slug === slug);
   if (!p) return {};
   return { title: p.title, description: p.description, alternates: { canonical: `/portfolio/${p.slug}` } };
 }
 
-export default function ProjectPage({ params }) {
-  const project = projects.find((p) => p.slug === params.slug);
+export default async function ProjectPage({ params }) {
+  const { slug } = await params;
+  const project = projects.find((p) => p.slug === slug);
   if (!project) return notFound();
 
   return (

@@ -3,8 +3,25 @@ import { projects } from '@/lib/projects';
 
 const SERVICE_IDS = ['ai', 'web', 'mobile', 'ecommerce', 'cloud', 'data', 'automation', 'consulting'];
 
-export default function sitemap() {
+export const revalidate = 3600;
+
+export default async function sitemap() {
   const now = new Date();
+
+  // Sanity is imported lazily so a missing/unset blog config never breaks the
+  // core site's sitemap — it just falls back to the static routes.
+  let posts = [];
+  let categories = [];
+  try {
+    const { client } = await import('@/sanity/lib/client');
+    const { sitemapPostsQuery, categorySlugsQuery } = await import('@/sanity/lib/queries');
+    [posts, categories] = await Promise.all([
+      client.fetch(sitemapPostsQuery),
+      client.fetch(categorySlugsQuery),
+    ]);
+  } catch {
+    // If Sanity is unreachable or unconfigured, still return the static routes.
+  }
 
   const staticRoutes = [
     { url: '/', priority: 1.0, changeFrequency: 'weekly' },
@@ -30,5 +47,25 @@ export default function sitemap() {
     priority: 0.5,
   }));
 
-  return [...staticRoutes, ...serviceRoutes, ...projectRoutes];
+  const postRoutes = posts.map((p) => ({
+    url: `${SITE_URL}/blog/${p.slug}`,
+    lastModified: p._updatedAt ? new Date(p._updatedAt) : now,
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }));
+
+  const categoryRoutes = categories.map((c) => ({
+    url: `${SITE_URL}/blog/category/${c.slug}`,
+    lastModified: now,
+    changeFrequency: 'weekly',
+    priority: 0.4,
+  }));
+
+  return [
+    ...staticRoutes,
+    ...serviceRoutes,
+    ...projectRoutes,
+    ...postRoutes,
+    ...categoryRoutes,
+  ];
 }

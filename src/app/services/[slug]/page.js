@@ -56,8 +56,9 @@ export function generateStaticParams() {
   return SERVICES.map((s) => ({ slug: s.id }));
 }
 
-export function generateMetadata({ params }) {
-  const s = SERVICES.find((x) => x.id === params.slug);
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const s = SERVICES.find((x) => x.id === slug);
   if (!s) return {};
   return {
     title: `${s.title}`,
@@ -66,8 +67,9 @@ export function generateMetadata({ params }) {
   };
 }
 
-export default function ServiceDetailPage({ params }) {
-  const service = SERVICES.find((s) => s.id === params.slug);
+export default async function ServiceDetailPage({ params }) {
+  const { slug } = await params;
+  const service = SERVICES.find((s) => s.id === slug);
   if (!service) notFound();
   const Icon = service.icon;
 
