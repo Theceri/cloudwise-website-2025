@@ -97,13 +97,19 @@ export function Comments({ postId, comments = [] }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error('Request failed');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // Surface the server's specific reason (e.g. "Comments are not
+        // configured.") so issues are diagnosable instead of generic.
+        toast.error(data?.error || 'Something went wrong. Please try again.');
+        return;
+      }
       form.reset();
       setReplyTo(null);
       setDone(true);
       toast.success('Thanks! Your comment is awaiting moderation.');
     } catch {
-      toast.error('Something went wrong. Please try again.');
+      toast.error('Network error. Please check your connection and try again.');
     } finally {
       setSubmitting(false);
     }
