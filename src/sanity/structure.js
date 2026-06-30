@@ -19,7 +19,25 @@ export const structure = (S) =>
       S.listItem()
         .title('Posts')
         .icon(DocumentTextIcon)
-        .child(S.documentTypeList('post').title('Posts')),
+        .child(
+          S.list()
+            .title('Posts')
+            .items([
+              S.listItem()
+                .title('All posts')
+                .icon(DocumentTextIcon)
+                .child(S.documentTypeList('post').title('All posts')),
+              S.listItem()
+                .title('🟡 Ready for review')
+                .icon(DocumentTextIcon)
+                .child(
+                  S.documentList()
+                    .title('Ready for review')
+                    .filter('_type == "post" && reviewStatus == "review"')
+                    .defaultOrdering([{ field: '_updatedAt', direction: 'desc' }])
+                ),
+            ])
+        ),
 
       S.listItem()
         .title('Categories')

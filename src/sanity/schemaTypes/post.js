@@ -99,6 +99,23 @@ export const post = defineType({
       description: 'Show this post in the large featured slot at the top of the blog.',
       initialValue: false,
     }),
+    defineField({
+      name: 'reviewStatus',
+      title: 'Review status',
+      type: 'string',
+      group: 'meta',
+      description:
+        'Editorial workflow label. Writers set "Ready for review"; an editor reviews and publishes.',
+      options: {
+        list: [
+          { title: 'Draft (in progress)', value: 'draft' },
+          { title: 'Ready for review', value: 'review' },
+          { title: 'Approved', value: 'approved' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'draft',
+    }),
 
     defineField({
       name: 'seo',
