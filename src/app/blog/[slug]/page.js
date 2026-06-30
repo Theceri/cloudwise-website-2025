@@ -137,19 +137,19 @@ export default async function PostPage({ params }) {
       <div className="container-px mx-auto max-w-3xl">
         <Link
           href="/blog"
-          className="mb-8 inline-flex items-center gap-2 text-sm text-white/50 transition-colors hover:text-white"
+          className="mb-10 flex w-fit items-center gap-2 text-sm text-white/50 transition-colors hover:text-white"
         >
           <ArrowLeft size={16} /> Back to blog
         </Link>
         {category && (
           <Link
             href={`/blog/category/${category.slug}`}
-            className="font-mono text-[0.65rem] uppercase tracking-eyebrow text-ember hover:underline"
+            className="block w-fit font-mono text-[0.65rem] uppercase tracking-eyebrow text-ember hover:underline"
           >
             {category.title}
           </Link>
         )}
-        <h1 className="mt-4 font-display text-4xl font-bold leading-tight text-white md:text-5xl">
+        <h1 className="mt-3 font-display text-4xl font-bold leading-tight text-white md:text-5xl">
           {post.title}
         </h1>
         <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
