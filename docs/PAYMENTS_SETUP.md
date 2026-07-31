@@ -533,29 +533,58 @@ manager, or raise a ticket at <https://developer.safaricom.co.ke> support:
 They will give you an **Initiator Name** (an API username, e.g. `apiuser`) and
 have you set an **Initiator Password** in the M-Pesa Org portal.
 
-#### 8.A.2 Create the security credential
+#### 8.A.2 The security credential (mostly already done)
 
 Safaricom will not accept your initiator password in plain text. It has to be
-encrypted with their public certificate.
+encrypted with their public certificate first. The encrypted result is called
+the **security credential**.
 
-1. Download the production certificate from
-   <https://developer.safaricom.co.ke/APIs/Credentials>. It is a file ending
-   `.cer`.
-2. Save it somewhere you can find it, e.g. `C:\Users\PAUL\Downloads\ProductionCertificate.cer`.
-3. Turn it into one long line of text that can live in a settings file:
+**There is no setting for this.** The website builds it fresh on every
+settlement request from two things:
+
+| Ingredient | Where it lives | Secret? |
+|---|---|---|
+| Safaricom's certificate | `ProductionCertificate.cer` in the project root | **No** — it is a public key every integrator downloads |
+| Your initiator password | `MPESA_INITIATOR_PASSWORD` in the environment | **Yes** — this is the real secret |
+
+`ProductionCertificate.cer` is already committed, so for production there is
+nothing to download. Set `MPESA_INITIATOR_PASSWORD` in 8.A.3 and you are done.
+
+**This is settlement-only.** STK push, the paybill fallback and card payments
+never touch it — taking money only needs the passkey. Only *sending* money out
+of the paybill needs proof that an authorised operator approved it.
+
+##### If you are testing against sandbox
+
+Safaricom publishes a different certificate per environment and they are **not**
+interchangeable — encrypting with the wrong one fails with an error that never
+mentions certificates. When `MPESA_ENVIRONMENT=sandbox`, the website looks for
+`SandboxCertificate.cer` instead:
+
+1. Go to <https://developer.safaricom.co.ke/APIs/Credentials>.
+2. Download **SandboxCertificate.cer**.
+3. Drop it in the project root, next to `ProductionCertificate.cer`.
+
+If it is missing you get a clear error naming the file and this URL, so you
+cannot get this wrong silently.
+
+##### Keeping the certificate current
+
+Check the expiry of the one in the repo at any time:
 
 ```powershell
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\Users\PAUL\Downloads\ProductionCertificate.cer")) | Set-Clipboard
+node -e "const c=require('crypto'),f=require('fs');const x=new c.X509Certificate(f.readFileSync('ProductionCertificate.cer'));console.log('valid to:', x.validTo)"
 ```
 
-That copies the encoded certificate to your clipboard.
+Encryption keeps working after the printed date — the code only uses the public
+key, and nothing checks expiry. What matters is whether Safaricom still holds
+the matching private key. If they ever rotate it, every settlement starts
+failing with **"Invalid Initiator Information"**, which says nothing about
+certificates and will cost you an afternoon.
 
-4. Paste it into `.env.local` after `MPESA_CERTIFICATE=`.
-
-The website generates the encrypted credential itself from the certificate and
-your initiator password. (If Safaricom instead hands you a ready-made
-credential, paste that into `MPESA_SECURITY_CREDENTIAL=` and leave
-`MPESA_CERTIFICATE=` empty.)
+**If in doubt, re-download `ProductionCertificate.cer` from the link above and
+overwrite the one in the project root.** It costs thirty seconds and rules out
+the whole class of problem.
 
 #### 8.A.3 Turn on settlement
 
@@ -564,7 +593,6 @@ In `.env.local`:
 ```env
 MPESA_INITIATOR_NAME=apiuser
 MPESA_INITIATOR_PASSWORD=the_password_you_set_in_the_org_portal
-MPESA_CERTIFICATE=paste_the_long_base64_string
 
 SETTLEMENT_ENABLED=true
 SETTLEMENT_ADAPTER=daraja-b2b

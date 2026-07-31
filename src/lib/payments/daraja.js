@@ -1,6 +1,8 @@
 import 'server-only';
 
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 
 /**
  * Safaricom Daraja client — M-Pesa STK push (collection) and B2B (settlement).
@@ -30,9 +32,9 @@ export function darajaConfig() {
     // kept separate because a till/head-office pairing can differ.
     displayPaybill: process.env.MPESA_DISPLAY_PAYBILL || process.env.MPESA_SHORTCODE || '',
     initiatorName: process.env.MPESA_INITIATOR_NAME || '',
+    // The only secret in the settlement flow. The certificate it is encrypted
+    // against is a public file in the repo root — see certificateFile().
     initiatorPassword: process.env.MPESA_INITIATOR_PASSWORD || '',
-    securityCredential: process.env.MPESA_SECURITY_CREDENTIAL || '',
-    certificate: process.env.MPESA_CERTIFICATE || '',
   };
 }
 
@@ -130,27 +132,89 @@ function stkPassword(timestamp) {
 }
 
 /**
- * The B2B/B2C security credential: the initiator password encrypted with
- * Safaricom's public certificate. Prefer a pre-computed MPESA_SECURITY_CREDENTIAL;
- * otherwise derive it from MPESA_CERTIFICATE + MPESA_INITIATOR_PASSWORD.
+ * Which of Safaricom's certificates to encrypt against.
+ *
+ * They publish one per environment and they are NOT interchangeable — a
+ * sandbox-encrypted credential is rejected in production and vice versa, with
+ * an error that does not mention certificates at all.
+ *
+ * Both files live in the repo root. That is safe: these are Safaricom's PUBLIC
+ * keys, downloaded by every integrator from developer.safaricom.co.ke. The only
+ * secret in this flow is MPESA_INITIATOR_PASSWORD, which stays in the environment.
  */
-export function securityCredential() {
-  const c = darajaConfig();
-  if (c.securityCredential) return c.securityCredential;
-  if (!c.certificate || !c.initiatorPassword) {
+export function certificateFile() {
+  const { env } = darajaConfig();
+  return env === 'production' ? 'ProductionCertificate.cer' : 'SandboxCertificate.cer';
+}
+
+// Parsing the certificate costs a few milliseconds and the file never changes
+// between deploys, so keep the public key for the life of the lambda.
+let publicKeyCache = { file: null, key: null };
+
+function certificatePublicKey() {
+  const file = certificateFile();
+  if (publicKeyCache.file === file && publicKeyCache.key) return publicKeyCache.key;
+
+  // process.cwd() is the deployment root on Vercel and the project root locally.
+  // next.config.mjs traces these files into the settlement route's bundle;
+  // without that they exist in the repo but not in the deployed function.
+  const certPath =
+    file === 'ProductionCertificate.cer'
+      ? path.join(process.cwd(), 'ProductionCertificate.cer')
+      : path.join(process.cwd(), 'SandboxCertificate.cer');
+
+  let raw;
+  try {
+    raw = fs.readFileSync(certPath);
+  } catch {
     throw new Error(
-      'Set MPESA_SECURITY_CREDENTIAL, or MPESA_CERTIFICATE + MPESA_INITIATOR_PASSWORD, to use B2B settlement.'
+      `Safaricom certificate not found at ${certPath}. Download ${file} from ` +
+        'https://developer.safaricom.co.ke/APIs/Credentials and put it in the project root.'
     );
   }
 
-  // The cert may be stored base64-wrapped (env vars dislike newlines) or as raw PEM.
-  const pem = c.certificate.includes('BEGIN CERTIFICATE')
-    ? c.certificate.replace(/\\n/g, '\n')
-    : Buffer.from(c.certificate, 'base64').toString('utf8');
+  // Node's X509Certificate takes a Buffer and accepts PEM or DER, so both of
+  // Safaricom's download formats work without us sniffing the encoding.
+  let key;
+  try {
+    key = new crypto.X509Certificate(raw).publicKey;
+  } catch (err) {
+    throw new Error(
+      `${file} is not a readable certificate (${err.message}). Re-download it — ` +
+        'a truncated or HTML-error-page download is the usual cause.'
+    );
+  }
+
+  publicKeyCache = { file, key };
+  return key;
+}
+
+/**
+ * The B2B/B2C security credential: the initiator password encrypted with
+ * Safaricom's public certificate, base64-encoded.
+ *
+ * Computed fresh on every call from the certificate on disk plus
+ * MPESA_INITIATOR_PASSWORD — the same shape as the thrivecap backend, so
+ * rotating the password means changing one environment variable.
+ *
+ * Throws rather than returning an error string: the return value goes straight
+ * into a request that moves money, and a placeholder like "Certificate file not
+ * found" would be sent to Safaricom as if it were a real credential, producing
+ * a rejection that names neither the certificate nor the password.
+ *
+ * The output differs on every call even for the same password — PKCS#1 v1.5
+ * padding is randomised by design. That is expected, not a bug.
+ */
+export function securityCredential() {
+  const { initiatorPassword } = darajaConfig();
+
+  if (!initiatorPassword) {
+    throw new Error('MPESA_INITIATOR_PASSWORD is not set — required for B2B settlement.');
+  }
 
   const encrypted = crypto.publicEncrypt(
-    { key: new crypto.X509Certificate(pem).publicKey, padding: crypto.constants.RSA_PKCS1_PADDING },
-    Buffer.from(c.initiatorPassword, 'utf8')
+    { key: certificatePublicKey(), padding: crypto.constants.RSA_PKCS1_PADDING },
+    Buffer.from(initiatorPassword, 'utf8')
   );
   return encrypted.toString('base64');
 }
