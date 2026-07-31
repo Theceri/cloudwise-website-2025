@@ -64,7 +64,10 @@ Both training tracks — the individual **AI Productivity Training** and the
 pipeline. It runs entirely inside this app; there is no separate backend.
 
 **Setup is documented step by step in [`docs/PAYMENTS_SETUP.md`](docs/PAYMENTS_SETUP.md).**
-Start there — this section is only a map of the code.
+Start there — this section is only a map of the code. For the M-Pesa settlement
+credential specifically (what it is, why the certificate is a committed file,
+and the expiry trap behind most `Invalid Initiator Information` errors), see
+[`docs/MPESA_SECURITY_CREDENTIAL_AND_CERTIFICATE_HANDLING.md`](docs/MPESA_SECURITY_CREDENTIAL_AND_CERTIFICATE_HANDLING.md).
 
 ### The flow
 

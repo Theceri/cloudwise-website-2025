@@ -550,6 +550,12 @@ settlement request from two things:
 `ProductionCertificate.cer` is already committed, so for production there is
 nothing to download. Set `MPESA_INITIATOR_PASSWORD` in 8.A.3 and you are done.
 
+> **Going deeper:** [`MPESA_SECURITY_CREDENTIAL_AND_CERTIFICATE_HANDLING.md`](MPESA_SECURITY_CREDENTIAL_AND_CERTIFICATE_HANDLING.md)
+> explains what the credential actually is, why it lives in a file rather than
+> an environment variable, how it differs from the ThriveCap implementation, and
+> the certificate-expiry trap behind most `Invalid Initiator Information`
+> errors. Read it if settlement misbehaves.
+
 **This is settlement-only.** STK push, the paybill fallback and card payments
 never touch it — taking money only needs the passkey. Only *sending* money out
 of the paybill needs proof that an authorised operator approved it.
