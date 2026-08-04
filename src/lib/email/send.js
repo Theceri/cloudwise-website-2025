@@ -32,7 +32,7 @@ export function isEmailConfigured() {
  * Send one email. Resolves to `{ ok, id }` and never throws — a failed
  * notification must not roll back a payment we have already taken.
  */
-export async function sendEmail({ to, subject, html, text, replyTo, bcc, tags }) {
+export async function sendEmail({ to, subject, html, text, replyTo, bcc, tags, attachments }) {
   const cfg = emailConfig();
   const recipients = (Array.isArray(to) ? to : [to]).filter(Boolean);
 
@@ -56,6 +56,11 @@ export async function sendEmail({ to, subject, html, text, replyTo, bcc, tags })
         html,
         ...(text ? { text } : {}),
         ...(bcc?.length ? { bcc } : {}),
+        // Resend takes base64 in `content`. Nulls are filtered so a builder can
+        // return "no attachment" without the caller having to check.
+        ...(attachments?.filter(Boolean).length
+          ? { attachments: attachments.filter(Boolean) }
+          : {}),
         reply_to: replyTo || cfg.replyTo,
         ...(tags ? { tags } : {}),
       }),

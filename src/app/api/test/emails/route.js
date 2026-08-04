@@ -222,6 +222,9 @@ export async function POST(request) {
       subject: `[TEST] ${message.subject}`,
       html: message.html,
       text: message.text,
+      // The roster spreadsheet rides along on the admin templates, and a test
+      // that quietly drops it cannot tell you the attachment is broken.
+      attachments: message.attachments,
     });
     results.push({ template: key, ...result });
   }

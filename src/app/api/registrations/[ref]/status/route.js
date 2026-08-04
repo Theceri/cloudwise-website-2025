@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { confirmPayment, onPaymentFailed } from '@/lib/lifecycle';
 import { isDarajaConfigured, stkQuery } from '@/lib/payments/daraja';
 import { getRegistration, latestPaymentFor, patchPayment } from '@/lib/store';
-import { isValidReference } from '@/lib/training';
+import { normaliseReference } from '@/lib/training';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -18,9 +18,10 @@ export const dynamic = 'force-dynamic';
  * sit on a spinner.
  */
 export async function GET(request, { params }) {
-  const { ref } = await params;
+  const { ref: rawRef } = await params;
+  const ref = normaliseReference(rawRef);
 
-  if (!isValidReference(ref)) {
+  if (!ref) {
     return NextResponse.json({ error: 'Unknown reference.' }, { status: 400 });
   }
 
@@ -61,11 +62,14 @@ export async function GET(request, { params }) {
     const query = await stkQuery(payment.externalId);
 
     if (query.state === 'completed') {
-      // The push succeeded but we never got the callback. The query response
-      // carries no receipt number, so record the CheckoutRequestID and let the
-      // callback fill in the M-Pesa code if it arrives later.
+      // The push succeeded but we never got the callback. The v2 query carries
+      // the M-Pesa code, so the reconciled payment is as complete as one
+      // confirmed by the callback itself.
+      const receipt = query.receipt || payment.receipt || null;
+
       await patchPayment('mpesa-stk', payment.externalId, {
         status: 'completed',
+        receipt,
         resultDescription: query.description || 'Confirmed by status query.',
         rawCallback: JSON.stringify(query.raw, null, 2),
         completedAt: new Date().toISOString(),
@@ -74,16 +78,16 @@ export async function GET(request, { params }) {
 
       await confirmPayment({
         registration,
-        payment: { ...payment, status: 'completed', settlementState: 'pending' },
+        payment: { ...payment, status: 'completed', settlementState: 'pending', receipt },
         method: 'mpesa-stk',
-        receipt: payment.receipt || null,
+        receipt,
       });
 
       return NextResponse.json({
         status: 'paid',
         reference: ref,
         amount: registration.amount,
-        receipt: payment.receipt || null,
+        receipt,
         method: 'mpesa-stk',
       });
     }

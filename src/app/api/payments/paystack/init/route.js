@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 
-import { initializeTransaction, isPaystackConfigured } from '@/lib/payments/paystack';
+import { initializeTransaction, isCardPaymentEnabled } from '@/lib/payments/paystack';
 import { publicBaseUrl } from '@/lib/runtime';
 import { createPayment, getRegistration } from '@/lib/store';
-import { getTrack, isValidReference } from '@/lib/training';
+import { getTrack, normaliseReference } from '@/lib/training';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -23,12 +23,12 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
   }
 
-  const { reference } = body || {};
-  if (!isValidReference(reference)) {
+  const reference = normaliseReference(body?.reference);
+  if (!reference) {
     return NextResponse.json({ error: 'Unknown booking reference.' }, { status: 400 });
   }
 
-  if (!isPaystackConfigured()) {
+  if (!isCardPaymentEnabled()) {
     return NextResponse.json(
       { error: 'Card payments are not connected yet. Please pay with M-Pesa.' },
       { status: 503 }

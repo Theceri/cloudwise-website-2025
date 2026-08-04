@@ -26,7 +26,8 @@ export const TRACKS = {
     strikePriceKes: 30000,
     registerPath: '/ai-training/register',
     landingPath: '/ai-training',
-    refPrefix: 'CWI',
+    refPrefix: 'CWI', // legacy references only — see generateReference
+    refLetter: 'A',
     // Two 4-hour Saturday sessions per cohort.
     durationLabel: '2 Saturdays · 9:00am–1:00pm each',
     venue: '4th Floor, Delta Annex, Delta Corner, Waiyaki Way, Nairobi',
@@ -43,7 +44,8 @@ export const TRACKS = {
     strikePriceKes: null,
     registerPath: '/women-biz360/register',
     landingPath: '/women-biz360',
-    refPrefix: 'CWW',
+    refPrefix: 'CWW', // legacy references only — see generateReference
+    refLetter: 'W',
     durationLabel: 'Full day · 8:30am–4:00pm',
     venue: 'Delta Centre, Waiyaki Way, Nairobi',
     supportsOnline: false,
@@ -70,6 +72,38 @@ export function priceFor(trackId) {
   const track = getTrack(trackId);
   if (!track) throw new Error(`Unknown track: ${trackId}`);
   return track.priceKes;
+}
+
+/**
+ * Test mode: charge a token amount instead of the real price.
+ *
+ * Set TEST_PAYMENT_AMOUNT_KES (e.g. 2) to exercise the whole money path —
+ * STK push, C2B confirmation, part payment, settlement — for a few shillings.
+ * Two, not one, so paying Ksh 1 to the paybill is a genuine underpayment and
+ * the part-payment branch can be tested too.
+ *
+ * This deliberately does NOT touch `priceKes`, so every marketing and
+ * registration page still advertises the real price. It changes only what a
+ * registration is actually charged, which is the number the STK push, the
+ * paid/part-paid threshold and the checkout total all read.
+ *
+ * Server-side only — it is read when a registration is created, and the amount
+ * is then stored on the record, so nothing downstream needs to know about it.
+ *
+ * NEVER set this in the production environment.
+ */
+export function testPaymentAmount() {
+  const raw = Number(process.env.TEST_PAYMENT_AMOUNT_KES);
+  return Number.isFinite(raw) && raw > 0 ? Math.round(raw) : null;
+}
+
+/**
+ * What a new registration is actually charged. Use this when creating a
+ * registration; use `priceFor` when displaying what the training costs.
+ */
+export function chargeFor(trackId) {
+  const real = priceFor(trackId);
+  return testPaymentAmount() ?? real;
 }
 
 // ---------------------------------------------------------------------------
@@ -266,21 +300,58 @@ export function daysUntil(isoDate, { now = new Date() } = {}) {
 const REF_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // no 0/O/1/I — read aloud over the phone
 
 /**
- * A short, unambiguous reference the customer types as the M-Pesa account
- * number and that we key every record off. Format: CWI-7F3K2M.
+ * The reference a customer types as the M-Pesa account number, and the key
+ * every record hangs off. Format: A7F3K2 (AI training) or W7F3K2 (Women Biz360).
+ *
+ * Six characters, no separator. This is typed on a feature phone keypad by
+ * someone standing at a till, so every character is a chance to get it wrong —
+ * the old CWI-7F3K2M was ten characters and a hyphen for no benefit the payer
+ * cares about. One track letter is kept because it costs a single character and
+ * makes a payment identifiable at a glance during reconciliation.
+ *
+ * 32^5 ≈ 33.5 million per track, so collisions stay negligible well past any
+ * plausible number of registrations. (Four random characters would have been
+ * about a million, where a couple of thousand bookings already makes a
+ * collision likely — hence five.)
  */
+const REF_BODY_LENGTH = 5;
+
 export function generateReference(trackId) {
-  const prefix = getTrack(trackId)?.refPrefix || 'CW';
-  const bytes = new Uint8Array(6);
+  const prefix = getTrack(trackId)?.refLetter || 'C';
+  const bytes = new Uint8Array(REF_BODY_LENGTH);
   globalThis.crypto.getRandomValues(bytes);
   const body = Array.from(bytes, (b) => REF_ALPHABET[b % REF_ALPHABET.length]).join('');
-  return `${prefix}-${body}`;
+  return `${prefix}${body}`;
 }
 
-export const REFERENCE_RE = /^CW[IW]-[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{6}$/;
+const CURRENT_RE = new RegExp(`^[AW][${REF_ALPHABET}]{${REF_BODY_LENGTH}}$`);
+// Bookings taken before the reference was shortened. Their documents are stored
+// under the hyphenated id, so those must keep resolving forever.
+const LEGACY_RE = new RegExp(`^CW[IW][${REF_ALPHABET}]{6}$`);
+
+export const REFERENCE_RE = CURRENT_RE;
+
+/**
+ * Turn whatever the customer actually typed into the canonical reference, or
+ * null if it cannot be one.
+ *
+ * Safaricom passes the account number through verbatim, and people type
+ * "a7f3k2", "A7F3-K2" or "A7F 3K2". Rejecting those loses a real payment over
+ * punctuation, so strip anything that is not a letter or digit before matching
+ * and let the shape decide.
+ */
+export function normaliseReference(input) {
+  if (typeof input !== 'string') return null;
+  const bare = input.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+  if (CURRENT_RE.test(bare)) return bare;
+  // Legacy ids live in Sanity with the hyphen, so put it back.
+  if (LEGACY_RE.test(bare)) return `${bare.slice(0, 3)}-${bare.slice(3)}`;
+  return null;
+}
 
 export function isValidReference(ref) {
-  return typeof ref === 'string' && REFERENCE_RE.test(ref);
+  return normaliseReference(ref) !== null;
 }
 
 export function formatKes(amount) {

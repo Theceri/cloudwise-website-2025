@@ -4,6 +4,8 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { normaliseReference } from '@/lib/training';
+
 /**
  * Safaricom Daraja client — M-Pesa STK push (collection) and B2B (settlement).
  *
@@ -76,7 +78,13 @@ export function displayPhone(msisdn) {
 // ---------------------------------------------------------------------------
 
 // Daraja tokens last an hour. Cache per warm lambda and refresh a minute early.
-let tokenCache = { token: null, expiresAt: 0 };
+//
+// Keyed by environment + consumer key, because a token is only valid against
+// the base URL that minted it. Without the key, flipping MPESA_ENVIRONMENT on a
+// running dev server hands a still-unexpired sandbox token to production, and
+// Daraja answers "Invalid Access Token" — an auth error that no amount of
+// checking your credentials will explain.
+let tokenCache = { key: null, token: null, expiresAt: 0 };
 
 export async function getAccessToken({ force = false } = {}) {
   const c = darajaConfig();
@@ -84,7 +92,8 @@ export async function getAccessToken({ force = false } = {}) {
     throw new Error('M-Pesa consumer key/secret are not configured.');
   }
 
-  if (!force && tokenCache.token && Date.now() < tokenCache.expiresAt) {
+  const cacheKey = `${c.env}:${c.consumerKey}`;
+  if (!force && tokenCache.token && tokenCache.key === cacheKey && Date.now() < tokenCache.expiresAt) {
     return tokenCache.token;
   }
 
@@ -103,6 +112,7 @@ export async function getAccessToken({ force = false } = {}) {
 
   const ttlSeconds = Number(body.expires_in || 3599);
   tokenCache = {
+    key: cacheKey,
     token: body.access_token,
     expiresAt: Date.now() + Math.max(ttlSeconds - 60, 60) * 1000,
   };
@@ -299,25 +309,56 @@ export async function stkQuery(checkoutRequestId) {
   const c = darajaConfig();
   const timestamp = darajaTimestamp();
 
-  const { ok, status, body } = await darajaPost('/mpesa/stkpushquery/v1/query', {
+  // v2, not v1: both answer, but only v2 includes MpesaReceiptNumber, which is
+  // the M-Pesa code the customer sees. Without it a payment reconciled by this
+  // query has no receipt to show or match a statement against.
+  const { ok, status, body } = await darajaPost('/mpesa/stkpushquery/v2/query', {
     BusinessShortCode: c.shortcode,
     Password: stkPassword(timestamp),
     Timestamp: timestamp,
     CheckoutRequestID: checkoutRequestId,
   });
 
-  // ResultCode 0 = paid. 1032 = cancelled by user. 1037 = timed out / unreachable.
-  // While the prompt is still on screen Daraja answers errorCode 500.001.1001
-  // ("transaction is being processed") — that is pending, not a failure.
-  if (!ok) {
-    const pending = /being processed|500\.001\.1001/i.test(JSON.stringify(body));
-    return { state: pending ? 'pending' : 'unknown', raw: body, httpStatus: status };
+  const resultCode = String(body.ResultCode ?? '');
+  const description = body.ResultDesc || body.errorMessage || '';
+
+  if (ok && resultCode === '0') {
+    return {
+      state: 'completed',
+      raw: body,
+      description,
+      receipt: body.MpesaReceiptNumber || null,
+    };
   }
 
-  const resultCode = String(body.ResultCode ?? '');
-  if (resultCode === '0') return { state: 'completed', raw: body, description: body.ResultDesc };
-  if (resultCode === '') return { state: 'pending', raw: body };
-  return { state: 'failed', raw: body, description: body.ResultDesc };
+  /**
+   * Only these end the attempt. Everything else is treated as still pending.
+   *
+   * This asymmetry is deliberate. Reporting "failed" is not a neutral guess:
+   * it emails the customer to say their payment did not go through and stops
+   * the checkout page polling. Doing that to someone who has actually paid is
+   * far worse than leaving a spinner up a little longer, and the callback, the
+   * C2B confirmation and the next poll all remain able to resolve it.
+   *
+   * The bug this replaces: Daraja answers a still-in-flight push with
+   * "The transaction is still under processing", which the old code matched
+   * against the phrase "being processed", missed, and so filed as a failure —
+   * marking a successful payment failed and emailing the payer to say so.
+   */
+  const TERMINAL = {
+    1: 'Insufficient M-Pesa balance.',
+    1019: 'The request expired before it was completed.',
+    1032: 'The prompt was cancelled.',
+    1037: 'The phone could not be reached, or the prompt timed out.',
+    2001: 'The M-Pesa PIN entered was wrong.',
+  };
+
+  if (ok && Object.prototype.hasOwnProperty.call(TERMINAL, resultCode)) {
+    return { state: 'failed', raw: body, description: description || TERMINAL[resultCode] };
+  }
+
+  // Unrecognised, still processing, or the query itself failed — keep waiting.
+  return { state: 'pending', raw: body, description, httpStatus: status };
 }
 
 /**
@@ -383,7 +424,10 @@ export async function b2bPayBill({
 export async function registerC2bUrls({ confirmationUrl, validationUrl }) {
   const c = darajaConfig();
 
-  const { ok, status, body } = await darajaPost('/mpesa/c2b/v1/registerurl', {
+  // v2, not v1: v1 still exists but rejects every production token with
+  // "401.003.01 Error Occurred - Invalid Access Token", which reads like an
+  // auth problem and is not one. v2 accepts the same token.
+  const { ok, status, body } = await darajaPost('/mpesa/c2b/v2/registerurl', {
     ShortCode: c.shortcode,
     ResponseType: 'Completed',
     ConfirmationURL: confirmationUrl,
@@ -402,10 +446,16 @@ export async function registerC2bUrls({ confirmationUrl, validationUrl }) {
 export function parseC2bConfirmation(body) {
   if (!body?.TransID) return null;
 
+  const typedReference = String(body.BillRefNumber || '').trim();
+
   return {
     transactionId: String(body.TransID),
-    // The account number the customer typed — our booking reference.
-    reference: String(body.BillRefNumber || '').trim().toUpperCase(),
+    // The account number the customer typed, normalised to our canonical form —
+    // "a7f3k2" and "A7F 3K2" are the same booking, and losing a payment to a
+    // stray space is not a trade worth making.
+    reference: normaliseReference(typedReference) || typedReference.toUpperCase(),
+    // Kept verbatim so an unmatched payment can show what was actually entered.
+    typedReference,
     amount: Number(body.TransAmount),
     phone: body.MSISDN ? String(body.MSISDN) : undefined,
     payerName: [body.FirstName, body.MiddleName, body.LastName]
@@ -455,10 +505,35 @@ function redact(payload) {
 }
 
 /**
+ * Whether to offer the paybill as a fallback at all.
+ *
+ * The fallback only works if Safaricom is actually delivering C2B confirmations
+ * to us, and that is not something the code can check: registration is one-shot
+ * on a live shortcode, there is no read-back endpoint, and a stale registration
+ * fails silently — the customer pays, the money arrives, and nothing tells us.
+ *
+ * So it is a switch. Set PAYBILL_FALLBACK_ENABLED=false and checkout offers the
+ * STK prompt alone, with no paybill number on screen and none in the emails.
+ * Better to show one route that works than two where the second quietly eats
+ * payments. Turn it back on once Safaricom confirms the registered URLs point
+ * at the live domain.
+ */
+export function isPaybillFallbackEnabled() {
+  const flag = String(process.env.PAYBILL_FALLBACK_ENABLED || '').trim().toLowerCase();
+  if (flag === 'false' || flag === '0' || flag === 'off') return false;
+  return isDarajaConfigured();
+}
+
+/**
  * Manual payment instructions shown next to every STK push, so a customer whose
  * prompt never arrives can still pay without contacting us.
+ *
+ * Returns null when the fallback is switched off, so every caller — checkout
+ * page and email templates alike — drops the paybill by doing nothing special.
  */
 export function paybillInstructions(reference) {
+  if (!isPaybillFallbackEnabled()) return null;
+
   const c = darajaConfig();
   return {
     paybill: c.displayPaybill,

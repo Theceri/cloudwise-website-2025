@@ -37,7 +37,7 @@ Someone signs up and pays. Here is every step, and who does it:
   Person fills the form on the website
               │
               ▼
-  We save a registration and give it a reference like CWI-7F3K2M
+  We save a registration and give it a reference like A7F3K2
               │
               ├──► Email to them:  "you're nearly in, here's how to pay"
               └──► Email to you:   "new signup" + the full roster so far
@@ -129,6 +129,36 @@ token is present.
 "Paid", "Awaiting payment" and "Payments" inside it. That is your admin screen —
 every registration will appear there.
 
+### Getting the roster out as a spreadsheet
+
+Every admin email — each new signup, each payment, and the 5pm round-up —
+arrives with the full roster attached as a `.csv` file. Double-click it and it
+opens in Excel. It carries more than the table in the email body does: the
+profiling answers, the cohort, the receipt, the settlement state, and both
+timestamps in Nairobi time.
+
+When you want the list *now* rather than the version attached to whichever alert
+you happen to have open, use the download link:
+
+```
+https://cloudwise.co.ke/api/registrations/export?secret=YOUR_CRON_SECRET
+```
+
+It takes optional filters, which is the quickest way to hand the partner their
+attendees or print a register for one cohort:
+
+| Add to the address | You get |
+|---|---|
+| `&status=paid` | Only people who have actually paid |
+| `&track=wbh-masterclass` | Only the Women Biz360 masterclass |
+| `&track=individual` | Only the AI Productivity Training |
+| `&cohortId=2026-10` | Only that month's cohort |
+
+Filters combine: `&track=individual&cohortId=2026-10&status=paid`.
+
+> The link contains your `CRON_SECRET`, so treat it like a password — do not
+> post it in a group chat. Send the downloaded file, not the link.
+
 ---
 
 ## 4. Resend — sending email
@@ -186,12 +216,25 @@ ADMIN_EMAILS=paul@cloudwise.co.ke,meg@elevatesmes.co.ke
 Separate addresses with commas, no spaces needed. **Put your partner's address
 here** — that is how Women Biz360 Hub sees their own signups.
 
-You also need a `CRON_SECRET` before the next step. Make one up — any long
-random string. For example:
+You also need a `CRON_SECRET` before the next step. Generate one — do not make it
+up, and do not reuse an example:
+
+```powershell
+-join ((1..32) | ForEach-Object { '0123456789abcdef'[(Get-Random -Max 16)] })
+```
+
+Put the result in `.env.local`:
 
 ```env
-CRON_SECRET=8f3a91c47b2e4d6f9a1c8e5b3d7f2a90
+CRON_SECRET=paste-the-generated-value-here
 ```
+
+> **Never write the real value into this file, a README, a commit message or a
+> chat.** This one string is the key to every protected route: it can mark a
+> booking paid, download the full customer list, send email from your domain and
+> trigger the cron jobs. This repository is public. If it ever does get
+> committed, generating a fresh one and updating `.env.local` and Vercel takes a
+> minute and makes the leaked value worthless.
 
 ### 4.5 Test it — send yourself every email
 
@@ -204,7 +247,7 @@ npm run dev
 Then in your browser, open (replacing the secret with yours):
 
 ```
-http://localhost:3000/api/test/emails?secret=8f3a91c47b2e4d6f9a1c8e5b3d7f2a90
+http://localhost:3000/api/test/emails?secret=YOUR_CRON_SECRET
 ```
 
 You will see a list of every email the system sends. To **look at one** without
@@ -329,6 +372,40 @@ so you can check the instructions read correctly.
 
 Restart `npm run dev`.
 
+### 6.3b Test mode — charge Ksh 2 instead of the real price
+
+Testing against a **production** paybill means every prompt moves real money.
+Rather than paying Ksh 13,500 to test a checkout, set this in `.env.local`:
+
+```
+TEST_PAYMENT_AMOUNT_KES=2
+```
+
+With it set, a new registration is charged Ksh 2 instead of the track price.
+That single number flows everywhere it needs to:
+
+| What | Uses the test amount? |
+|---|---|
+| Course prices on `/ai-training`, `/women-biz360`, register pages | **No** — always the real price |
+| Amount sent in the STK push | Yes |
+| Amount shown on the checkout page and paybill panel | Yes |
+| Threshold for "paid in full" vs "part payment" | Yes |
+| Amount swept to the bank by settlement | Yes |
+
+Two, not one, on purpose: it leaves Ksh 1 available as a genuine **part
+payment** so you can test that path against the paybill.
+
+Three things to know:
+
+- It applies **when a registration is created**. Bookings made before you set it
+  keep the amount they were created with, so make a fresh one to test.
+- It affects both tracks identically — `ai-training` and `women-biz360`.
+- **Never set it in production.** It is deliberately absent from
+  `.env.example`'s active lines and must stay unset on Vercel. If it were ever
+  set live, every seat would sell for two shillings.
+
+Unset it (or comment it out) and restart to go back to real prices.
+
 ### 6.4 Test the STK push
 
 1. Make sure your tunnel is running and `PUBLIC_BASE_URL` is set (section 5).
@@ -368,16 +445,174 @@ https://your-tunnel.trycloudflare.com/api/payments/mpesa/register-urls?secret=YO
 
 You should get back `{"ok":true, ...}` showing the two URLs it registered.
 
-Do this again on the live site once you go to production:
+> **The word `mpesa` in that address is correct — leave it.** Safaricom's ban on
+> the word applies *only* to the URLs we hand to Safaricom, i.e. the
+> confirmation and validation endpoints it calls back on. `register-urls` is a
+> URL **you** open in your own browser; Safaricom never sees it. The same goes
+> for `/api/payments/mpesa/stk`, which only your own checkout page calls.
+>
+> What the registration endpoint *submits* to Safaricom is a different pair of
+> addresses, and those deliberately avoid the word:
+>
+> | Sent to Safaricom | Path |
+> |---|---|
+> | ConfirmationURL | `/api/payments/paybill/c2b` |
+> | ValidationURL | `/api/payments/paybill/c2b/validation` |
+> | STK CallBackURL | `/api/payments/paybill/stk-callback` |
+>
+> Rule of thumb: **anything under `/api/payments/paybill/…` is called by
+> Safaricom and must never contain the word `mpesa`. Anything under
+> `/api/payments/mpesa/…` is called by us and is free to.**
 
-```
-https://cloudwise.co.ke/api/payments/mpesa/register-urls?secret=YOUR_CRON_SECRET
+### Moving off the tunnel and onto the live domain
+
+While testing, the registered URLs point at a `trycloudflare.com` address. That
+address dies the moment `cloudflared` restarts, and comes back with a different
+random name. Until you re-register, a real paybill payment is still *accepted*
+(`ResponseType` is `Completed`, see below) but its confirmation goes nowhere —
+it arrives as unattributed money you match by hand.
+
+So when you finish testing, move it to the live domain:
+
+1. Set `PUBLIC_BASE_URL=https://cloudwise.co.ke` in the production environment
+   (Vercel → Settings → Environment Variables), or remove it entirely — with it
+   unset the code falls back to the site URL anyway.
+2. Make sure `TEST_PAYMENT_AMOUNT_KES` is **not** set in production.
+3. Deploy, then open once:
+
+   ```
+   https://cloudwise.co.ke/api/payments/mpesa/register-urls?secret=YOUR_CRON_SECRET
+   ```
+
+4. Confirm the JSON that comes back names `cloudwise.co.ke`, not a tunnel:
+
+   ```json
+   {"ok":true,
+    "confirmationUrl":"https://cloudwise.co.ke/api/payments/paybill/c2b",
+    "validationUrl":"https://cloudwise.co.ke/api/payments/paybill/c2b/validation",
+    "response":{"ResponseCode":"00000000","ResponseDescription":"Success"}}
+   ```
+
+`ResponseCode` `00000000` is success. Safaricom simply replaces whatever was
+stored before, so this is safe to repeat as often as you like.
+
+> There is **no way to ask Safaricom what is currently registered** — Daraja has
+> no read-back endpoint for C2B URLs. The `{"ok":true, ...}` response above is
+> the only confirmation you get, so keep an eye on it when you re-register.
+
+#### On a live paybill you get **one** attempt
+
+Everything above is true on sandbox, where you can re-register as often as you
+like. On a **production** shortcode, C2B registration is one-shot. The second
+call comes back:
+
+```json
+{"requestId":"…","errorCode":"500.003.1001","errorMessage":"URLs are already registered"}
 ```
 
-> Registering is safe to repeat — Safaricom just replaces the stored URLs. On
-> production paybills Safaricom sometimes has to activate C2B for you first; if
-> the call returns an error mentioning the shortcode, ask them to enable
+Whatever was registered first is what Safaricom keeps posting to, permanently,
+and no API call will change it. If that first registration pointed at a tunnel —
+and during development it almost certainly did — then **every direct-paybill
+payment on the live shortcode is being delivered to an address that no longer
+exists**, and will be until you get it changed.
+
+The only way to change it: email **apisupport@safaricom.co.ke** from the account
+that owns the shortcode, quote the shortcode, and ask them to update the
+registered C2B confirmation and validation URLs to:
+
+| | |
+|---|---|
+| ConfirmationURL | `https://cloudwise.co.ke/api/payments/paybill/c2b` |
+| ValidationURL | `https://cloudwise.co.ke/api/payments/paybill/c2b/validation` |
+
+Give them the **production domain**, never a tunnel address. You are unlikely to
+get a second go.
+
+**So how do you test the paybill before launch?** You do not, on the live
+shortcode. Test C2B end to end on **sandbox** (`MPESA_ENVIRONMENT=sandbox`),
+where re-registration is free and the tunnel address does not matter. Then, on
+production:
+
+- **STK push works normally**, on a tunnel or anywhere else — it sends its
+  callback URL with every individual request, so it always follows
+  `PUBLIC_BASE_URL`. This is the path to use for live end-to-end tests.
+- **Real paybill payments are recovered by hand** with the reconcile endpoint
+  below, until Safaricom has pointed the URLs at the live domain.
+
+#### Hide the paybill while it cannot confirm
+
+Do not leave a paybill number on screen that nobody is listening to. Set:
+
+```env
+PAYBILL_FALLBACK_ENABLED=false
+```
+
+Checkout then offers the STK prompt alone, and the paybill disappears from the
+registration and payment-failed emails too. Delete the line and redeploy once
+Safaricom confirms the URLs are pointed at `cloudwise.co.ke`.
+
+The code cannot work this out for itself — there is no read-back endpoint, and a
+stale registration fails silently — so it is a switch you throw deliberately.
+
+> On production paybills Safaricom sometimes has to activate C2B for you first;
+> if the call returns an error mentioning the shortcode, ask them to enable
 > "C2B URL registration" on 4131947.
+
+### When a paybill payment goes missing
+
+Safaricom tells us about a C2B payment **once**, over a webhook. Unlike the STK
+push there is no "what happened to this payment?" query to fall back on, so if
+that one delivery fails — the tunnel changed address, a deploy landed
+mid-flight, the URLs were registered against the wrong environment — the money
+is really in the paybill but the seat never confirms and the customer never gets
+their receipt.
+
+Symptoms, all at once: the checkout page keeps waiting, no confirmation email
+arrives, and nothing appears in the Studio under *Training payments*.
+
+Fix it from the M-Pesa code on the confirmation SMS:
+
+```powershell
+$secret = "YOUR_CRON_SECRET"
+$body = '{"reference":"A2KWGM","receipt":"TH41ABCD2X"}'
+Invoke-RestMethod -Method Post -Uri "https://cloudwise.co.ke/api/payments/paybill/reconcile" `
+  -Headers @{ Authorization = "Bearer $secret" } `
+  -ContentType "application/json" -Body $body
+```
+
+Everything then happens exactly as it would have: the payment is recorded, the
+seat is confirmed, the receipt and preparation pack go out, the admin alert
+fires and the settlement sweep picks it up.
+
+It is safe to run twice — the record is keyed on the M-Pesa code, so a repeat
+(or Safaricom's confirmation finally turning up) is recognised and ignored
+rather than confirming or settling the booking a second time.
+
+A part payment is refused with the shortfall spelled out, so you cannot confirm
+a seat for less than the price by accident. To accept one anyway, pass the
+amount you are treating as settled in full: `{"reference":…,"receipt":…,"amount":7500}`.
+
+### Three Daraja traps, already handled here
+
+They cost hours if you meet them fresh on another project:
+
+- **Callback URLs must not contain the word "mpesa"** (see the box above).
+  Safaricom rejects them with `400.003.02 Bad Request - Invalid ValidationURL -
+  URL has the word MPESA`.
+- **Use `/mpesa/c2b/v2/registerurl`, never v1.** v1 answers every valid
+  production token with `401.003.01 Error Occurred - Invalid Access Token`.
+  Nothing is wrong with the token — v2 accepts the very same one. Chasing the
+  "invalid token" message is a dead end.
+- **A token is only valid against the environment that minted it.** Switching
+  `MPESA_ENVIRONMENT` between sandbox and production while the server is running
+  used to reuse the cached token and produce that same misleading
+  `Invalid Access Token`. The cache is now keyed by environment, but if you ever
+  see it, restart the server before believing your credentials are wrong.
+
+Also note that when a callback fails, the route answers HTTP 502 with a JSON
+body naming the cause — but **Cloudflare replaces 502 bodies with its own error
+page**, so through a tunnel you see a generic "Bad gateway" and lose the
+message. Call the endpoint on `http://localhost:3000` to read the real error.
 
 **Then check the payment page shows:**
 
@@ -390,9 +625,24 @@ https://cloudwise.co.ke/api/payments/mpesa/register-urls?secret=YOUR_CRON_SECRET
 | Situation | What the system does |
 |---|---|
 | Correct account number, correct amount | Confirms the booking, sends both emails, sweeps to the bank — exactly as if they had used the prompt |
-| Mistyped account number | Safaricom shows them "invalid account number" before the money leaves. If validation is not active on your shortcode, the payment goes through and your admin addresses get an "unmatched payment" email so you can find them |
-| Paid less than the price | The booking is **not** confirmed. Your admin addresses get a "part payment" email with how much is still owing |
+| Mistyped account number | Safaricom shows them "invalid account number" before the money leaves. If validation is not active on your shortcode, the payment goes through, is recorded in the Studio as **Unmatched ❓** with whatever they actually typed, and your admin addresses get an "unmatched payment" email |
+| Paid less than the price | The booking is **not** confirmed. The payment is recorded in the Studio as **Part payment ⚠️**, and your admin addresses get a "part payment" email with how much is still owing |
 | Paid twice | The second payment is rejected as already paid |
+
+**The account number is the booking reference**, e.g. `A7F3K2` — one letter for
+the track (`A` = AI Productivity Training, `W` = Women Biz360) plus five
+characters. It never contains `0`, `O`, `1` or `I`, so nothing is ambiguous read
+aloud over the phone.
+
+Customers do not type it cleanly, so the system does not insist: `a7f3k2`,
+`A7F 3K2` and `A7F-3K2` all resolve to the same booking. Older references in the
+long `CWI-7F3K2M` form still work and always will.
+
+**Nothing that arrives at the paybill is ever silently dropped.** Every payment
+becomes a record in `/studio` → **Training payments**, including money that
+matches no booking, so the Studio is a complete ledger rather than a list of
+successes. Only payments with the status **Completed ✅** are swept to the bank —
+part payments and unmatched money are held back until a human decides.
 
 ### 6.6 Going to production
 
@@ -427,6 +677,28 @@ MPESA_DISPLAY_PAYBILL=4131947
 We use Paystack for **cards only**. M-Pesa stays on Daraja, because M-Pesa money
 needs to land in the Cloudwise paybill where we can sweep it to the bank
 ourselves.
+
+### 7.0 Launching on M-Pesa alone
+
+You do not have to wait for Paystack. Set this in the production environment:
+
+```env
+CARD_PAYMENTS_ENABLED=false
+```
+
+Checkout then shows M-Pesa on its own — no card tab at all, rather than a card
+tab that apologises when someone clicks it — and `/api/payments/paystack/init`
+refuses requests, so a page left open from before the switch cannot start a
+payment that will not complete. M-Pesa is unaffected: STK push, the paybill
+fallback, confirmation emails and bank settlement all work exactly as they do
+with cards on.
+
+When Paystack approves you, remove the line (or set it to `true`) and redeploy.
+The card tab comes back on the next page load. Nothing else changes, and
+bookings taken in the meantime need no attention.
+
+Left unset, cards are offered whenever `PAYSTACK_SECRET_KEY` is present — so
+this is an explicit switch, not something you can trip over by accident.
 
 ### 7.1 Create the account
 
@@ -732,8 +1004,47 @@ You get a small summary back, and the round-up email arrives at your
 | Provider | Where | Set it to |
 |---|---|---|
 | Paystack | Settings → API Keys & Webhooks → Webhook URL | `https://cloudwise.co.ke/api/payments/paystack/webhook` |
-| Daraja | Nothing to do | The website sends its callback URL with each request |
-| SasaPay | Nothing to do | Same |
+| Daraja — STK push | Nothing to do | The website sends its callback URL with each request |
+| Daraja — C2B / paybill | **Email apisupport@safaricom.co.ke** | See §6.5 — one-shot on a live shortcode, so it cannot be changed from here |
+| SasaPay | Nothing to do | Same as STK |
+
+### Deploying with M-Pesa only
+
+For a first release — a partner test, or launching while Paystack approval and
+the Safaricom C2B change are still outstanding — add these two on top of the
+variables above:
+
+```env
+CARD_PAYMENTS_ENABLED=false
+PAYBILL_FALLBACK_ENABLED=false
+```
+
+That leaves exactly one way to pay: the STK prompt. It is the path most
+customers take anyway, it works without anything pending from a third party, and
+it confirms the seat and sends the emails by itself.
+
+**Set both in Vercel, not just locally.** `.env.local` never leaves your laptop.
+Forgetting `PAYBILL_FALLBACK_ENABLED=false` on the live site is the expensive
+one: the paybill would appear on the checkout page, and any payment made to it
+would go unconfirmed until someone reconciled it by hand.
+
+Switch each back on — by deleting the line and redeploying — when its blocker
+clears. They are independent: Paystack approval turns cards on, Safaricom
+repointing the C2B URLs turns the paybill on.
+
+### If the test is running at a token price
+
+`TEST_PAYMENT_AMOUNT_KES=2` works in production exactly as it does locally, so a
+partner can walk the whole flow for two shillings. Two things to know:
+
+- Only what is *charged* changes. Every marketing and registration page still
+  advertises the real price, so a tester sees Ksh 13,500 on the training page
+  and Ksh 2 at checkout.
+- **It is the first thing to remove before real bookings open.** Delete the
+  variable in Vercel and redeploy; prices return to `priceKes` in
+  `src/lib/training.js` — Ksh 13,500 for the AI Productivity Training and
+  Ksh 7,500 for the Women Biz360 masterclass. Bookings already taken keep the
+  amount stored on them, so historical records stay honest.
 
 ### Check the cron jobs registered
 
@@ -781,7 +1092,7 @@ Only when every box is ticked should you send the registration link to anyone.
 ### Where to look first
 
 Vercel → your project → **Logs**. Filter by the failing path, e.g.
-`/api/payments/mpesa/callback`. Every problem in this system logs a line
+`/api/payments/paybill/stk-callback`. Every problem in this system logs a line
 starting with the area in brackets: `[mpesa/stk]`, `[email]`, `[settlement]`.
 
 Locally, the same messages appear in the PowerShell window running `npm run dev`.

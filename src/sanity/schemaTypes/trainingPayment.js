@@ -60,6 +60,11 @@ export const trainingPayment = defineType({
           { title: 'Pending', value: 'pending' },
           { title: 'Completed', value: 'completed' },
           { title: 'Failed', value: 'failed' },
+          // Money that arrived but does not confirm a seat. Both are real
+          // receipts needing a human decision, so they are payment records
+          // rather than an alert someone has to remember to act on.
+          { title: 'Part payment', value: 'partial' },
+          { title: 'Unmatched', value: 'unmatched' },
         ],
       },
       initialValue: 'pending',
@@ -118,7 +123,9 @@ export const trainingPayment = defineType({
       settlementState: 'settlementState',
     },
     prepare({ ref, status, amount, provider, settlementState }) {
-      const badge = { completed: '✅', pending: '🟡', failed: '⛔' }[status] || '·';
+      const badge =
+        { completed: '✅', pending: '🟡', failed: '⛔', partial: '⚠️', unmatched: '❓' }[status] ||
+        '·';
       const settled = settlementState === 'settled' ? ' → 🏦 settled' : '';
       return {
         title: `${badge} ${ref} · Ksh ${Number(amount || 0).toLocaleString('en-KE')}`,

@@ -9,7 +9,7 @@
  * prompt library, and the pre-work that makes day one hands-on from minute one.
  */
 
-import { TRACK_WBH } from '@/lib/training';
+import { TRACK_WBH, describeSchedule } from '@/lib/training';
 
 export const RESOURCE_INDEX = [
   {
@@ -284,7 +284,16 @@ Help me turn this into a simple, realistic daily to-do list (Monday to Saturday)
 // Track-specific framing
 // ---------------------------------------------------------------------------
 
-export function resourceIntro(track) {
+/**
+ * Takes the registration, not just the track, because the copy names dates.
+ *
+ * It used to open with "Two Saturdays from now…", which is only true for
+ * whoever books the very next cohort. Someone booking October in August was
+ * told their training was a fortnight away. The dates come from the cohort now,
+ * so the sentence is right however far ahead they book — and reads as a
+ * confirmation of the dates they chose, which is what they want to see first.
+ */
+export function resourceIntro({ track, cohortId } = {}) {
   if (track === TRACK_WBH) {
     return {
       greeting: 'Karibu — your seat is confirmed',
@@ -293,9 +302,15 @@ export function resourceIntro(track) {
       partner: 'Women Biz360 Hub × Cloudwise',
     };
   }
+
+  const schedule = describeSchedule({ track, cohortId });
+  const when = schedule.days.length
+    ? `Your two Saturdays are ${schedule.headline}.`
+    : 'You have two Saturdays with us.';
+
   return {
     greeting: 'Welcome — your seat is confirmed',
-    body: 'Two Saturdays from now you will have AI doing the work that currently eats your week. This pack is how you arrive ready to build rather than ready to watch.',
+    body: `${when} By the end of them you will have AI doing the work that currently eats your week. This pack is how you arrive ready to build rather than ready to watch.`,
     signoff: 'See you in the room.',
     partner: 'Cloudwise AI Productivity Training',
   };

@@ -1,4 +1,5 @@
 import { COMPANY_INFO, SITE_URL, whatsappLink } from '@/lib/constants';
+import { isCardPaymentEnabled } from '@/lib/payments/paystack';
 import {
   TRACK_WBH,
   TRACKS,
@@ -17,6 +18,7 @@ import {
   whatToBring,
 } from '@/lib/resources';
 
+import { rosterAttachment } from './roster-csv';
 import {
   button,
   codeBlock,
@@ -48,9 +50,14 @@ function firstName(reg) {
   return reg.firstName?.trim() || 'there';
 }
 
-function finish({ title, preheader, bodyHtml, footerNote, subject, kicker }) {
+function finish({ title, preheader, bodyHtml, footerNote, subject, kicker, attachments }) {
   const html = emailShell({ title, preheader, bodyHtml, footerNote, kicker });
-  return { subject: subject || title, html, text: htmlToText(html) };
+  return {
+    subject: subject || title,
+    html,
+    text: htmlToText(html),
+    ...(attachments?.filter(Boolean).length ? { attachments } : {}),
+  };
 }
 
 /**
@@ -110,11 +117,22 @@ export function registrationReceived({ registration: reg, paybill }) {
     )}
     ${detailTable([...scheduleRows(reg), ['Amount due', escapeHtml(formatKes(reg.amount))]])}
     ${button(`Pay ${formatKes(reg.amount)} now`, payUrl)}
-    ${paragraph('You can pay by M-Pesa or by card on that page.')}
-    ${highlight(
-      'Prefer to pay directly from M-Pesa?',
-      `${paymentSteps}<p style="margin:6px 0 0;">Use exactly that account number — it’s how we match your payment to your seat automatically.</p>`
+    ${paragraph(
+      isCardPaymentEnabled()
+        ? 'You can pay by M-Pesa or by card on that page.'
+        : 'We’ll send a payment request straight to your phone — just enter your M-Pesa PIN.'
     )}
+    ${
+      // Only when the paybill fallback is switched on. Printing a paybill we are
+      // not reliably notified about turns a helpful alternative into a way to
+      // lose someone's money.
+      paybill
+        ? highlight(
+            'Prefer to pay directly from M-Pesa?',
+            `${paymentSteps}<p style="margin:6px 0 0;">Use exactly that account number — it’s how we match your payment to your seat automatically.</p>`
+          )
+        : ''
+    }
     ${paragraph(
       `Any questions at all, just reply to this email or <a href="${whatsappLink(
         `Hi Cloudwise, I've registered for the training (ref ${reg.reference}) and have a question.`
@@ -138,7 +156,7 @@ export function registrationReceived({ registration: reg, paybill }) {
 // ---------------------------------------------------------------------------
 
 export function paymentConfirmed({ registration: reg }) {
-  const intro = resourceIntro(reg.track);
+  const intro = resourceIntro({ track: reg.track, cohortId: reg.cohortId });
   const bring = whatToBring({ track: reg.track, attendance: reg.attendance });
 
   const bodyHtml = `
@@ -516,6 +534,9 @@ export function adminSignupAlert({ registration: reg, roster, event }) {
     ])}
     ${profileBlock(reg)}
     ${heading('Everyone signed up right now')}
+    ${paragraph(
+      'The full list is attached as a spreadsheet — every field, including the profiling answers, ready to sort and filter.'
+    )}
     ${rosterSection(groupRoster(roster))}
     ${button('Open the Studio', url('/studio'))}
   `;
@@ -525,6 +546,7 @@ export function adminSignupAlert({ registration: reg, roster, event }) {
     title: isPayment ? 'Payment received' : 'New registration',
     preheader: `${fullName(reg)} · ${where} · ${formatKes(reg.amount)}`,
     bodyHtml,
+    attachments: [rosterAttachment(roster)],
   });
 }
 
@@ -554,6 +576,9 @@ export function adminDailyDigest({ roster, todaysSignups, dateLabel }) {
     }
 
     ${heading('Full roster')}
+    ${paragraph(
+      'Attached as a spreadsheet too — every field we hold, ready to sort, filter and mail-merge.'
+    )}
     ${rosterSection(groupRoster(roster))}
 
     ${
@@ -573,6 +598,7 @@ export function adminDailyDigest({ roster, todaysSignups, dateLabel }) {
     title: 'Daily training round-up',
     preheader: `${todaysSignups.length} new signups · ${formatKes(revenueToday)} collected today.`,
     bodyHtml,
+    attachments: [rosterAttachment(roster)],
   });
 }
 

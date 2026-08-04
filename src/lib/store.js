@@ -148,6 +148,29 @@ export async function latestPaymentFor(reference) {
 }
 
 /**
+ * A payment already recorded against this M-Pesa receipt, whatever channel it
+ * came in on.
+ *
+ * One payment can legitimately reach us twice: paying an STK prompt on a
+ * paybill produces both an STK callback and a C2B confirmation, carrying the
+ * same M-Pesa code as `receipt` on one and `externalId` on the other. They are
+ * two notifications about one movement of money, so the second must never be
+ * queued for settlement — otherwise the sweep pays the bank twice for a single
+ * collection.
+ */
+export async function findPaymentByReceipt(receipt, { excludeId } = {}) {
+  assertConfigured();
+  if (!receipt) return null;
+  return writeClient.fetch(
+    `*[_type == "trainingPayment" && (receipt == $receipt || externalId == $receipt)
+       && status in ["completed", "partial"]
+       && _id != $excludeId] | order(createdAt asc)[0]`,
+    { receipt: String(receipt), excludeId: excludeId || '-' },
+    { cache: 'no-store' }
+  );
+}
+
+/**
  * Completed payments still owing a sweep to the bank.
  *
  * `pending` means the collection confirmed but the sweep has not been attempted

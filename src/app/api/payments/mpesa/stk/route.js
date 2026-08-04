@@ -8,7 +8,7 @@ import {
 } from '@/lib/payments/daraja';
 import { callbackUrl } from '@/lib/runtime';
 import { createPayment, getRegistration } from '@/lib/store';
-import { isValidReference } from '@/lib/training';
+import { normaliseReference } from '@/lib/training';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,8 +28,10 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
   }
 
-  const { reference, phone } = body || {};
-  if (!isValidReference(reference)) {
+  const { phone } = body || {};
+  // Normalise before looking up: documents are stored under the canonical form.
+  const reference = normaliseReference(body?.reference);
+  if (!reference) {
     return NextResponse.json({ error: 'Unknown booking reference.' }, { status: 400 });
   }
 
@@ -67,7 +69,8 @@ export async function POST(request) {
       amount: registration.amount,
       accountReference: reference,
       description: 'AI training',
-      callbackUrl: callbackUrl('/api/payments/mpesa/callback'),
+      // Must not contain the word "mpesa" — Safaricom rejects such URLs.
+      callbackUrl: callbackUrl('/api/payments/paybill/stk-callback'),
     });
 
     await createPayment({

@@ -25,6 +25,22 @@ export function isPaystackConfigured() {
   return Boolean(paystackConfig().secretKey);
 }
 
+/**
+ * Whether to offer cards at checkout at all.
+ *
+ * Keys existing is not the same as cards being usable: a Paystack business
+ * waiting on approval has perfectly valid keys that fail the moment a customer
+ * reaches the card form. Set CARD_PAYMENTS_ENABLED=false to ship M-Pesa on its
+ * own — the card option disappears from checkout rather than sitting there as a
+ * dead end, and the init route refuses it too, so a stale page cannot start a
+ * payment that cannot complete.
+ */
+export function isCardPaymentEnabled() {
+  const flag = String(process.env.CARD_PAYMENTS_ENABLED || '').trim().toLowerCase();
+  if (flag === 'false' || flag === '0' || flag === 'off') return false;
+  return isPaystackConfigured();
+}
+
 async function paystackRequest(path, { method = 'GET', body } = {}) {
   const { secretKey } = paystackConfig();
   if (!secretKey) throw new Error('PAYSTACK_SECRET_KEY is not configured.');

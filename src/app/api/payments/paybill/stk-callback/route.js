@@ -25,20 +25,20 @@ export async function POST(request) {
   try {
     body = await request.json();
   } catch {
-    console.warn('[mpesa/callback] non-JSON body');
+    console.warn('[paybill/stk-callback] non-JSON body');
     return accepted;
   }
 
   const callback = parseStkCallback(body);
   if (!callback?.checkoutRequestId) {
-    console.warn('[mpesa/callback] unrecognised shape:', JSON.stringify(body).slice(0, 400));
+    console.warn('[paybill/stk-callback] unrecognised shape:', JSON.stringify(body).slice(0, 400));
     return accepted;
   }
 
   try {
     const payment = await getPayment('mpesa-stk', callback.checkoutRequestId);
     if (!payment) {
-      console.warn('[mpesa/callback] no payment for', callback.checkoutRequestId);
+      console.warn('[paybill/stk-callback] no payment for', callback.checkoutRequestId);
       return accepted;
     }
 
@@ -56,7 +56,7 @@ export async function POST(request) {
 
     const registration = await getRegistration(payment.registrationRef);
     if (!registration) {
-      console.warn('[mpesa/callback] no registration for', payment.registrationRef);
+      console.warn('[paybill/stk-callback] no registration for', payment.registrationRef);
       return accepted;
     }
 
@@ -77,7 +77,7 @@ export async function POST(request) {
     }
   } catch (err) {
     // Swallow: retrying will not help, and the status poll reconciles anyway.
-    console.error('[mpesa/callback] processing failed:', err?.message);
+    console.error('[paybill/stk-callback] processing failed:', err?.message);
   }
 
   return accepted;

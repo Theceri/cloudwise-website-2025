@@ -5,13 +5,13 @@ import { CalendarDays, Laptop, MapPin } from 'lucide-react';
 import { Checkout } from '@/components/training/Checkout';
 import { Reveal } from '@/components/anim/Reveal';
 import { paybillInstructions } from '@/lib/payments/daraja';
-import { isPaystackConfigured } from '@/lib/payments/paystack';
+import { isCardPaymentEnabled } from '@/lib/payments/paystack';
 import { getRegistration } from '@/lib/store';
 import {
   describeSchedule,
   formatKes,
   getTrack,
-  isValidReference,
+  normaliseReference,
 } from '@/lib/training';
 
 export const dynamic = 'force-dynamic';
@@ -30,8 +30,9 @@ function maskEmail(email = '') {
 }
 
 export default async function CheckoutPage({ params }) {
-  const { ref } = await params;
-  if (!isValidReference(ref)) notFound();
+  const { ref: rawRef } = await params;
+  const ref = normaliseReference(rawRef);
+  if (!ref) notFound();
 
   const registration = await getRegistration(ref);
   if (!registration) notFound();
@@ -80,7 +81,7 @@ export default async function CheckoutPage({ params }) {
               <Checkout
                 booking={booking}
                 fallback={paybillInstructions(registration.reference)}
-                cardEnabled={isPaystackConfigured()}
+                cardEnabled={isCardPaymentEnabled()}
               />
             </Reveal>
           </div>

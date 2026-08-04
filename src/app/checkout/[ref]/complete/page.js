@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import { PaystackReturn } from '@/components/training/PaystackReturn';
-import { isValidReference } from '@/lib/training';
+import { normaliseReference } from '@/lib/training';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,10 +18,11 @@ export const metadata = {
  * anything reassuring.
  */
 export default async function CheckoutCompletePage({ params, searchParams }) {
-  const { ref } = await params;
+  const { ref: rawRef } = await params;
+  const ref = normaliseReference(rawRef);
   const query = await searchParams;
 
-  if (!isValidReference(ref)) notFound();
+  if (!ref) notFound();
 
   // Paystack appends its own transaction reference on return.
   const attemptReference = query?.reference || query?.trxref || null;

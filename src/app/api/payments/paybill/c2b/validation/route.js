@@ -34,7 +34,7 @@ export async function POST(request) {
   const reference = payment?.reference;
 
   if (!isValidReference(reference)) {
-    console.warn('[mpesa/c2b/validation] rejected malformed reference:', reference);
+    console.warn('[paybill/c2b/validation] rejected malformed reference:', reference);
     return NextResponse.json(REJECT);
   }
 
@@ -42,11 +42,11 @@ export async function POST(request) {
     const registration = await getRegistration(reference);
 
     if (!registration) {
-      console.warn('[mpesa/c2b/validation] rejected unknown reference:', reference);
+      console.warn('[paybill/c2b/validation] rejected unknown reference:', reference);
       return NextResponse.json(REJECT);
     }
     if (registration.status === 'paid') {
-      console.warn('[mpesa/c2b/validation] rejected already-paid booking:', reference);
+      console.warn('[paybill/c2b/validation] rejected already-paid booking:', reference);
       return NextResponse.json({
         ResultCode: 'C2B00016',
         ResultDesc: 'This booking has already been paid',
@@ -55,7 +55,7 @@ export async function POST(request) {
   } catch (err) {
     // If our own lookup is broken, take the money and reconcile afterwards —
     // turning a customer away because of our outage is the worse failure.
-    console.error('[mpesa/c2b/validation] lookup failed, accepting:', err?.message);
+    console.error('[paybill/c2b/validation] lookup failed, accepting:', err?.message);
   }
 
   return NextResponse.json(ACCEPT);

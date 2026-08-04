@@ -26,8 +26,27 @@ import { cn } from '@/lib/utils';
  * same booking because the account number *is* the booking reference.
  */
 
-const POLL_INTERVAL_MS = 4000;
-const POLL_TIMEOUT_MS = 3 * 60 * 1000;
+// Someone staring at an STK prompt is waiting on the next few seconds.
+const STK_POLL_INTERVAL_MS = 4000;
+const STK_POLL_TIMEOUT_MS = 3 * 60 * 1000;
+
+// Paying the paybill directly tells us nothing until Safaricom's confirmation
+// lands, so the page watches from the moment it loads. Slower, because nobody
+// is holding their breath, and for much longer, because the customer is reading
+// steps and typing an account number on a keypad.
+const WATCH_POLL_INTERVAL_MS = 8000;
+const WATCH_POLL_TIMEOUT_MS = 45 * 60 * 1000;
+
+/**
+ * The watch backs off as it goes. Someone who is going to use the paybill does
+ * it in the first minute or two; a page left open on a desk for half an hour
+ * should not keep asking every eight seconds.
+ */
+function watchIntervalFor(elapsedMs) {
+  if (elapsedMs < 2 * 60 * 1000) return WATCH_POLL_INTERVAL_MS;
+  if (elapsedMs < 10 * 60 * 1000) return 15000;
+  return 30000;
+}
 
 export function Checkout({ booking, fallback, cardEnabled }) {
   const [method, setMethod] = useState('mpesa');
@@ -39,6 +58,9 @@ export function Checkout({ booking, fallback, cardEnabled }) {
 
   const pollTimer = useRef(null);
   const pollDeadline = useRef(0);
+  const pollInterval = useRef(WATCH_POLL_INTERVAL_MS);
+  const pollMode = useRef('watch'); // 'watch' | 'stk'
+  const watchStartedAt = useRef(0);
 
   const stopPolling = useCallback(() => {
     if (pollTimer.current) {
@@ -47,45 +69,98 @@ export function Checkout({ booking, fallback, cardEnabled }) {
     }
   }, []);
 
-  useEffect(() => stopPolling, [stopPolling]);
+  /**
+   * A prompt that failed or timed out is not the end of the payment — the
+   * customer's next move is usually the paybill panel right below it. Fall back
+   * to the slow ambient watch instead of going blind.
+   */
+  const downgradeToWatch = useCallback(() => {
+    pollMode.current = 'watch';
+    watchStartedAt.current = Date.now();
+    pollInterval.current = WATCH_POLL_INTERVAL_MS;
+    pollDeadline.current = Date.now() + WATCH_POLL_TIMEOUT_MS;
+  }, []);
 
   const poll = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/registrations/${booking.reference}/status`, {
-        cache: 'no-store',
-      });
-      const data = await res.json();
+    // A backgrounded tab has no one to update. Skip the request, keep the loop.
+    const hidden = typeof document !== 'undefined' && document.hidden;
 
-      if (data.status === 'paid') {
-        stopPolling();
-        setReceipt(data.receipt || null);
-        setState('paid');
-        return;
-      }
+    if (!hidden) {
+      try {
+        const res = await fetch(`/api/registrations/${booking.reference}/status`, {
+          cache: 'no-store',
+        });
+        const data = await res.json();
 
-      if (data.status === 'failed') {
-        stopPolling();
-        setState('failed');
-        setError(data.message || 'The payment was not completed.');
-        return;
+        if (data.status === 'paid') {
+          stopPolling();
+          setReceipt(data.receipt || null);
+          setState('paid');
+          return;
+        }
+
+        // Only the prompt has a failure worth interrupting for. In watch mode a
+        // stale failed attempt must not overwrite a page the customer is
+        // calmly reading the paybill steps from.
+        if (data.status === 'failed' && pollMode.current === 'stk') {
+          setState('failed');
+          setError(data.message || 'The payment was not completed.');
+          downgradeToWatch();
+        }
+      } catch {
+        // A dropped poll is not a failed payment — keep waiting.
       }
-    } catch {
-      // A dropped poll is not a failed payment — keep waiting.
     }
 
     if (Date.now() > pollDeadline.current) {
-      stopPolling();
+      // The watch is ambient: give up quietly rather than shouting "timeout" at
+      // a page nobody has asked anything of.
+      if (pollMode.current !== 'stk') {
+        stopPolling();
+        return;
+      }
       setState('timeout');
-      return;
+      downgradeToWatch();
     }
-    pollTimer.current = setTimeout(poll, POLL_INTERVAL_MS);
-  }, [booking.reference, stopPolling]);
 
-  const startPolling = useCallback(() => {
-    stopPolling();
-    pollDeadline.current = Date.now() + POLL_TIMEOUT_MS;
-    pollTimer.current = setTimeout(poll, POLL_INTERVAL_MS);
-  }, [poll, stopPolling]);
+    if (pollMode.current === 'watch') {
+      pollInterval.current = watchIntervalFor(Date.now() - watchStartedAt.current);
+    }
+    pollTimer.current = setTimeout(poll, pollInterval.current);
+  }, [booking.reference, downgradeToWatch, stopPolling]);
+
+  const startPolling = useCallback(
+    (mode) => {
+      stopPolling();
+      pollMode.current = mode;
+      watchStartedAt.current = Date.now();
+      pollInterval.current = mode === 'stk' ? STK_POLL_INTERVAL_MS : WATCH_POLL_INTERVAL_MS;
+      pollDeadline.current =
+        Date.now() + (mode === 'stk' ? STK_POLL_TIMEOUT_MS : WATCH_POLL_TIMEOUT_MS);
+      pollTimer.current = setTimeout(poll, pollInterval.current);
+    },
+    [poll, stopPolling]
+  );
+
+  /**
+   * Watch for payment from the moment the page opens.
+   *
+   * Without this, the only thing that ever started the poll was clicking the
+   * STK button — so anyone who used the paybill instead sat on a page that
+   * would never update, however long they waited, even though their seat had
+   * been confirmed and their receipt emailed.
+   */
+  useEffect(() => {
+    if (booking.status === 'paid') return undefined;
+    startPolling('watch');
+    return stopPolling;
+  }, [booking.status, startPolling, stopPolling]);
+
+  // Never send someone to the paybill when the paybill is switched off — that
+  // is the one instruction guaranteed to lose their payment.
+  const retryAdvice = fallback
+    ? 'Use the paybill steps below to pay.'
+    : 'Please try again, or message us on WhatsApp and we will take it from there.';
 
   async function sendStkPush(event) {
     event.preventDefault();
@@ -103,16 +178,16 @@ export function Checkout({ booking, fallback, cardEnabled }) {
 
       if (!res.ok) {
         setState('failed');
-        setError(data.error || 'We could not send the prompt. Use the paybill steps below.');
+        setError(data.error || `We could not send the prompt. ${retryAdvice}`);
         return;
       }
 
       setMessage(data.message || 'Check your phone and enter your M-Pesa PIN.');
       setState('waiting');
-      startPolling();
+      startPolling('stk');
     } catch {
       setState('failed');
-      setError('We could not reach the server. Use the paybill steps below to pay.');
+      setError(`We could not reach the server. ${retryAdvice}`);
     }
   }
 
@@ -147,22 +222,27 @@ export function Checkout({ booking, fallback, cardEnabled }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-1.5">
-        <MethodTab
-          active={method === 'mpesa'}
-          onClick={() => setMethod('mpesa')}
-          icon={Smartphone}
-          label="M-Pesa"
-        />
-        <MethodTab
-          active={method === 'card'}
-          onClick={() => setMethod('card')}
-          icon={CreditCard}
-          label="Card"
-        />
-      </div>
+      {/* No card tab at all while cards are switched off. A tab that only ever
+          says "not available" is a dead end at the exact moment we are asking
+          someone for money. */}
+      {cardEnabled && (
+        <div className="flex gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-1.5">
+          <MethodTab
+            active={method === 'mpesa'}
+            onClick={() => setMethod('mpesa')}
+            icon={Smartphone}
+            label="M-Pesa"
+          />
+          <MethodTab
+            active={method === 'card'}
+            onClick={() => setMethod('card')}
+            icon={CreditCard}
+            label="Card"
+          />
+        </div>
+      )}
 
-      {method === 'mpesa' ? (
+      {method === 'mpesa' || !cardEnabled ? (
         <div className="space-y-6">
           <form onSubmit={sendStkPush} className="card-dark space-y-4 p-6">
             <div>
@@ -211,15 +291,19 @@ export function Checkout({ booking, fallback, cardEnabled }) {
 
             {state === 'timeout' && (
               <Notice tone="warn">
-                We have not seen the payment yet. If you completed it, give it a moment and refresh —
-                otherwise use the paybill steps below.
+                We have not seen the payment yet. If you completed it, give it a moment — this page
+                is still watching. {fallback
+                  ? 'Otherwise use the paybill steps below.'
+                  : 'Otherwise send the prompt again.'}
               </Notice>
             )}
 
             {error && <Notice tone="error">{error}</Notice>}
           </form>
 
-          <PaybillPanel fallback={fallback} amount={booking.amount} reference={booking.reference} />
+          {fallback && (
+            <PaybillPanel fallback={fallback} amount={booking.amount} reference={booking.reference} />
+          )}
         </div>
       ) : (
         <div className="card-dark space-y-4 p-6">
@@ -230,24 +314,17 @@ export function Checkout({ booking, fallback, cardEnabled }) {
             </p>
           </div>
 
-          {cardEnabled ? (
-            <button onClick={payByCard} disabled={busy} className="btn-ember w-full text-base disabled:opacity-60">
-              {state === 'sending' ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" /> Opening secure checkout…
-                </>
-              ) : (
-                <>
-                  Pay {formatKes(booking.amount)} by card <ArrowUpRight size={18} />
-                </>
-              )}
-            </button>
-          ) : (
-            <Notice tone="warn">
-              Card payments are not switched on yet. Please pay with M-Pesa, or message us and we
-              will sort you out.
-            </Notice>
-          )}
+          <button onClick={payByCard} disabled={busy} className="btn-ember w-full text-base disabled:opacity-60">
+            {state === 'sending' ? (
+              <>
+                <Loader2 size={18} className="animate-spin" /> Opening secure checkout…
+              </>
+            ) : (
+              <>
+                Pay {formatKes(booking.amount)} by card <ArrowUpRight size={18} />
+              </>
+            )}
+          </button>
 
           {error && <Notice tone="error">{error}</Notice>}
         </div>
@@ -339,8 +416,13 @@ function PaybillPanel({ fallback, amount, reference }) {
         ))}
       </ol>
 
-      <p className="mt-4 text-[13px] text-white/45">
-        Once M-Pesa confirms, your seat is confirmed automatically and your welcome email follows.
+      <p className="mt-4 flex items-center gap-2.5 text-[13px] text-white/45">
+        <span className="relative flex h-2 w-2 shrink-0">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember opacity-70" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-ember" />
+        </span>
+        Watching for your payment — this page confirms itself the moment M-Pesa does, and your
+        welcome email follows. No need to refresh.
       </p>
     </div>
   );

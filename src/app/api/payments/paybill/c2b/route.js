@@ -3,7 +3,13 @@ import { NextResponse } from 'next/server';
 import { sendToAdmins } from '@/lib/email/send';
 import { confirmPayment } from '@/lib/lifecycle';
 import { parseC2bConfirmation } from '@/lib/payments/daraja';
-import { createPayment, getPayment, getRegistration } from '@/lib/store';
+import {
+  createPayment,
+  findPaymentByReceipt,
+  getPayment,
+  getRegistration,
+  paymentId,
+} from '@/lib/store';
 import { formatKes, isValidReference } from '@/lib/training';
 
 export const runtime = 'nodejs';
@@ -28,13 +34,13 @@ export async function POST(request) {
   try {
     body = await request.json();
   } catch {
-    console.warn('[mpesa/c2b] non-JSON body');
+    console.warn('[paybill/c2b] non-JSON body');
     return accepted;
   }
 
   const payment = parseC2bConfirmation(body);
   if (!payment) {
-    console.warn('[mpesa/c2b] unrecognised shape:', JSON.stringify(body).slice(0, 400));
+    console.warn('[paybill/c2b] unrecognised shape:', JSON.stringify(body).slice(0, 400));
     return accepted;
   }
 
@@ -50,9 +56,43 @@ export async function POST(request) {
     if (!registration) {
       // Money we cannot attribute. Never silently swallowed — an admin needs to
       // match it by hand, and the payer is waiting on a confirmation.
+      //
+      // Recorded as a payment document even though it belongs to no booking:
+      // an email alone is not a ledger, and real money that exists only in an
+      // inbox is money nobody reconciles. `registrationRef` holds whatever
+      // account number was actually typed, which is the clue to who sent it.
+      await createPayment({
+        provider: 'mpesa-c2b',
+        externalId: payment.transactionId,
+        registrationRef: payment.typedReference || '(blank)',
+        amount: payment.amount,
+        phone: payment.phone,
+        receipt: payment.transactionId,
+        status: 'unmatched',
+        resultDescription:
+          `Paid to the paybill by ${payment.payerName || 'customer'} with account ` +
+          `number "${payment.typedReference || '(blank)'}" — no booking matches it`,
+        rawCallback: JSON.stringify(body, null, 2),
+        completedAt: new Date().toISOString(),
+        settlementState: 'na',
+      });
+
       await unattributed(payment);
       return accepted;
     }
+
+    // A short payment must not confirm a seat, but it must still be visible.
+    const shortfall = Number(registration.amount) - payment.amount;
+    const isPartial = shortfall > 0;
+
+    // Paying an STK prompt on a paybill notifies us twice — once as the STK
+    // callback, once as this C2B confirmation, both carrying the same M-Pesa
+    // code. Keep the record (the ledger should show what Safaricom sent) but
+    // never queue it for settlement, or the sweep pays out twice for one
+    // collection.
+    const alreadyRecorded = await findPaymentByReceipt(payment.transactionId, {
+      excludeId: paymentId('mpesa-c2b', payment.transactionId),
+    });
 
     await createPayment({
       provider: 'mpesa-c2b',
@@ -61,15 +101,21 @@ export async function POST(request) {
       amount: payment.amount,
       phone: payment.phone,
       receipt: payment.transactionId,
-      status: 'completed',
-      resultDescription: `Paid directly to the paybill by ${payment.payerName || 'customer'}`,
+      status: isPartial ? 'partial' : 'completed',
+      resultDescription: alreadyRecorded
+        ? `Paybill confirmation for a payment already recorded as ` +
+          `${alreadyRecorded.provider} — not settled twice`
+        : isPartial
+          ? `Part payment by ${payment.payerName || 'customer'} — ${formatKes(shortfall)} still owing`
+          : `Paid directly to the paybill by ${payment.payerName || 'customer'}`,
       rawCallback: JSON.stringify(body, null, 2),
       completedAt: new Date().toISOString(),
-      settlementState: 'pending',
+      // Nothing is swept to the bank until the booking is actually paid in
+      // full, and nothing is swept twice for the same M-Pesa code.
+      settlementState: alreadyRecorded ? 'skipped' : isPartial ? 'na' : 'pending',
     });
 
-    // A short payment must not confirm a seat. Flag it and let a human decide.
-    if (payment.amount < Number(registration.amount)) {
+    if (isPartial) {
       await underpaid({ registration, payment });
       return accepted;
     }
@@ -90,14 +136,14 @@ export async function POST(request) {
       receipt: payment.transactionId,
     });
   } catch (err) {
-    console.error('[mpesa/c2b] processing failed:', err?.message);
+    console.error('[paybill/c2b] processing failed:', err?.message);
   }
 
   return accepted;
 }
 
 async function unattributed(payment) {
-  console.warn('[mpesa/c2b] unattributed payment:', payment.transactionId, payment.reference);
+  console.warn('[paybill/c2b] unattributed payment:', payment.transactionId, payment.reference);
 
   await sendToAdmins({
     subject: `⚠️ Unmatched M-Pesa payment — ${formatKes(payment.amount)} from ${payment.payerName || payment.phone}`,
@@ -106,7 +152,7 @@ async function unattributed(payment) {
       <ul>
         <li><strong>Amount:</strong> ${formatKes(payment.amount)}</li>
         <li><strong>M-Pesa code:</strong> ${payment.transactionId}</li>
-        <li><strong>Account number typed:</strong> ${payment.reference || '(blank)'}</li>
+        <li><strong>Account number typed:</strong> ${payment.typedReference || '(blank)'}</li>
         <li><strong>From:</strong> ${payment.payerName || 'unknown'} (${payment.phone || 'no number'})</li>
       </ul>
       <p>They have most likely mistyped their booking reference. Call or message
@@ -117,7 +163,7 @@ async function unattributed(payment) {
 
 async function underpaid({ registration, payment }) {
   console.warn(
-    `[mpesa/c2b] underpaid ${registration.reference}: ${payment.amount} of ${registration.amount}`
+    `[paybill/c2b] underpaid ${registration.reference}: ${payment.amount} of ${registration.amount}`
   );
 
   await sendToAdmins({
@@ -134,6 +180,8 @@ async function underpaid({ registration, payment }) {
       </ul>
       <p>The booking has <em>not</em> been confirmed. Decide whether to accept the
       part payment or ask for the balance, then confirm it by hand.</p>
+      <p>The payment is recorded in the Studio under <em>Training payments</em>
+      with the status <strong>Part payment</strong>.</p>
     `,
   }).catch(() => {});
 }

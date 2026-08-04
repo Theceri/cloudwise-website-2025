@@ -6,10 +6,10 @@ import { validateRegistration } from '@/lib/registration-form';
 import { createRegistration, isStoreConfigured } from '@/lib/store';
 import {
   TRACK_INDIVIDUAL,
+  chargeFor,
   describeSchedule,
   generateReference,
   isCohortOpen,
-  priceFor,
   startDateFor,
 } from '@/lib/training';
 
@@ -59,7 +59,9 @@ export async function POST(request) {
     reference,
     // Store the M-Pesa-ready form so callbacks and STK pushes agree on it.
     phone: normalisePhone(value.phone) || value.phone,
-    amount: priceFor(value.track),
+    // chargeFor, not priceFor: in test mode this is the token amount. The price
+    // shown on the site is unaffected.
+    amount: chargeFor(value.track),
     cohortLabel: value.track === TRACK_INDIVIDUAL ? schedule.headline : null,
     startDate: startDateFor({ track: value.track, cohortId: value.cohortId }),
     settlementState: 'na',
