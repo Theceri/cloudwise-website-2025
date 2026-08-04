@@ -57,6 +57,68 @@ Add a webhook in sanity.io/manage → **API → Webhooks**:
 - Trigger on create/update/delete
 - Projection: `{ "_type": _type, "slug": slug.current, "postId": post._ref }`
 
+## Training registrations & payments
+
+Both training tracks — the individual **AI Productivity Training** and the
+**Women Biz360 Hub masterclass** — share one registration → payment → onboarding
+pipeline. It runs entirely inside this app; there is no separate backend.
+
+**Setup is documented step by step in [`docs/PAYMENTS_SETUP.md`](docs/PAYMENTS_SETUP.md).**
+Start there — this section is only a map of the code. For the M-Pesa settlement
+credential specifically (what it is, why the certificate is a committed file,
+and the expiry trap behind most `Invalid Initiator Information` errors), see
+[`docs/MPESA_SECURITY_CREDENTIAL_AND_CERTIFICATE_HANDLING.md`](docs/MPESA_SECURITY_CREDENTIAL_AND_CERTIFICATE_HANDLING.md).
+
+### The flow
+
+```
+/ai-training/register       full form (cohort, profiling questions)
+/women-biz360/register      short form (they already answered at the free webinar)
+        │
+        ▼  POST /api/registrations
+   trainingRegistration in Sanity, reference CWI-7F3K2M
+        │
+        ▼  /checkout/[ref]
+   M-Pesa STK push  ·  paybill fallback  ·  Paystack card
+        │
+        ▼  provider callback
+   confirmed → emails to attendee + admins → swept to the bank
+```
+
+### Where things live
+
+| Area | Path |
+|---|---|
+| Tracks, pricing, cohort dates | `src/lib/training.js` |
+| Form questions & validation | `src/lib/registration-form.js` |
+| Reads/writes + one-shot claims | `src/lib/store.js` |
+| Lifecycle side effects | `src/lib/lifecycle.js` |
+| Emails | `src/lib/email/` |
+| Onboarding resource content | `src/lib/resources.js` |
+| Daraja / Paystack / SasaPay clients | `src/lib/payments/` |
+| Bank sweep + adapters | `src/lib/settlement/` |
+| API routes | `src/app/api/{registrations,payments,cron,test}/` |
+
+### Admin
+
+- **Roster:** `/studio` → **Training**. Split by track, by cohort, and by paid
+  vs awaiting payment. Payments carry the full provider request/response.
+- **Alerts:** every signup and every payment emails `ADMIN_EMAILS` with the full
+  roster attached.
+- **Daily round-up:** 5:00pm East Africa Time, via `vercel.json` cron.
+- **Email previews:** `/api/test/emails?secret=$CRON_SECRET` lists every
+  lifecycle email; add `&template=<key>` to render one in the browser, or POST
+  `{"to":"…"}` to send them all to yourself.
+
+### Money
+
+M-Pesa runs on **Daraja** into the Cloudwise paybill; cards run on **Paystack**.
+Collected M-Pesa funds are swept to the bank automatically by whichever
+settlement adapter is configured — `daraja-b2b` (paybill → Equity's paybill
+`247247`) or `sasapay` (SasaPay working account → Equity by B2C). Card money
+settles on Paystack's own schedule and is never swept by us. See section 8 of
+the setup guide for why the collection and settlement rails have to match.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

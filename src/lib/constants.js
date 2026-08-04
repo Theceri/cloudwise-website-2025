@@ -37,11 +37,33 @@ export const SOCIAL_LINKS = [
   { name: 'LinkedIn', href: 'https://www.linkedin.com/company/90601227/', handle: 'Cloudwise' },
 ]
 
+// `children` renders a dropdown on desktop and an indented group on mobile.
 export const NAVIGATION_LINKS = [
   { name: 'Home', href: '/' },
   { name: 'About', href: '/about' },
   { name: 'Services', href: '/services' },
-  { name: 'AI Training', href: '/ai-training', highlight: true },
+  {
+    name: 'AI Training',
+    href: '/ai-training',
+    highlight: true,
+    children: [
+      {
+        name: 'For individuals & teams',
+        href: '/ai-training',
+        description: 'Two Saturdays a month, online or in Nairobi',
+      },
+      {
+        name: 'Women Biz360 Hub',
+        href: '/women-biz360',
+        description: 'Full-day masterclass with our partner',
+      },
+      {
+        name: 'Free resources',
+        href: '/resources',
+        description: 'Prompt pack & AI readiness guide',
+      },
+    ],
+  },
   { name: 'Portfolio', href: '/portfolio' },
   { name: 'Blog', href: '/blog' },
   { name: 'Contact', href: '/contact' },

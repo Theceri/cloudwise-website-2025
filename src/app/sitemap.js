@@ -26,6 +26,13 @@ export default async function sitemap() {
   const staticRoutes = [
     { url: '/', priority: 1.0, changeFrequency: 'weekly' },
     { url: '/ai-training', priority: 0.95, changeFrequency: 'weekly' },
+    { url: '/ai-training/register', priority: 0.9, changeFrequency: 'weekly' },
+    { url: '/women-biz360', priority: 0.9, changeFrequency: 'weekly' },
+    { url: '/women-biz360/register', priority: 0.85, changeFrequency: 'weekly' },
+    { url: '/resources', priority: 0.8, changeFrequency: 'monthly' },
+    { url: '/resources/prompt-pack', priority: 0.75, changeFrequency: 'monthly' },
+    { url: '/resources/ai-readiness', priority: 0.7, changeFrequency: 'monthly' },
+    { url: '/resources/session-prep', priority: 0.6, changeFrequency: 'monthly' },
     { url: '/services', priority: 0.9, changeFrequency: 'monthly' },
     { url: '/about', priority: 0.7, changeFrequency: 'monthly' },
     { url: '/portfolio', priority: 0.7, changeFrequency: 'monthly' },

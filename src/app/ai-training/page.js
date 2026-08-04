@@ -9,6 +9,11 @@ import { Gauge } from '@/components/anim/Gauge';
 import { Faq } from '@/components/Faq';
 import { Testimonials } from '@/components/Testimonials';
 import { SITE_URL, COMPANY_INFO, whatsappLink } from '@/lib/constants';
+import { TRACK_INDIVIDUAL, TRACKS, formatKes, listOpenCohorts } from '@/lib/training';
+
+// The next-cohort strip is derived from today's date, so this page cannot be
+// baked at build time without eventually advertising dates that have passed.
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'AI Productivity Training in Nairobi — Work Smarter with AI',
@@ -73,12 +78,13 @@ const RESOURCES = [
 ];
 
 const FAQ_ITEMS = [
-  { q: 'When does the training happen?', a: 'Every month. The two sessions run on the first Saturday and the second Saturday of each month, 9am–1pm each (4 hours per session). Message us on WhatsApp for the next cohort’s exact dates.' },
+  { q: 'When does the training happen?', a: 'Every month. The two sessions run on the first Saturday and the second Saturday of each month, 9am–1pm each (4 hours per session). The exact dates for every open cohort are listed on the registration page — pick the pair that suits you.' },
   { q: 'Is it online or in person?', a: 'Both. You can join live online via Zoom, or attend in person at our Nairobi office (4th Floor, Delta Annex, Delta Corner, Waiyaki Way). Choose whichever suits you when you register.' },
   { q: 'How much does it cost and what’s included?', a: 'Ksh 13,500 per person (introductory price; normally Ksh 30,000). It includes 8 hours of live training, a 1-month Claude AI subscription, an AI toolkit & prompt library, session recordings, and access to our WhatsApp support community.' },
   { q: 'Do I need a tech background?', a: 'No. The training is designed for everyday business people. If you can use a browser and send an email, you can do this. Every session is hands-on with your real tasks.' },
   { q: 'What should I bring?', a: 'A laptop or tablet with internet access. Every session is hands-on — you’ll be practising live on real tools from minute one.' },
   { q: 'Can you train my whole team?', a: 'Yes. We run private team and organisation trainings tailored to your workflows — we’ve trained teams including TechCamp and Stratostaff. Message us to arrange a session.' },
+  { q: 'How do I pay?', a: 'Register on the website and pay by M-Pesa or card on the next screen. With M-Pesa you get a prompt on your phone — and if it doesn’t arrive, the paybill and account number are right there so you can pay directly. Your confirmation and preparation pack are emailed the moment payment clears.' },
 ];
 
 const courseJsonLd = {
@@ -131,6 +137,8 @@ const faqJsonLd = {
 };
 
 export default function AiTrainingPage() {
+  const cohorts = listOpenCohorts({ count: 3 });
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }} />
@@ -157,9 +165,9 @@ export default function AiTrainingPage() {
           </Reveal>
 
           <Reveal delay={0.16} className="mt-8 flex flex-wrap items-center gap-3">
-            <a href={whatsappLink(REGISTER_MSG)} target="_blank" rel="noopener noreferrer" className="btn-ember text-base">
-              Register via WhatsApp <ArrowUpRight size={18} />
-            </a>
+            <Link href="/ai-training/register" className="btn-ember text-base">
+              Register &amp; pay online <ArrowUpRight size={18} />
+            </Link>
             <a href="#curriculum" className="btn-ghost text-base">See the curriculum</a>
           </Reveal>
 
@@ -181,6 +189,49 @@ export default function AiTrainingPage() {
               <p className="flex items-center gap-3 text-white/80"><Laptop size={16} className="text-ember" /> 100% hands-on — bring your laptop</p>
             </Reveal>
           </div>
+
+          {/* Next cohorts — the single most-asked question, answered up front. */}
+          {cohorts.length > 0 && (
+            <Reveal delay={0.2} className="mt-6 lg:max-w-3xl">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                <p className="font-mono text-[0.6rem] uppercase tracking-eyebrow text-white/40">
+                  Next cohorts
+                </p>
+                <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+                  {cohorts.map((cohort, i) => (
+                    <li key={cohort.id} className="flex items-center gap-2 text-sm text-white/75">
+                      <span className={i === 0 ? 'h-1.5 w-1.5 rounded-full bg-ember' : 'h-1.5 w-1.5 rounded-full bg-white/25'} />
+                      {cohort.label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Reveal>
+          )}
+        </div>
+      </section>
+
+      {/* WOMEN BIZ360 CROSS-LINK */}
+      <section className="border-t border-white/10 bg-ink-800/30 py-10">
+        <div className="container-px">
+          <Link
+            href="/women-biz360"
+            className="group flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition-colors hover:border-ember/40 hover:bg-ember/[0.05]"
+          >
+            <div>
+              <p className="eyebrow mb-1.5">Women Biz360 Hub × Cloudwise</p>
+              <p className="font-display text-lg font-semibold text-white">
+                A women-only full-day masterclass, {formatKes(TRACKS['wbh-masterclass'].priceKes)}
+              </p>
+              <p className="mt-1 text-sm text-white/55">
+                Run with our partner for women entrepreneurs. Same hands-on approach, one full day.
+              </p>
+            </div>
+            <span className="flex items-center gap-2 text-sm font-medium text-ember">
+              See the masterclass
+              <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </span>
+          </Link>
         </div>
       </section>
 
@@ -397,11 +448,11 @@ export default function AiTrainingPage() {
             your 1-month Claude subscription.
           </Reveal>
           <Reveal delay={0.14} className="mt-9 flex flex-wrap justify-center gap-3">
-            <a href={whatsappLink(REGISTER_MSG)} target="_blank" rel="noopener noreferrer" className="btn-ember text-base">
-              Register via WhatsApp · {COMPANY_INFO.phone} <ArrowUpRight size={18} />
-            </a>
-            <a href={`mailto:${COMPANY_INFO.email}`} className="btn-ghost text-base">
-              Email us
+            <Link href="/ai-training/register" className="btn-ember text-base">
+              Register &amp; pay · {formatKes(TRACKS[TRACK_INDIVIDUAL].priceKes)} <ArrowUpRight size={18} />
+            </Link>
+            <a href={whatsappLink(REGISTER_MSG)} target="_blank" rel="noopener noreferrer" className="btn-ghost text-base">
+              Ask a question on WhatsApp
             </a>
           </Reveal>
           <p className="mt-6 font-mono text-xs uppercase tracking-eyebrow text-white/35">
