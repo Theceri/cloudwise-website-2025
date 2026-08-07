@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import {
-  Clock, Sparkles, FileText, Users, Gift, Check, ArrowUpRight,
-  CalendarDays, MapPin, Laptop, BookOpen, PlayCircle, ShieldCheck,
+  Clock, FileText, Users, Gift, Check, ArrowUpRight,
+  CalendarDays, MapPin, Laptop, BookOpen, ShieldCheck,
 } from 'lucide-react';
 import { Reveal } from '@/components/anim/Reveal';
 import { AnimatedHeading } from '@/components/anim/AnimatedHeading';
@@ -18,12 +18,12 @@ export const dynamic = 'force-dynamic';
 export const metadata = {
   title: 'AI Productivity Training in Nairobi — Work Smarter with AI',
   description:
-    'Hands-on AI productivity training by Cloudwise. Two Saturday sessions every month (1st & 2nd Saturday, 9am–1pm), online or in Nairobi. Ksh 13,500 — includes a 1-month Claude subscription, toolkit & support community.',
+    'Hands-on AI productivity training by Cloudwise. Two Saturday sessions every month (1st & 2nd Saturday, 9am–1pm), online or in Nairobi. Ksh 13,500 — includes the AI toolkit, prompt library & support community.',
   alternates: { canonical: '/ai-training' },
   openGraph: {
     title: 'Cloudwise AI Productivity Training — Work Smarter with AI',
     description:
-      'Practical, hands-on AI training for you and your team. Every 1st & 2nd Saturday. Includes a 1-month Claude subscription.',
+      'Practical, hands-on AI training for you and your team. Every 1st & 2nd Saturday. Includes the AI toolkit, prompt library & support community.',
     url: `${SITE_URL}/ai-training`,
   },
 };
@@ -33,7 +33,7 @@ const REGISTER_MSG =
 
 const VALUE_STACK = [
   { icon: Clock, title: '8 Hours of Live AI Training', desc: '2 full sessions — in-person or online. Practical and hands-on.', worth: 'Worth 20K' },
-  { icon: Sparkles, title: '1-Month Claude AI Subscription', desc: "One of the world's most powerful AI assistants, included.", worth: 'Worth 3K' },
+  { icon: BookOpen, title: 'Your Session Workbook', desc: 'Every exercise, plus the documents we build together on your real work.', worth: 'Yours to keep' },
   { icon: FileText, title: 'AI Toolkit & Resource Pack', desc: 'Curated prompts, templates & workflow guides to keep.', worth: 'Worth 5K' },
   { icon: Users, title: 'Post-Training Support Group', desc: 'A WhatsApp community for ongoing Q&A after training.', worth: 'Priceless' },
 ];
@@ -74,13 +74,13 @@ const WHO = [
 const RESOURCES = [
   { tag: 'Before', icon: BookOpen, title: 'AI Readiness Guide', desc: 'Account setup for Claude, ChatGPT & Gemini, plus 3 warm-up exercises. Sent via WhatsApp.' },
   { tag: 'During', icon: Laptop, title: 'Live Workbook + Prompt Library', desc: 'Every exercise plus 50+ curated prompts organised by use case — yours to keep.' },
-  { tag: 'After', icon: PlayCircle, title: 'Recording + Toolkit + Community', desc: 'Session recordings, an AI cheat-sheet, and the Cloudwise AI WhatsApp support group.' },
+  { tag: 'After', icon: Users, title: 'Toolkit + Cheat-Sheet + Community', desc: 'Your full prompt library, an AI cheat-sheet, and the Cloudwise AI WhatsApp support group.' },
 ];
 
 const FAQ_ITEMS = [
   { q: 'When does the training happen?', a: 'Every month. The two sessions run on the first Saturday and the second Saturday of each month, 9am–1pm each (4 hours per session). The exact dates for every open cohort are listed on the registration page — pick the pair that suits you.' },
   { q: 'Is it online or in person?', a: 'Both. You can join live online via Zoom, or attend in person at our Nairobi office (4th Floor, Delta Annex, Delta Corner, Waiyaki Way). Choose whichever suits you when you register.' },
-  { q: 'How much does it cost and what’s included?', a: 'Ksh 13,500 per person (introductory price; normally Ksh 30,000). It includes 8 hours of live training, a 1-month Claude AI subscription, an AI toolkit & prompt library, session recordings, and access to our WhatsApp support community.' },
+  { q: 'How much does it cost and what’s included?', a: 'Ksh 13,500 per person (introductory price; normally Ksh 30,000). It includes 8 hours of live training, an AI toolkit & prompt library, your session workbook, and access to our WhatsApp support community.' },
   { q: 'Do I need a tech background?', a: 'No. The training is designed for everyday business people. If you can use a browser and send an email, you can do this. Every session is hands-on with your real tasks.' },
   { q: 'What should I bring?', a: 'A laptop or tablet with internet access. Every session is hands-on — you’ll be practising live on real tools from minute one.' },
   { q: 'Can you train my whole team?', a: 'Yes. We run private team and organisation trainings tailored to your workflows — we’ve trained teams including TechCamp and Stratostaff. Message us to arrange a session.' },
@@ -177,7 +177,7 @@ export default function AiTrainingPage() {
               <div>
                 <p className="text-sm text-white/40 line-through">Was Ksh 30,000</p>
                 <p className="font-display text-4xl font-bold text-white">Ksh 13,500</p>
-                <p className="mt-1 text-sm text-white/50">per person · incl. 1-month Claude</p>
+                <p className="mt-1 text-sm text-white/50">per person · all materials included</p>
               </div>
               <span className="rounded-full bg-ember px-3 py-2 text-center font-mono text-xs font-bold leading-tight text-white">
                 SAVE<br />55%
@@ -445,7 +445,7 @@ export default function AiTrainingPage() {
           </Reveal>
           <Reveal as="p" delay={0.08} className="mx-auto mt-6 max-w-xl text-lg text-white/60">
             Secure your seat — introductory pricing closes once the cohort is full. Payment includes
-            your 1-month Claude subscription.
+            the toolkit, the prompt library and the support community.
           </Reveal>
           <Reveal delay={0.14} className="mt-9 flex flex-wrap justify-center gap-3">
             <Link href="/ai-training/register" className="btn-ember text-base">
