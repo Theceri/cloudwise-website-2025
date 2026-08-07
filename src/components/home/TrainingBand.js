@@ -7,8 +7,8 @@ import { Gauge } from '@/components/anim/Gauge';
 
 const INCLUDES = [
   '8 hours of live, hands-on AI training',
-  '1-month Claude AI subscription included',
   'AI toolkit, prompt library & templates',
+  'Session recordings to revisit any time',
   'Lifetime WhatsApp support community',
 ];
 
