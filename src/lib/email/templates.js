@@ -379,7 +379,7 @@ export function completionPack({ registration: reg }) {
   `;
 
   return finish({
-    subject: 'Your toolkit, recording and community 🎁',
+    subject: 'Your toolkit, prompts and community 🎁',
     title: 'After your training',
     preheader: 'Everything from the session, plus the one thing to do this week.',
     kicker: kickerFor(reg.track),

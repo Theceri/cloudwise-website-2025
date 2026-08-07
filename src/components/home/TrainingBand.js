@@ -8,7 +8,7 @@ import { Gauge } from '@/components/anim/Gauge';
 const INCLUDES = [
   '8 hours of live, hands-on AI training',
   'AI toolkit, prompt library & templates',
-  'Session recordings to revisit any time',
+  'Your session workbook & documents to keep',
   'Lifetime WhatsApp support community',
 ];
 

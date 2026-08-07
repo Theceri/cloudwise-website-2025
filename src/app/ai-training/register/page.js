@@ -18,7 +18,7 @@ export const metadata = {
   alternates: { canonical: '/ai-training/register' },
   openGraph: {
     title: 'Register — Cloudwise AI Productivity Training',
-    description: 'Two Saturdays. 100% hands-on. Includes the AI toolkit, recordings & support community.',
+    description: 'Two Saturdays. 100% hands-on. Includes the AI toolkit, prompt library & support community.',
     url: `${SITE_URL}/ai-training/register`,
   },
 };
@@ -26,7 +26,7 @@ export const metadata = {
 const INCLUDED = [
   '8 hours of live, hands-on training',
   'AI toolkit & prompt library to keep',
-  'Session recordings',
+  'Your session workbook & documents',
   'WhatsApp support community',
 ];
 
