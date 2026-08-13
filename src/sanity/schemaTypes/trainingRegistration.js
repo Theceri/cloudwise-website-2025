@@ -1,6 +1,8 @@
 import { defineType, defineField } from 'sanity';
 import { UsersIcon } from '@sanity/icons';
 
+import { TRACKS, TRACK_WBH, formatDay } from '@/lib/training';
+
 /**
  * One person signing up for one training. Created by /api/registrations with
  * status "pending", then advanced to "paid" by the payment callbacks.
@@ -229,7 +231,11 @@ export const trainingRegistration = defineType({
     },
     prepare({ firstName, lastName, status, cohortLabel, track, reference }) {
       const badge = { paid: '✅', pending: '🟡', cancelled: '⛔' }[status] || '·';
-      const where = cohortLabel || (track === 'wbh-masterclass' ? 'Masterclass · 27 Aug 2026' : '');
+      const where =
+        cohortLabel ||
+        (track === TRACK_WBH
+          ? `Masterclass · ${formatDay(TRACKS[TRACK_WBH].eventDate)}`
+          : '');
       return {
         title: `${badge} ${[firstName, lastName].filter(Boolean).join(' ') || reference}`,
         subtitle: [reference, where].filter(Boolean).join(' · '),

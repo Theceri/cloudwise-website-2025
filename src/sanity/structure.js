@@ -9,7 +9,7 @@ import {
   CalendarIcon,
 } from '@sanity/icons';
 
-import { listOpenCohorts } from '@/lib/training';
+import { listOpenCohorts, formatDay, TRACKS, TRACK_WBH } from '@/lib/training';
 
 const byNewest = [{ field: 'createdAt', direction: 'desc' }];
 
@@ -87,7 +87,7 @@ export const structure = (S) =>
                 .icon(UsersIcon)
                 .child(
                   S.documentList()
-                    .title('Masterclass · 27 Aug 2026')
+                    .title(`Masterclass · ${formatDay(TRACKS[TRACK_WBH].eventDate)}`)
                     .filter('_type == "trainingRegistration" && track == "wbh-masterclass"')
                     .defaultOrdering(byNewest)
                 ),
