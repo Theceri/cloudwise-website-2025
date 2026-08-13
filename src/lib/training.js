@@ -51,7 +51,7 @@ export const TRACKS = {
     supportsOnline: false,
     hasCohorts: false,
     // Single fixed event.
-    eventDate: '2026-08-27',
+    eventDate: '2026-09-15',
     eventStart: '08:30',
     eventEnd: '16:00',
   },
@@ -151,7 +151,7 @@ function nthSaturday(year, month, n) {
 
 /**
  * Short form is the compact one used for cohort labels — "Sat 05 Sep 2026".
- * Long form reads like a person wrote it — "Thursday, 27 August 2026".
+ * Long form reads like a person wrote it — "Tuesday, 15 September 2026".
  */
 export function formatDay(date, { long = false } = {}) {
   const d = typeof date === 'string' ? new Date(`${date}T00:00:00Z`) : date;
