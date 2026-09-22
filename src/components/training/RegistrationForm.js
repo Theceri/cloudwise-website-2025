@@ -10,12 +10,11 @@ import {
   ATTENDANCE_OPTIONS,
   CONSENT_TEXT,
   INDUSTRIES,
-  MASTERCLASS_TOPICS,
   REFERRAL_SOURCES,
   TIME_CONSUMING_TASKS,
   validateRegistration,
 } from '@/lib/registration-form';
-import { TRACK_WBH, formatKes } from '@/lib/training';
+import { formatKes } from '@/lib/training';
 
 import {
   Checkbox,
@@ -29,17 +28,13 @@ import {
 } from './fields';
 
 /**
- * The registration form for both tracks.
+ * The registration form for the AI Productivity Training.
  *
- * The individual track asks the full set of questions — the same ones the Zoom
- * pre-registration used, because those answers genuinely shape what gets taught.
- * The masterclass track asks far less: those attendees already answered all of
- * that when they signed up for the free webinar, so re-asking would be rude and
- * would cost conversions. It only collects what is new since then.
+ * It asks the full set of questions — the same ones the Zoom pre-registration
+ * used, because those answers genuinely shape what gets taught.
  */
 export function RegistrationForm({ track, cohorts = [], price }) {
   const router = useRouter();
-  const isMasterclass = track === TRACK_WBH;
 
   const [form, setForm] = useState({
     firstName: '',
@@ -50,7 +45,7 @@ export function RegistrationForm({ track, cohorts = [], price }) {
     jobTitle: '',
     city: '',
     industry: '',
-    attendance: isMasterclass ? 'in-person' : 'in-person',
+    attendance: 'in-person',
     cohortId: cohorts[0]?.id || '',
     aiExperience: '',
     aiTools: [],
@@ -123,11 +118,7 @@ export function RegistrationForm({ track, cohorts = [], price }) {
       <FormSection
         step={1}
         title="About you"
-        description={
-          isMasterclass
-            ? 'Just enough to match you to your free-webinar registration.'
-            : 'So we know who is coming and can send your joining details.'
-        }
+        description="So we know who is coming and can send your joining details."
       >
         <div className="grid gap-5 sm:grid-cols-2">
           <div id="field-firstName">
@@ -226,229 +217,188 @@ export function RegistrationForm({ track, cohorts = [], price }) {
           </Field>
         </div>
 
-        {!isMasterclass && (
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="City" htmlFor="city">
-              <TextInput
-                id="city"
-                name="city"
-                autoComplete="address-level2"
-                value={form.city}
-                onChange={setInput('city')}
-                placeholder="Nairobi"
-              />
-            </Field>
-            <Field label="Industry" htmlFor="industry">
-              <Select id="industry" value={form.industry} onChange={setInput('industry')}>
-                <option value="">Select industry</option>
-                {INDUSTRIES.map((industry) => (
-                  <option key={industry} value={industry}>
-                    {industry}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-          </div>
-        )}
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field label="City" htmlFor="city">
+            <TextInput
+              id="city"
+              name="city"
+              autoComplete="address-level2"
+              value={form.city}
+              onChange={setInput('city')}
+              placeholder="Nairobi"
+            />
+          </Field>
+          <Field label="Industry" htmlFor="industry">
+            <Select id="industry" value={form.industry} onChange={setInput('industry')}>
+              <option value="">Select industry</option>
+              {INDUSTRIES.map((industry) => (
+                <option key={industry} value={industry}>
+                  {industry}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        </div>
       </FormSection>
 
-      {!isMasterclass && (
-        <FormSection
-          step={2}
-          title="Choose your dates"
-          description="Two Saturdays, 9:00am–1:00pm each. Pick the pair that suits you."
-        >
-          <div id="field-cohortId">
-            <Field label="Cohort" required error={errors.cohortId} htmlFor="cohortId">
-              <Select
-                id="cohortId"
-                value={form.cohortId}
-                onChange={setInput('cohortId')}
-                error={errors.cohortId}
-              >
-                <option value="">Select your dates</option>
-                {cohorts.map((cohort) => (
-                  <option key={cohort.id} value={cohort.id}>
-                    {cohort.label}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-          </div>
+      <FormSection
+        step={2}
+        title="Choose your dates"
+        description="Two Saturdays, 9:00am–1:00pm each. Pick the pair that suits you."
+      >
+        <div id="field-cohortId">
+          <Field label="Cohort" required error={errors.cohortId} htmlFor="cohortId">
+            <Select
+              id="cohortId"
+              value={form.cohortId}
+              onChange={setInput('cohortId')}
+              error={errors.cohortId}
+            >
+              <option value="">Select your dates</option>
+              {cohorts.map((cohort) => (
+                <option key={cohort.id} value={cohort.id}>
+                  {cohort.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        </div>
 
-          <div id="field-attendance">
-            <Field label="How would you like to attend?" required error={errors.attendance}>
-              <RadioCards
-                name="attendance"
-                value={form.attendance}
-                onChange={set('attendance')}
-                error={errors.attendance}
-                options={[
-                  {
-                    value: 'in-person',
-                    label: 'In person, Nairobi',
-                    description: 'Delta Annex, Delta Corner, Waiyaki Way',
-                  },
-                  {
-                    value: 'online',
-                    label: 'Online via Zoom',
-                    description: 'Same session, joining link sent the day before',
-                  },
-                ]}
-              />
-            </Field>
-          </div>
-        </FormSection>
-      )}
+        <div id="field-attendance">
+          <Field label="How would you like to attend?" required error={errors.attendance}>
+            <RadioCards
+              name="attendance"
+              value={form.attendance}
+              onChange={set('attendance')}
+              error={errors.attendance}
+              options={[
+                {
+                  value: 'in-person',
+                  label: 'In person, Nairobi',
+                  description: 'Delta Annex, Delta Corner, Waiyaki Way',
+                },
+                {
+                  value: 'online',
+                  label: 'Online via Zoom',
+                  description: 'Same session, joining link sent the day before',
+                },
+              ]}
+            />
+          </Field>
+        </div>
+      </FormSection>
 
       <FormSection
-        step={isMasterclass ? 2 : 3}
-        title={isMasterclass ? 'Make the day count for you' : 'Help us tailor the training'}
-        description={
-          isMasterclass
-            ? 'You told us about your business when you signed up for the free webinar — we still have all of that. These few answers are what shape the day itself.'
-            : 'Every answer here changes what we spend time on. None of it is required, but the more you tell us, the more the day is about your work.'
-        }
+        step={3}
+        title="Help us tailor the training"
+        description="Every answer here changes what we spend time on. None of it is required, but the more you tell us, the more the day is about your work."
       >
-        {isMasterclass ? (
-          <>
-            <Field
-              label="Which of these do you most want to walk out with?"
-              hint="Pick as many as you like. The most-picked modules get the most floor time."
+        <div id="field-aiExperience">
+          <Field
+            label="Have you used an AI tool before?"
+            required
+            error={errors.aiExperience}
+            htmlFor="aiExperience"
+            hint="ChatGPT, Gemini, Canva AI, Copilot, Claude — anything counts."
+          >
+            <Select
+              id="aiExperience"
+              value={form.aiExperience}
+              onChange={setInput('aiExperience')}
+              error={errors.aiExperience}
             >
-              <CheckboxGroup
-                options={MASTERCLASS_TOPICS}
-                value={form.topicPriorities}
-                onChange={set('topicPriorities')}
-                columns={1}
-              />
-            </Field>
+              <option value="">Select one</option>
+              {AI_EXPERIENCE.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        </div>
 
-            <Field
-              label="What have you tried since the webinar?"
-              hint="Even “nothing yet” is useful — it tells us where to start."
-              htmlFor="goal"
-            >
-              <TextArea
-                id="goal"
-                value={form.goal}
-                onChange={setInput('goal')}
-                placeholder="I tried the social media prompt and got a week of posts, but the captions did not sound like me…"
-              />
-            </Field>
-          </>
-        ) : (
-          <>
-            <div id="field-aiExperience">
-              <Field
-                label="Have you used an AI tool before?"
-                required
-                error={errors.aiExperience}
-                htmlFor="aiExperience"
-                hint="ChatGPT, Gemini, Canva AI, Copilot, Claude — anything counts."
-              >
-                <Select
-                  id="aiExperience"
-                  value={form.aiExperience}
-                  onChange={setInput('aiExperience')}
-                  error={errors.aiExperience}
-                >
-                  <option value="">Select one</option>
-                  {AI_EXPERIENCE.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-            </div>
+        <Field label="Which have you tried?">
+          <CheckboxGroup options={AI_TOOLS} value={form.aiTools} onChange={set('aiTools')} />
+        </Field>
 
-            <Field label="Which have you tried?">
-              <CheckboxGroup options={AI_TOOLS} value={form.aiTools} onChange={set('aiTools')} />
-            </Field>
-
-            <Field label="Which tasks take up most of your time?">
-              <CheckboxGroup
-                options={TIME_CONSUMING_TASKS}
-                value={form.timeConsumingTasks}
-                onChange={set('timeConsumingTasks')}
-              />
-            </Field>
-
-            <Field
-              label="What is the biggest challenge in running or growing your business right now?"
-              htmlFor="biggestChallenge"
-            >
-              <TextArea
-                id="biggestChallenge"
-                value={form.biggestChallenge}
-                onChange={setInput('biggestChallenge')}
-                placeholder="Mondays and Tuesdays are very quiet and I lose money on those days…"
-              />
-            </Field>
-
-            <Field label="What would make this training most valuable for you?" htmlFor="goal">
-              <TextArea
-                id="goal"
-                value={form.goal}
-                onChange={setInput('goal')}
-                placeholder="I want to stop spending my evenings writing proposals."
-              />
-            </Field>
-          </>
-        )}
-
-        <Field
-          label="Bring one real task and we will solve it live"
-          hint="The one thing you would love to hand over. We build it together on the day."
-          htmlFor="liveChallenge"
-        >
-          <TextArea
-            id="liveChallenge"
-            value={form.liveChallenge}
-            onChange={setInput('liveChallenge')}
-            placeholder="Responding to tenders — it takes me a whole weekend every time."
+        <Field label="Which tasks take up most of your time?">
+          <CheckboxGroup
+            options={TIME_CONSUMING_TASKS}
+            value={form.timeConsumingTasks}
+            onChange={set('timeConsumingTasks')}
           />
         </Field>
 
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field
-            label={isMasterclass ? 'Dietary needs' : 'Dietary or accessibility needs'}
-            hint={isMasterclass ? 'Lunch and refreshments are provided.' : 'Anything we should know.'}
-            htmlFor="dietary"
+        <Field
+          label="What is the biggest challenge in running or growing your business right now?"
+          htmlFor="biggestChallenge"
+        >
+          <TextArea
+            id="biggestChallenge"
+            value={form.biggestChallenge}
+            onChange={setInput('biggestChallenge')}
+            placeholder="Mondays and Tuesdays are very quiet and I lose money on those days…"
+          />
+        </Field>
+
+        <Field label="What would make this training most valuable for you?" htmlFor="goal">
+          <TextArea
+            id="goal"
+            value={form.goal}
+            onChange={setInput('goal')}
+            placeholder="I want to stop spending my evenings writing proposals."
+          />
+        </Field>
+
+      <Field
+        label="Bring one real task and we will solve it live"
+        hint="The one thing you would love to hand over. We build it together on the day."
+        htmlFor="liveChallenge"
+      >
+        <TextArea
+          id="liveChallenge"
+          value={form.liveChallenge}
+          onChange={setInput('liveChallenge')}
+          placeholder="Responding to tenders — it takes me a whole weekend every time."
+        />
+      </Field>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field
+          label="Dietary or accessibility needs"
+          hint="Anything we should know."
+          htmlFor="dietary"
+        >
+          <TextInput
+            id="dietary"
+            value={form.dietary}
+            onChange={setInput('dietary')}
+            placeholder="Vegetarian"
+          />
+        </Field>
+
+        <Field label="How did you hear about us?" htmlFor="referralSource">
+          <Select
+            id="referralSource"
+            value={form.referralSource}
+            onChange={setInput('referralSource')}
           >
-            <TextInput
-              id="dietary"
-              value={form.dietary}
-              onChange={setInput('dietary')}
-              placeholder="Vegetarian"
-            />
-          </Field>
+            <option value="">Select one</option>
+            {REFERRAL_SOURCES.map((source) => (
+              <option key={source} value={source}>
+                {source}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      </div>
 
-          {!isMasterclass && (
-            <Field label="How did you hear about us?" htmlFor="referralSource">
-              <Select
-                id="referralSource"
-                value={form.referralSource}
-                onChange={setInput('referralSource')}
-              >
-                <option value="">Select one</option>
-                {REFERRAL_SOURCES.map((source) => (
-                  <option key={source} value={source}>
-                    {source}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-          )}
-        </div>
-
-        <Checkbox id="deviceReady" checked={form.deviceReady} onChange={set('deviceReady')}>
-          I will bring a laptop and charger. <span className="text-white/45">This is 100% hands-on — you cannot build on a phone.</span>
-        </Checkbox>
+      <Checkbox id="deviceReady" checked={form.deviceReady} onChange={set('deviceReady')}>
+        I will bring a laptop and charger. <span className="text-white/45">This is 100% hands-on — you cannot build on a phone.</span>
+      </Checkbox>
       </FormSection>
 
-      <FormSection step={isMasterclass ? 3 : 4} title="Confirm and pay">
+      <FormSection step={4} title="Confirm and pay">
         <Checkbox id="whatsappOptIn" checked={form.whatsappOptIn} onChange={set('whatsappOptIn')}>
           Send me reminders and joining details on WhatsApp too. <span className="text-white/45">Most people read these; email sometimes hides.</span>
         </Checkbox>

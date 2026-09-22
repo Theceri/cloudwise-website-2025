@@ -1,13 +1,20 @@
 /**
  * Training domain model — tracks, pricing, cohorts and payment references.
  *
- * Two tracks share one registration → payment → onboarding pipeline:
+ * One track is sold:
  *
  *   individual      Cloudwise AI Productivity Training. Rolling monthly cohorts,
  *                   two half-day Saturday sessions (1st & 2nd Saturday).
- *   wbh-masterclass Women Biz360 Hub × Cloudwise AI Masterclass. A single dated
- *                   event; attendees already gave their details at the free
- *                   webinar, so its form only collects what we still need.
+ *
+ * A second is retired:
+ *
+ *   wbh-masterclass Women Biz360 Hub × Cloudwise AI Masterclass. A one-off dated
+ *                   event, run on 15 September 2026 and not running again. Its
+ *                   landing and registration pages are gone and nothing can
+ *                   create a new registration on it — but people paid for it,
+ *                   so the track stays readable here. Its records still have to
+ *                   render in the Studio, in receipts and in the admin digest.
+ *                   Do not delete it; do not sell it.
  *
  * Everything here is pure data + pure functions so it can be imported from
  * server routes, client components and cron jobs alike.
@@ -34,16 +41,17 @@ export const TRACKS = {
     supportsOnline: true,
     hasCohorts: true,
   },
+  // Retired — read-only. See the module comment above.
   [TRACK_WBH]: {
     id: TRACK_WBH,
+    retired: true,
     name: 'AI Masterclass for Women Entrepreneurs',
     shortName: 'AI Masterclass',
     audience: 'Women Biz360 Hub members',
     partner: 'Women Biz360 Hub',
     priceKes: 7500,
     strikePriceKes: null,
-    registerPath: '/women-biz360/register',
-    landingPath: '/women-biz360',
+    // No registerPath or landingPath: those pages are gone.
     refPrefix: 'CWW', // legacy references only — see generateReference
     refLetter: 'W',
     durationLabel: 'Full day · 8:30am–4:00pm',
@@ -63,8 +71,15 @@ export function getTrack(trackId) {
   return TRACKS[trackId] || null;
 }
 
+/** Does this track exist at all? True for retired tracks, so old records read. */
 export function isValidTrack(trackId) {
   return Object.prototype.hasOwnProperty.call(TRACKS, trackId);
+}
+
+/** Can someone still book this today? False for retired tracks. */
+export function isBookableTrack(trackId) {
+  const track = getTrack(trackId);
+  return Boolean(track && !track.retired);
 }
 
 /** Amount payable, in KES, for a track. Single source of truth for pricing. */

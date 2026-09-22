@@ -5,13 +5,13 @@
  * agree on exactly one definition of "valid". Safe to import from client
  * components — no server-only dependencies.
  *
- * The individual track's questions mirror the Zoom pre-registration form that
- * ran for the free Women Biz360 webinar, since those answers proved genuinely
- * useful for tailoring content. The masterclass track skips them: those
- * attendees already answered at the free session, so it only asks what is new.
+ * Only the individual track can be registered for. The Women Biz360 masterclass
+ * is retired, so a submission naming it is treated as the individual track
+ * rather than honoured — there is no page that can produce one, and a forged
+ * post must not be able to buy a seat at the old partner price.
  */
 
-import { TRACK_INDIVIDUAL, TRACK_WBH } from '@/lib/training';
+import { TRACK_INDIVIDUAL } from '@/lib/training';
 
 export const INDUSTRIES = [
   'Agriculture', 'Automotive', 'Banking & Finance', 'Beauty & Wellness',
@@ -46,25 +46,9 @@ export const TIME_CONSUMING_TASKS = [
   'Everything — I do it all myself',
 ];
 
-/**
- * The masterclass modules. Taken from the demand the free webinar surfaced:
- * RFP responses, beating AI-detector-sounding writing, Canva, transcription,
- * NotebookLM, spreadsheets, and safe handling of confidential data.
- */
-export const MASTERCLASS_TOPICS = [
-  'Responding to RFPs & writing proposals on my letterhead',
-  'Making AI writing sound like me, not like AI',
-  'A month of social content, and posting it through Canva',
-  'Analysing my numbers & spreadsheets safely',
-  'Turning recordings & meetings into notes (transcription)',
-  'Researching with my own documents (NotebookLM)',
-  'Customer replies & follow-up that win the sale',
-  'Handling confidential client data safely',
-];
-
 export const REFERRAL_SOURCES = [
   'Instagram', 'LinkedIn', 'TikTok', 'WhatsApp', 'Google search',
-  'A friend or colleague', 'Women Biz360 Hub', 'A previous Cloudwise training',
+  'A friend or colleague', 'A previous Cloudwise training',
   'Other',
 ];
 
@@ -105,7 +89,7 @@ export function validateRegistration(input = {}) {
   const errors = {};
   const value = {};
 
-  const track = input.track === TRACK_WBH ? TRACK_WBH : TRACK_INDIVIDUAL;
+  const track = TRACK_INDIVIDUAL;
   value.track = track;
 
   const text = (field, { required = false, min = 0 } = {}) => {
@@ -143,29 +127,20 @@ export function validateRegistration(input = {}) {
   value.dietary = text('dietary');
   value.liveChallenge = text('liveChallenge');
 
-  // Attendance: the masterclass is in person only.
-  if (track === TRACK_WBH) {
-    value.attendance = 'in-person';
-  } else {
-    value.attendance = input.attendance === 'online' ? 'online' : 'in-person';
-    if (!['online', 'in-person'].includes(input.attendance)) {
-      errors.attendance = 'Choose how you would like to attend.';
-    }
+  value.attendance = input.attendance === 'online' ? 'online' : 'in-person';
+  if (!['online', 'in-person'].includes(input.attendance)) {
+    errors.attendance = 'Choose how you would like to attend.';
   }
 
-  if (track === TRACK_INDIVIDUAL) {
-    value.cohortId = typeof input.cohortId === 'string' ? input.cohortId.trim() : '';
-    if (!value.cohortId) errors.cohortId = 'Choose the dates you want to attend.';
+  value.cohortId = typeof input.cohortId === 'string' ? input.cohortId.trim() : '';
+  if (!value.cohortId) errors.cohortId = 'Choose the dates you want to attend.';
 
-    value.city = text('city');
-    value.industry = text('industry');
-    value.aiExperience = text('aiExperience', { required: true });
-    value.biggestChallenge = text('biggestChallenge');
-    value.goal = text('goal');
-    value.referralSource = text('referralSource');
-  } else {
-    value.cohortId = null;
-  }
+  value.city = text('city');
+  value.industry = text('industry');
+  value.aiExperience = text('aiExperience', { required: true });
+  value.biggestChallenge = text('biggestChallenge');
+  value.goal = text('goal');
+  value.referralSource = text('referralSource');
 
   for (const field of ARRAY_FIELDS) {
     const raw = Array.isArray(input[field]) ? input[field] : [];

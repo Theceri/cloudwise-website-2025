@@ -26,10 +26,18 @@ export const metadata = {
       'Practical, hands-on AI training for you and your team. Every 1st & 2nd Saturday. Includes the AI toolkit, prompt library & support community.',
     url: `${SITE_URL}/ai-training`,
   },
+  // Without this the card inherits the root layout's generic company blurb, so
+  // every share of the training page on X sold the company rather than the course.
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AI Productivity Training in Nairobi — Cloudwise',
+    description:
+      'Two hands-on Saturdays, 9am–1pm. Online or in Nairobi. Ksh 13,500, including the AI toolkit, prompt library and support community.',
+  },
 };
 
 const REGISTER_MSG =
-  "Hi Cloudwise, I'd like to register for the AI Productivity Training. Please share the next cohort dates and payment details.";
+  "Hi Cloudwise, I'd like to register for the AI Productivity Training. I have a question before I book.";
 
 const VALUE_STACK = [
   { icon: Clock, title: '8 Hours of Live AI Training', desc: '2 full sessions — in-person or online. Practical and hands-on.', worth: 'Worth 20K' },
@@ -77,8 +85,22 @@ const RESOURCES = [
   { tag: 'After', icon: Users, title: 'Toolkit + Cheat-Sheet + Community', desc: 'Your full prompt library, an AI cheat-sheet, and the Cloudwise AI WhatsApp support group.' },
 ];
 
-const FAQ_ITEMS = [
-  { q: 'When does the training happen?', a: 'Every month. The two sessions run on the first Saturday and the second Saturday of each month, 9am–1pm each (4 hours per session). The exact dates for every open cohort are listed on the registration page — pick the pair that suits you.' },
+/**
+ * Built per request, not once at module load: the first answer names real dates,
+ * and a constant evaluated at import would keep serving whatever cohorts were
+ * open the last time the server booted.
+ */
+const buildFaqItems = (cohorts) => [
+  {
+    q: 'When does the training happen?',
+    a:
+      'Every month, on the first and second Saturday, 9am–1pm each day (4 hours per session). ' +
+      (cohorts.length
+        ? `The next cohort runs ${cohorts[0].label}` +
+          (cohorts[1] ? `, and the one after that runs ${cohorts[1].label}.` : '.') +
+          ' Pick the pair that suits you when you register.'
+        : 'Dates for every open cohort are listed on the registration page.'),
+  },
   { q: 'Is it online or in person?', a: 'Both. You can join live online via Zoom, or attend in person at our Nairobi office (4th Floor, Delta Annex, Delta Corner, Waiyaki Way). Choose whichever suits you when you register.' },
   { q: 'How much does it cost and what’s included?', a: 'Ksh 13,500 per person (introductory price; normally Ksh 30,000). It includes 8 hours of live training, an AI toolkit & prompt library, your session workbook, and access to our WhatsApp support community.' },
   { q: 'Do I need a tech background?', a: 'No. The training is designed for everyday business people. If you can use a browser and send an email, you can do this. Every session is hands-on with your real tasks.' },
@@ -87,7 +109,7 @@ const FAQ_ITEMS = [
   { q: 'How do I pay?', a: 'Register on the website and pay by M-Pesa or card on the next screen. With M-Pesa you get a prompt on your phone — and if it doesn’t arrive, the paybill and account number are right there so you can pay directly. Your confirmation and preparation pack are emailed the moment payment clears.' },
 ];
 
-const courseJsonLd = {
+const buildCourseJsonLd = (cohorts) => ({
   '@context': 'https://schema.org',
   '@type': 'Course',
   name: 'Cloudwise AI Productivity Training',
@@ -106,38 +128,46 @@ const courseJsonLd = {
     url: `${SITE_URL}/ai-training`,
     availability: 'https://schema.org/InStock',
   },
-  hasCourseInstance: {
+  hasCourseInstance: cohorts.map((cohort) => ({
     '@type': 'CourseInstance',
+    name: `Cloudwise AI Productivity Training — ${cohort.monthLabel} cohort`,
     courseMode: ['Online', 'Onsite'],
     courseWorkload: 'PT8H',
+    startDate: cohort.dayOne,
+    endDate: cohort.dayTwo,
     courseSchedule: {
       '@type': 'Schedule',
-      repeatFrequency: 'P1M',
+      repeatCount: 2,
+      repeatFrequency: 'P1W',
       byDay: 'https://schema.org/Saturday',
       startTime: '09:00',
       endTime: '13:00',
-      description: 'First and second Saturday of every month',
+      startDate: cohort.dayOne,
+      endDate: cohort.dayTwo,
     },
     location: {
       '@type': 'Place',
       name: 'Cloudwise, Delta Annex, Delta Corner',
       address: '4th Floor, Delta Annex, Delta Corner, Waiyaki Way, Nairobi, Kenya',
     },
-  },
-};
+  })),
+});
 
-const faqJsonLd = {
+const buildFaqJsonLd = (faqItems) => ({
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
-  mainEntity: FAQ_ITEMS.map((f) => ({
+  mainEntity: faqItems.map((f) => ({
     '@type': 'Question',
     name: f.q,
     acceptedAnswer: { '@type': 'Answer', text: f.a },
   })),
-};
+});
 
 export default function AiTrainingPage() {
   const cohorts = listOpenCohorts({ count: 3 });
+  const faqItems = buildFaqItems(cohorts);
+  const courseJsonLd = buildCourseJsonLd(cohorts);
+  const faqJsonLd = buildFaqJsonLd(faqItems);
 
   return (
     <>
@@ -201,37 +231,16 @@ export default function AiTrainingPage() {
                   {cohorts.map((cohort, i) => (
                     <li key={cohort.id} className="flex items-center gap-2 text-sm text-white/75">
                       <span className={i === 0 ? 'h-1.5 w-1.5 rounded-full bg-ember' : 'h-1.5 w-1.5 rounded-full bg-white/25'} />
-                      {cohort.label}
+                      <span>
+                        {cohort.label}
+                        {i === 0 && <span className="ml-2 text-ember">Next</span>}
+                      </span>
                     </li>
                   ))}
                 </ul>
               </div>
             </Reveal>
           )}
-        </div>
-      </section>
-
-      {/* WOMEN BIZ360 CROSS-LINK */}
-      <section className="border-t border-white/10 bg-ink-800/30 py-10">
-        <div className="container-px">
-          <Link
-            href="/women-biz360"
-            className="group flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6 transition-colors hover:border-ember/40 hover:bg-ember/[0.05]"
-          >
-            <div>
-              <p className="eyebrow mb-1.5">Women Biz360 Hub × Cloudwise</p>
-              <p className="font-display text-lg font-semibold text-white">
-                A women-only full-day masterclass, {formatKes(TRACKS['wbh-masterclass'].priceKes)}
-              </p>
-              <p className="mt-1 text-sm text-white/55">
-                Run with our partner for women entrepreneurs. Same hands-on approach, one full day.
-              </p>
-            </div>
-            <span className="flex items-center gap-2 text-sm font-medium text-ember">
-              See the masterclass
-              <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </span>
-          </Link>
         </div>
       </section>
 
@@ -433,7 +442,7 @@ export default function AiTrainingPage() {
 
       <Testimonials eyebrow="Social proof" title="Organisations we’ve trained" />
 
-      <Faq items={FAQ_ITEMS} eyebrow="FAQ" title="AI training, answered" />
+      <Faq items={faqItems} eyebrow="FAQ" title="AI training, answered" />
 
       {/* REGISTER CTA */}
       <section className="relative overflow-hidden border-t border-white/10 bg-ink py-24 md:py-32">

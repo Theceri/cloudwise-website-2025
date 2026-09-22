@@ -15,7 +15,7 @@ import {
   WARM_UP_PROMPTS,
   getResource,
 } from '@/lib/resources';
-import { TRACKS, TRACK_INDIVIDUAL, TRACK_WBH, formatDay, formatTime } from '@/lib/training';
+import { TRACKS, TRACK_INDIVIDUAL } from '@/lib/training';
 
 export function generateStaticParams() {
   return RESOURCE_INDEX.map((r) => ({ slug: r.slug }));
@@ -233,7 +233,6 @@ function PromptPack() {
 
 function SessionPrep() {
   const individual = TRACKS[TRACK_INDIVIDUAL];
-  const masterclass = TRACKS[TRACK_WBH];
 
   const bring = [
     'Your laptop and its charger — you cannot build on a phone',
@@ -246,8 +245,7 @@ function SessionPrep() {
   return (
     <article>
       <Lead>
-        Whichever session you are booked on, this is what the day looks like and what to have with
-        you.
+        This is what the day looks like and what to have with you.
       </Lead>
 
       <SectionTitle>Bring these</SectionTitle>
@@ -263,8 +261,8 @@ function SessionPrep() {
         ))}
       </ul>
 
-      <SectionTitle>The two formats</SectionTitle>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <SectionTitle>The format</SectionTitle>
+      <div className="grid gap-4">
         <div className="card-dark p-6">
           <h3 className="font-display text-lg font-semibold text-white">{individual.name}</h3>
           <p className="mt-2 text-sm text-white/55">{individual.durationLabel}</p>
@@ -273,18 +271,6 @@ function SessionPrep() {
             Two half-days a week apart. Day one is foundations and core tools; day two is the
             advanced workflows and building your own system. Come with real work — you will spend
             most of both sessions on it.
-          </p>
-        </div>
-        <div className="card-dark p-6">
-          <h3 className="font-display text-lg font-semibold text-white">{masterclass.name}</h3>
-          <p className="mt-2 text-sm text-white/55">
-            {formatDay(masterclass.eventDate, { long: true })} ·{' '}
-            {formatTime(masterclass.eventStart)}–{formatTime(masterclass.eventEnd)}
-          </p>
-          <p className="mt-1 text-sm text-white/55">{masterclass.venue}</p>
-          <p className="mt-4 text-sm text-white/70">
-            One full day, in person, with Women Biz360 Hub. Arrive by 8:15 so we start on time.
-            Lunch and refreshments are provided.
           </p>
         </div>
       </div>
