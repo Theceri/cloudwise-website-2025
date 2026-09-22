@@ -5,7 +5,11 @@ export const BRAND_COLORS = {
   teal: '#447980',
 }
 
-export const SITE_URL = 'https://cloudwise.co.ke'
+// The apex redirects to www, so this must be the www host: it is the base for
+// every canonical tag, OG url, sitemap entry, RSS link and robots host on the
+// site, and a canonical that points at a redirect is a canonical search engines
+// quietly discard.
+export const SITE_URL = 'https://www.cloudwise.co.ke'
 
 export const WHATSAPP_NUMBER = '+254712658775'
 export const WHATSAPP_NUMBER_RAW = '254712658775'
@@ -51,11 +55,6 @@ export const NAVIGATION_LINKS = [
         name: 'For individuals & teams',
         href: '/ai-training',
         description: 'Two Saturdays a month, online or in Nairobi',
-      },
-      {
-        name: 'Women Biz360 Hub',
-        href: '/women-biz360',
-        description: 'Full-day masterclass with our partner',
       },
       {
         name: 'Free resources',
