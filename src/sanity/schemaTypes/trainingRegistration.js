@@ -211,6 +211,27 @@ export const trainingRegistration = defineType({
         'Keys of lifecycle emails already delivered. Guards against duplicates when a webhook is re-delivered.',
     }),
     defineField({ name: 'createdAt', title: 'Registered at', type: 'datetime', readOnly: true }),
+
+    // --- Ad attribution ----------------------------------------------------
+    defineField({
+      name: 'metaAttribution',
+      title: 'Meta ad attribution',
+      type: 'object',
+      readOnly: true,
+      // Nothing here is for a human to read. It is collapsed so it does not
+      // push the useful fields off the screen.
+      options: { collapsible: true, collapsed: true },
+      description:
+        'Captured from the browser at registration and replayed with the Conversions API Purchase event, which fires from a webhook long after the browser has gone.',
+      fields: [
+        defineField({ name: 'fbp', title: 'Browser id (_fbp)', type: 'string', readOnly: true }),
+        defineField({ name: 'fbc', title: 'Click id (_fbc)', type: 'string', readOnly: true }),
+        defineField({ name: 'clientIp', title: 'Client IP', type: 'string', readOnly: true }),
+        defineField({ name: 'userAgent', title: 'User agent', type: 'string', readOnly: true }),
+        defineField({ name: 'eventSourceUrl', title: 'Page submitted from', type: 'string', readOnly: true }),
+        defineField({ name: 'capturedAt', title: 'Captured at', type: 'datetime', readOnly: true }),
+      ],
+    }),
     defineField({
       name: 'notes',
       title: 'Admin notes',

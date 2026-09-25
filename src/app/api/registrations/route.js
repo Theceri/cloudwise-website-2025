@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { onRegistrationCreated } from '@/lib/lifecycle';
+import { readAttribution } from '@/lib/meta/capi';
 import { normalisePhone } from '@/lib/payments/daraja';
 import { validateRegistration } from '@/lib/registration-form';
 import { createRegistration, isStoreConfigured } from '@/lib/store';
@@ -65,6 +66,12 @@ export async function POST(request) {
     cohortLabel: value.track === TRACK_INDIVIDUAL ? schedule.headline : null,
     startDate: startDateFor({ track: value.track, cohortId: value.cohortId }),
     settlementState: 'na',
+    // Meta's ad attribution lives in browser cookies, and the payment is
+    // confirmed later by a webhook with no browser attached — sometimes days
+    // later, from a paybill on a phone that never opened the site. This is the
+    // last moment the cookies exist, so they are stored and replayed with the
+    // Purchase event whenever the money actually lands.
+    metaAttribution: readAttribution(request, { eventSourceUrl: body?.pageUrl }),
   };
 
   let registration;
