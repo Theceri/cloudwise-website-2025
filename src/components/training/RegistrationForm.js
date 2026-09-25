@@ -95,7 +95,10 @@ export function RegistrationForm({ track, cohorts = [], price }) {
       const res = await fetch('/api/registrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        // pageUrl is ignored by validation. The server reads it only to recover
+        // the Meta click id when the pixel cookie is missing, so that a sale
+        // confirmed days later still points back at the ad that caused it.
+        body: JSON.stringify({ ...payload, pageUrl: window.location.href }),
       });
       const data = await res.json();
 

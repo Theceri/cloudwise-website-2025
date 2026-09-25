@@ -7,8 +7,10 @@ import { Reveal } from '@/components/anim/Reveal';
 import { AnimatedHeading } from '@/components/anim/AnimatedHeading';
 import { Gauge } from '@/components/anim/Gauge';
 import { Faq } from '@/components/Faq';
+import { PixelEvent } from '@/components/PixelEvent';
 import { Testimonials } from '@/components/Testimonials';
 import { SITE_URL, COMPANY_INFO, whatsappLink } from '@/lib/constants';
+import { META_CURRENCY, META_EVENTS } from '@/lib/meta/events';
 import { TRACK_INDIVIDUAL, TRACKS, formatKes, listOpenCohorts } from '@/lib/training';
 
 // The next-cohort strip is derived from today's date, so this page cannot be
@@ -173,6 +175,18 @@ export default function AiTrainingPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+
+      <PixelEvent
+        event={META_EVENTS.viewContent}
+        params={{
+          content_name: TRACKS[TRACK_INDIVIDUAL].name,
+          content_category: 'Training',
+          content_type: 'product',
+          content_ids: [TRACK_INDIVIDUAL],
+          value: TRACKS[TRACK_INDIVIDUAL].priceKes,
+          currency: META_CURRENCY,
+        }}
+      />
 
       {/* HERO */}
       <section className="relative overflow-hidden pt-36 pb-20 md:pt-44 md:pb-28">

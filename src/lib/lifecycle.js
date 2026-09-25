@@ -3,8 +3,11 @@ import 'server-only';
 import { paybillInstructions } from '@/lib/payments/daraja';
 import { sendOnce, sendToAdmins } from '@/lib/email/send';
 import * as templates from '@/lib/email/templates';
+import { sendEvent } from '@/lib/meta/capi';
+import { META_CURRENCY, META_EVENTS, metaEventId } from '@/lib/meta/events';
 import { listRegistrations, patchRegistration } from '@/lib/store';
 import { maybeSettle } from '@/lib/settlement';
+import { TRACKS } from '@/lib/training';
 
 /**
  * The state machine's side effects, in one place.
@@ -24,9 +27,45 @@ async function fullRoster() {
   }
 }
 
+/**
+ * The `custom_data` block Meta reads to value a conversion.
+ *
+ * `amount` is what we actually charge, which in test mode is a token shilling.
+ * The Purchase event must carry the real price instead, or the return on ad
+ * spend figure in Ads Manager is wrong by three orders of magnitude.
+ */
+function metaCustomData(registration) {
+  const track = TRACKS[registration.track];
+
+  return {
+    currency: META_CURRENCY,
+    value: track?.priceKes ?? registration.amount ?? 0,
+    content_name: track?.name || 'Training',
+    content_category: 'Training',
+    content_type: 'product',
+    content_ids: [registration.track],
+    num_items: 1,
+    order_id: registration.reference,
+  };
+}
+
 /** Someone completed the form. Not paid yet. */
 export async function onRegistrationCreated(registration) {
   const results = {};
+
+  // Sent from the server, not the browser: this carries the registrant's email,
+  // phone and name, hashed, which is what lets Meta match the person back to
+  // the ad they clicked. A browser-only Lead has none of that.
+  //
+  // Started here and awaited at the bottom, so it overlaps the emails rather
+  // than adding its own latency. The customer is watching a spinner waiting to
+  // reach checkout, and Meta must never be the reason that takes longer.
+  const metaLead = sendEvent({
+    eventName: META_EVENTS.lead,
+    eventId: metaEventId(META_EVENTS.lead, registration.reference),
+    registration,
+    customData: metaCustomData(registration),
+  }).catch((err) => ({ sent: false, reason: err?.message }));
 
   results.customer = await sendOnce({
     reference: registration.reference,
@@ -46,6 +85,8 @@ export async function onRegistrationCreated(registration) {
     })
   );
 
+  results.metaLead = await metaLead;
+
   return results;
 }
 
@@ -55,6 +96,18 @@ export async function onRegistrationCreated(registration) {
  */
 export async function onPaymentConfirmed({ registration, payment }) {
   const results = {};
+
+  // The one event the whole ad account is optimised against, and the only place
+  // a shilling of revenue is ever reported to Meta. Started first and awaited
+  // last so it overlaps the emails: Safaricom and Paystack both retry a webhook
+  // that answers slowly, and a retry here would be a second confirmation email.
+  const metaPurchase = sendEvent({
+    eventName: META_EVENTS.purchase,
+    eventId: metaEventId(META_EVENTS.purchase, registration.reference),
+    registration,
+    customData: metaCustomData(registration),
+    eventTime: registration.paidAt,
+  }).catch((err) => ({ sent: false, reason: err?.message }));
 
   results.customer = await sendOnce({
     reference: registration.reference,
@@ -79,6 +132,8 @@ export async function onPaymentConfirmed({ registration, payment }) {
       event: 'paid',
     })
   );
+
+  results.metaPurchase = await metaPurchase;
 
   // Sweep the collection to the bank. Runs last so a settlement problem cannot
   // delay the customer's confirmation.
