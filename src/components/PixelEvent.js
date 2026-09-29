@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-import { trackPixel } from '@/components/MetaPixel';
+import { trackPixel } from '@/components/MetaPixelClient';
 
 /**
  * Fire one pixel event when a page mounts, and only once.
