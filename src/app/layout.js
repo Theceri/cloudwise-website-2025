@@ -2,6 +2,7 @@ import './globals.css';
 import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google';
 import { SiteChrome } from '@/components/SiteChrome';
 import { MetaPixel } from '@/components/MetaPixel';
+import { GoogleTag } from '@/components/GoogleTag';
 import { SITE_URL, COMPANY_INFO, SOCIAL_LINKS } from '@/lib/constants';
 
 const inter = Inter({
@@ -94,6 +95,7 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
         />
         <MetaPixel />
+        <GoogleTag />
         <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
