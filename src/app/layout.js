@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google';
 import { SiteChrome } from '@/components/SiteChrome';
 import { MetaPixel } from '@/components/MetaPixel';
 import { GoogleTag } from '@/components/GoogleTag';
+import { MicrosoftClarity } from '@/components/MicrosoftClarity';
 import { SITE_URL, COMPANY_INFO, SOCIAL_LINKS } from '@/lib/constants';
 
 const inter = Inter({
@@ -96,6 +97,7 @@ export default function RootLayout({ children }) {
         />
         <MetaPixel />
         <GoogleTag />
+        <MicrosoftClarity />
         <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
