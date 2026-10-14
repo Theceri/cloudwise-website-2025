@@ -23,9 +23,11 @@ export const COMPANY_INFO = {
   phoneRaw: '+254712658775',
   address: {
     line1: '4th Floor, Delta Annex, Delta Corner',
-    line2: 'Waiyaki Way',
+    area: 'Westlands',
     city: 'Nairobi',
+    region: 'Nairobi County',
     country: 'Kenya',
+    countryCode: 'KE',
   },
   founded: '2019',
   stats: {
@@ -33,6 +35,16 @@ export const COMPANY_INFO = {
     happyCustomers: 33,
     countries: 3,
   },
+}
+
+/**
+ * The one way the office address is written: "4th Floor, Delta Annex, Delta
+ * Corner, Westlands, Nairobi". Every page, email and JSON-LD block reads it from
+ * here, so the address can never again drift into three variants.
+ */
+export function formatAddress({ withCountry = false } = {}) {
+  const a = COMPANY_INFO.address
+  return [a.line1, a.area, a.city, withCountry ? a.country : null].filter(Boolean).join(', ')
 }
 
 export const SOCIAL_LINKS = [
@@ -59,7 +71,7 @@ export const NAVIGATION_LINKS = [
       {
         name: 'Free resources',
         href: '/resources',
-        description: 'Prompt pack & AI readiness guide',
+        description: 'Prompt pack, readiness guide and session checklist',
       },
     ],
   },

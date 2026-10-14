@@ -9,7 +9,7 @@ import { Gauge } from '@/components/anim/Gauge';
 import { Faq } from '@/components/Faq';
 import { PixelEvent } from '@/components/PixelEvent';
 import { Testimonials } from '@/components/Testimonials';
-import { SITE_URL, COMPANY_INFO, whatsappLink } from '@/lib/constants';
+import { SITE_URL, COMPANY_INFO, formatAddress, whatsappLink } from '@/lib/constants';
 import { META_CURRENCY, META_EVENTS } from '@/lib/meta/events';
 import { TRACK_INDIVIDUAL, TRACKS, formatKes, listOpenCohorts } from '@/lib/training';
 
@@ -42,10 +42,10 @@ const REGISTER_MSG =
   "Hi Cloudwise, I'd like to register for the AI Productivity Training. I have a question before I book.";
 
 const VALUE_STACK = [
-  { icon: Clock, title: '8 Hours of Live AI Training', desc: '2 full sessions — in-person or online. Practical and hands-on.', worth: 'Worth 20K' },
-  { icon: BookOpen, title: 'Your Session Workbook', desc: 'Every exercise, plus the documents we build together on your real work.', worth: 'Yours to keep' },
-  { icon: FileText, title: 'AI Toolkit & Resource Pack', desc: 'Curated prompts, templates & workflow guides to keep.', worth: 'Worth 5K' },
-  { icon: Users, title: 'Post-Training Support Group', desc: 'A WhatsApp community for ongoing Q&A after training.', worth: 'Priceless' },
+  { icon: Clock, title: '8 hours of live AI training', desc: 'Two Saturday sessions, in person or online. Practical and hands-on.' },
+  { icon: BookOpen, title: 'Your session workbook', desc: 'Every exercise, plus the documents we build together on your real work.' },
+  { icon: FileText, title: 'The 72-prompt Prompt Pack', desc: 'Prompts, templates and workflow guides to keep.' },
+  { icon: Users, title: 'WhatsApp support community', desc: 'Ongoing questions and answers after the training, with no end date.' },
 ];
 
 const DAY_ONE = [
@@ -65,13 +65,15 @@ const DAY_TWO = [
   'Building your personal AI system',
 ];
 
+// Only tools the course actually teaches. The site must never name one it does
+// not — decided 14 October 2026 (tiered plan rev4, §12).
 const TOOLS = [
-  { name: 'Claude', desc: 'Writing, analysis, research & reasoning' },
-  { name: 'ChatGPT', desc: 'Conversations, drafting & ideation' },
-  { name: 'Gemini', desc: 'Google integration & real-time search' },
-  { name: 'Perplexity', desc: 'AI-powered research & fact-finding' },
-  { name: 'Image AI', desc: 'Midjourney & DALL·E for visuals' },
-  { name: 'Automation', desc: 'Zapier + Make AI workflows' },
+  { name: 'Claude', desc: 'Your own AI assistant, built as a Claude Project and kept after the class' },
+  { name: 'Claude connectors', desc: 'Day Two: AI reading a live CRM, invoices and a calendar, then stopping for your approval' },
+  { name: 'NotebookLM', desc: 'Research that answers only from your own documents' },
+  { name: 'ChatGPT, Gemini & Copilot', desc: 'The same task run on each, so you see the real differences' },
+  { name: 'Voice & camera', desc: 'Dictate on your phone, and turn a photo of a receipt into a spreadsheet' },
+  { name: 'Claude Design & HeyGen', desc: 'Day Two demonstration: from brief to flyer, and to a 30-second presenter video' },
 ];
 
 const WHO = [
@@ -82,8 +84,8 @@ const WHO = [
 ];
 
 const RESOURCES = [
-  { tag: 'Before', icon: BookOpen, title: 'AI Readiness Guide', desc: 'Account setup for Claude, ChatGPT & Gemini, plus 3 warm-up exercises. Sent via WhatsApp.' },
-  { tag: 'During', icon: Laptop, title: 'Live Workbook + Prompt Library', desc: 'Every exercise plus 50+ curated prompts organised by use case — yours to keep.' },
+  { tag: 'Before', icon: BookOpen, title: 'Your welcome pack', desc: 'The accounts to open and a 15-minute warm-up. Read it any time in our free AI readiness guide.', href: '/resources/ai-readiness' },
+  { tag: 'During', icon: Laptop, title: 'Live Workbook + Prompt Library', desc: 'Every exercise, plus the 72-prompt Prompt Pack organised by use case. Yours to keep.' },
   { tag: 'After', icon: Users, title: 'Toolkit + Cheat-Sheet + Community', desc: 'Your full prompt library, an AI cheat-sheet, and the Cloudwise AI WhatsApp support group.' },
 ];
 
@@ -103,11 +105,11 @@ const buildFaqItems = (cohorts) => [
           ' Pick the pair that suits you when you register.'
         : 'Dates for every open cohort are listed on the registration page.'),
   },
-  { q: 'Is it online or in person?', a: 'Both. You can join live online via Zoom, or attend in person at our Nairobi office (4th Floor, Delta Annex, Delta Corner, Waiyaki Way). Choose whichever suits you when you register.' },
-  { q: 'How much does it cost and what’s included?', a: 'Ksh 13,500 per person (introductory price; normally Ksh 30,000). It includes 8 hours of live training, an AI toolkit & prompt library, your session workbook, and access to our WhatsApp support community.' },
+  { q: 'Is it online or in person?', a: `Both. You can join live online on Google Meet (the link arrives the day before), or attend in person at our Nairobi office: ${formatAddress()}. Choose whichever suits you when you register.` },
+  { q: 'How much does it cost and what’s included?', a: 'Ksh 13,500 per person. It includes 8 hours of live training, the 72-prompt Prompt Pack, your session workbook, and our WhatsApp support community. Private one-to-one training is Ksh 30,000.' },
   { q: 'Do I need a tech background?', a: 'No. The training is designed for everyday business people. If you can use a browser and send an email, you can do this. Every session is hands-on with your real tasks.' },
   { q: 'What should I bring?', a: 'A laptop or tablet with internet access. Every session is hands-on — you’ll be practising live on real tools from minute one.' },
-  { q: 'Can you train my whole team?', a: 'Yes. We run private team and organisation trainings tailored to your workflows — we’ve trained teams including TechCamp and Stratostaff. Message us to arrange a session.' },
+  { q: 'Can you train my whole team?', a: 'Yes. We run private team and organisation trainings tailored to your workflows — we’ve trained teams at Bamburi Cement, FEKAN Howell LLP, TechCamp and Stratostaff. Message us to arrange a session.' },
   { q: 'How do I pay?', a: 'Register on the website and pay by M-Pesa or card on the next screen. With M-Pesa you get a prompt on your phone — and if it doesn’t arrive, the paybill and account number are right there so you can pay directly. Your confirmation and preparation pack are emailed the moment payment clears.' },
 ];
 
@@ -150,7 +152,7 @@ const buildCourseJsonLd = (cohorts) => ({
     location: {
       '@type': 'Place',
       name: 'Cloudwise, Delta Annex, Delta Corner',
-      address: '4th Floor, Delta Annex, Delta Corner, Waiyaki Way, Nairobi, Kenya',
+      address: formatAddress({ withCountry: true }),
     },
   })),
 });
@@ -219,17 +221,13 @@ export default function AiTrainingPage() {
           <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:max-w-3xl">
             <Reveal className="card-dark flex items-center justify-between p-6">
               <div>
-                <p className="text-sm text-white/40 line-through">Was Ksh 30,000</p>
-                <p className="font-display text-4xl font-bold text-white">Ksh 13,500</p>
-                <p className="mt-1 text-sm text-white/50">per person · all materials included</p>
+                <p className="font-display text-4xl font-bold text-white">{formatKes(TRACKS[TRACK_INDIVIDUAL].priceKes)}</p>
+                <p className="mt-1 text-sm text-white/65">per person · all materials included</p>
               </div>
-              <span className="rounded-full bg-ember px-3 py-2 text-center font-mono text-xs font-bold leading-tight text-white">
-                SAVE<br />55%
-              </span>
             </Reveal>
             <Reveal delay={0.08} className="card-dark space-y-3 p-6 text-sm">
               <p className="flex items-center gap-3 text-white/80"><CalendarDays size={16} className="text-ember" /> Every 1st &amp; 2nd Saturday · 9am–1pm</p>
-              <p className="flex items-center gap-3 text-white/80"><MapPin size={16} className="text-ember" /> Online (Zoom) or in-person, Nairobi</p>
+              <p className="flex items-center gap-3 text-white/80"><MapPin size={16} className="text-ember" /> Online (Google Meet) or in person, Westlands</p>
               <p className="flex items-center gap-3 text-white/80"><Laptop size={16} className="text-ember" /> 100% hands-on — bring your laptop</p>
             </Reveal>
           </div>
@@ -275,10 +273,7 @@ export default function AiTrainingPage() {
                     <v.icon size={22} />
                   </div>
                   <div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h3 className="font-display text-lg font-semibold text-white">{v.title}</h3>
-                      <span className="font-mono text-[0.65rem] uppercase tracking-eyebrow text-ember">{v.worth}</span>
-                    </div>
+                    <h3 className="font-display text-lg font-semibold text-white">{v.title}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-white/55">{v.desc}</p>
                   </div>
                 </div>
@@ -286,18 +281,22 @@ export default function AiTrainingPage() {
             ))}
           </div>
 
-          {/* bonus */}
+          {/* before day one */}
           <Reveal delay={0.1} className="mt-4">
             <div className="flex items-start gap-5 rounded-3xl border border-ember/30 bg-ember/[0.07] p-7">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-ember text-white">
                 <Gift size={22} />
               </div>
               <div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="rounded-full bg-ember px-2.5 py-1 font-mono text-[0.6rem] uppercase tracking-eyebrow text-white">Bonus</span>
-                  <h3 className="font-display text-lg font-semibold text-white">Free Pre-Training AI Readiness Guide</h3>
-                </div>
-                <p className="mt-2 text-sm text-white/65">Sent to you before Day 1 so you arrive ready to hit the ground running.</p>
+                <h3 className="font-display text-lg font-semibold text-white">Before day one: your welcome pack</h3>
+                <p className="mt-2 text-sm text-white/65">
+                  The accounts to open and a 15-minute warm-up, so you arrive ready to build. Read it any
+                  time in our{' '}
+                  <Link href="/resources/ai-readiness" className="text-ember hover:underline">
+                    free AI readiness guide
+                  </Link>
+                  .
+                </p>
               </div>
             </div>
           </Reveal>
@@ -310,7 +309,7 @@ export default function AiTrainingPage() {
           <div className="mb-14 max-w-2xl">
             <Reveal as="p" className="eyebrow mb-4">How it works</Reveal>
             <Reveal as="h2" delay={0.05} className="text-balance font-display text-4xl font-bold text-white md:text-5xl">
-              Your 2-day training schedule.
+              Two Saturdays, 9am to 1pm.
             </Reveal>
             <Reveal as="p" delay={0.1} className="mt-5 text-white/55">
               Two focused Saturday sessions — 4 hours each — on the first and second Saturday of the month.
@@ -414,6 +413,11 @@ export default function AiTrainingPage() {
                       <span className="font-mono text-[0.6rem] uppercase tracking-eyebrow text-ember">{r.tag}</span>
                       <h3 className="font-display font-semibold text-white">{r.title}</h3>
                       <p className="mt-1 text-sm text-white/55">{r.desc}</p>
+                      {r.href && (
+                        <Link href={r.href} className="mt-2 inline-block text-sm text-ember hover:underline">
+                          Open the guide
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </Reveal>
@@ -437,7 +441,7 @@ export default function AiTrainingPage() {
               business environments.
             </Reveal>
             <ul className="mt-7 space-y-3">
-              {['Certified ICT & AI practitioners', 'Trained organisations including TechCamp & Stratostaff', '100% hands-on — no filler theory'].map((x) => (
+              {['ICT and AI practitioners, not academics', 'Trained organisations including Bamburi Cement, FEKAN Howell LLP, TechCamp and Stratostaff', 'Hands-on from the first minute'].map((x) => (
                 <li key={x} className="flex items-center gap-3 text-white/80">
                   <ShieldCheck size={18} className="text-ember" /> {x}
                 </li>
@@ -467,8 +471,8 @@ export default function AiTrainingPage() {
             Ready to work smarter with AI?
           </Reveal>
           <Reveal as="p" delay={0.08} className="mx-auto mt-6 max-w-xl text-lg text-white/60">
-            Secure your seat — introductory pricing closes once the cohort is full. Payment includes
-            the toolkit, the prompt library and the support community.
+            Seats are limited to keep every session hands-on. Payment includes the workbook, the
+            72-prompt Prompt Pack and the support community.
           </Reveal>
           <Reveal delay={0.14} className="mt-9 flex flex-wrap justify-center gap-3">
             <Link href="/ai-training/register" className="btn-ember text-base">

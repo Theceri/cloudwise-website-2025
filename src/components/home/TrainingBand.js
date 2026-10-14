@@ -9,7 +9,7 @@ const INCLUDES = [
   '8 hours of live, hands-on AI training',
   'AI toolkit, prompt library & templates',
   'Your session workbook & documents to keep',
-  'Lifetime WhatsApp support community',
+  'WhatsApp support community, with no end date',
 ];
 
 export function TrainingBand() {
@@ -42,7 +42,6 @@ export function TrainingBand() {
                 See training details <ArrowUpRight size={18} />
               </Link>
               <span className="text-sm text-white/45">
-                <span className="text-white/30 line-through">Ksh 30,000</span>{' '}
                 <span className="font-semibold text-white">Ksh 13,500</span> / person
               </span>
             </Reveal>
@@ -62,7 +61,7 @@ export function TrainingBand() {
                 ))}
               </ul>
               <div className="mt-7 grid grid-cols-3 gap-3 border-t border-white/10 pt-6 text-center">
-                {[['100%', 'Hands-on'], ['6+', 'AI tools'], ['2', 'Saturdays']].map(([n, l]) => (
+                {[['100%', 'Hands-on'], ['72', 'Prompts'], ['2', 'Saturdays']].map(([n, l]) => (
                   <div key={l}>
                     <div className="font-display text-2xl font-bold text-white">{n}</div>
                     <div className="mt-1 text-xs text-white/45">{l}</div>

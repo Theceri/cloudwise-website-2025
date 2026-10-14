@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Phone, Mail, MapPin, ArrowUpRight } from 'lucide-react';
-import { NAVIGATION_LINKS, COMPANY_INFO, SOCIAL_LINKS, whatsappLink } from '@/lib/constants';
+import { NAVIGATION_LINKS, COMPANY_INFO, SOCIAL_LINKS, formatAddress, whatsappLink } from '@/lib/constants';
 import { BrandLogo } from './BrandLogo';
 
 export function Footer() {
@@ -46,7 +46,7 @@ export function Footer() {
               <Mail size={16} className="text-ember" /> {COMPANY_INFO.email}
             </a>
             <p className="flex items-center gap-3 text-white/65">
-              <MapPin size={16} className="text-ember" /> {COMPANY_INFO.address.line1}, {COMPANY_INFO.address.city}
+              <MapPin size={16} className="text-ember" /> {formatAddress()}
             </p>
           </div>
         </div>

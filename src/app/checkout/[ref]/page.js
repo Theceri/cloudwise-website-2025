@@ -105,7 +105,7 @@ export default async function CheckoutPage({ params }) {
                 </p>
                 <p className="flex items-start gap-3 text-white/75">
                   <MapPin size={16} className="mt-0.5 shrink-0 text-ember" />
-                  {isOnline ? 'Online via Zoom' : track?.venue}
+                  {isOnline ? 'Online via Google Meet' : track?.venue}
                 </p>
                 <p className="flex items-start gap-3 text-white/75">
                   <Laptop size={16} className="mt-0.5 shrink-0 text-ember" />

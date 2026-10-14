@@ -98,7 +98,7 @@ export const trainingRegistration = defineType({
       options: {
         list: [
           { title: 'In person (Nairobi)', value: 'in-person' },
-          { title: 'Online (Zoom)', value: 'online' },
+          { title: 'Online (Google Meet)', value: 'online' },
         ],
       },
     }),

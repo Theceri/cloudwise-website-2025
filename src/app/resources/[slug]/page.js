@@ -278,7 +278,7 @@ function SessionPrep() {
       <SectionTitle>If you are joining online</SectionTitle>
       <ul className="space-y-3">
         {[
-          'Your Zoom link arrives by email the day before — check spam if it has not.',
+          'Your Google Meet link arrives by email the day before. Check spam if it has not.',
           'Use headphones. The hands-on stretches are much easier to follow with them.',
           'Find somewhere you can talk. You will be asked questions and encouraged to ask your own.',
           'Two screens, or a phone beside your laptop, makes following along far easier.',

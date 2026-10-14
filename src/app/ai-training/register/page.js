@@ -95,14 +95,9 @@ export default function RegisterPage() {
 
             <Reveal delay={0.1} className="order-1 lg:order-2">
               <aside className="card-dark sticky top-28 p-7">
-                <div className="flex items-baseline gap-3">
-                  <p className="font-display text-3xl font-bold text-white">
-                    {formatKes(track.priceKes)}
-                  </p>
-                  <p className="text-sm text-white/35 line-through">
-                    {formatKes(track.strikePriceKes)}
-                  </p>
-                </div>
+                <p className="font-display text-3xl font-bold text-white">
+                  {formatKes(track.priceKes)}
+                </p>
                 <p className="mt-1 text-sm text-white/50">per person</p>
 
                 <ul className="mt-6 space-y-2.5 border-y border-white/10 py-6">
@@ -121,7 +116,7 @@ export default function RegisterPage() {
                   </p>
                   <p className="flex items-start gap-3 text-white/70">
                     <MapPin size={15} className="mt-0.5 shrink-0 text-ember" />
-                    Online, or Delta Annex, Nairobi
+                    Online, or Delta Annex, Westlands
                   </p>
                   <p className="flex items-start gap-3 text-white/70">
                     <Laptop size={15} className="mt-0.5 shrink-0 text-ember" />

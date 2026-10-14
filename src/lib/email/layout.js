@@ -1,4 +1,4 @@
-import { COMPANY_INFO, SITE_URL, SOCIAL_LINKS } from '@/lib/constants';
+import { COMPANY_INFO, SITE_URL, SOCIAL_LINKS, formatAddress } from '@/lib/constants';
 
 /**
  * Email chrome.
@@ -150,7 +150,7 @@ export function emailShell({ title, preheader, bodyHtml, footerNote, kicker }) {
               }
               <p style="margin:0 0 8px;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:${MUTED};">
                 <strong style="color:${INK};">${escapeHtml(COMPANY_INFO.legalName)}</strong><br>
-                ${escapeHtml(COMPANY_INFO.address.line1)}, ${escapeHtml(COMPANY_INFO.address.line2)}, ${escapeHtml(COMPANY_INFO.address.city)}<br>
+                ${escapeHtml(formatAddress())}<br>
                 <a href="mailto:${COMPANY_INFO.email}" style="color:${MUTED};">${escapeHtml(COMPANY_INFO.email)}</a> &nbsp;·&nbsp; ${escapeHtml(COMPANY_INFO.phone)}
               </p>
               <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:12px;color:${MUTED};">${socials}</p>

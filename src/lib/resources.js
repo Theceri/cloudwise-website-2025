@@ -78,13 +78,7 @@ export const READINESS_ACCOUNTS = [
   {
     name: 'Google Gemini',
     url: 'https://gemini.google.com',
-    why: 'Best for reading your files and documents, and for anything already in Google.',
-    required: false,
-  },
-  {
-    name: 'Perplexity',
-    url: 'https://perplexity.ai',
-    why: 'Research with live information and sources you can check.',
+    why: 'Used once in class, to compare answers on the same task.',
     required: false,
   },
 ];
