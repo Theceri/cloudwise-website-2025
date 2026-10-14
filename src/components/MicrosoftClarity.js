@@ -17,6 +17,11 @@ export const CLARITY_PROJECT_ID =
  *
  * No route-change handling is needed. Clarity watches the History API itself,
  * so client-side navigation in Next.js is recorded as part of the same session.
+ *
+ * The `clarity` queue is created at parse time, but the recorder script is
+ * inserted only after the page has loaded and the browser is idle, or on the
+ * first tap, key or scroll. It used 0.35 to 0.5 seconds of main-thread time
+ * during load on a mid-range phone (traces of 14 October 2026).
  */
 export function MicrosoftClarity() {
   return (
@@ -24,8 +29,12 @@ export function MicrosoftClarity() {
       dangerouslySetInnerHTML={{
         __html: `(function(c,l,a,r,i,t,y){
     c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+    var d=0,go=function(){if(d)return;d=1;
     t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)},
+    idle=function(){c.requestIdleCallback?c.requestIdleCallback(go,{timeout:3000}):setTimeout(go,1500)};
+    ["pointerdown","keydown","scroll"].forEach(function(x){c.addEventListener(x,go,{once:true,passive:true})});
+    l.readyState==="complete"?idle():c.addEventListener("load",idle,{once:true});
 })(window, document, "clarity", "script", "${CLARITY_PROJECT_ID}");`,
       }}
     />

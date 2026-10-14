@@ -34,6 +34,7 @@ export async function GET(request, { params }) {
     return NextResponse.json({
       status: 'paid',
       reference: ref,
+      track: registration.track,
       amount: registration.amount,
       receipt: registration.paymentReceipt || null,
       method: registration.paymentMethod || null,

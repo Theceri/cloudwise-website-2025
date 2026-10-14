@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { AlertCircle, ArrowUpRight, CheckCircle2, Loader2 } from 'lucide-react';
 
+import { trackPurchase } from '@/lib/analytics/funnel';
+import { TRACKS } from '@/lib/training';
+
 /**
  * Verifies a card payment when the customer returns from Paystack.
  *
@@ -14,6 +17,28 @@ import { AlertCircle, ArrowUpRight, CheckCircle2, Loader2 } from 'lucide-react';
  */
 
 const MAX_ATTEMPTS = 6;
+
+/**
+ * Report the sale from the browser. The verify call does not carry the track,
+ * so read it from the booking. A failure here costs one browser event only: the
+ * server already reported the same Purchase with the same id.
+ */
+async function reportPurchase(reference) {
+  try {
+    const res = await fetch(`/api/registrations/${reference}/status`, { cache: 'no-store' });
+    const data = await res.json();
+    if (data.status !== 'paid') return;
+    const track = TRACKS[data.track];
+    trackPurchase({
+      reference,
+      track: data.track,
+      name: track?.name,
+      value: track?.priceKes ?? data.amount,
+    });
+  } catch {
+    // See above.
+  }
+}
 const RETRY_MS = 3000;
 
 export function PaystackReturn({ bookingReference, attemptReference }) {
@@ -40,6 +65,7 @@ export function PaystackReturn({ bookingReference, attemptReference }) {
 
         if (data.status === 'paid') {
           setState('paid');
+          reportPurchase(bookingReference);
           return;
         }
         if (data.status === 'failed') {

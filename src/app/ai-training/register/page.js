@@ -2,15 +2,15 @@ import Link from 'next/link';
 import { CalendarDays, Check, Laptop, MapPin } from 'lucide-react';
 
 import { Reveal } from '@/components/anim/Reveal';
-import { PixelEvent } from '@/components/PixelEvent';
 import { RegistrationForm } from '@/components/training/RegistrationForm';
 import { SITE_URL } from '@/lib/constants';
-import { META_CURRENCY, META_EVENTS } from '@/lib/meta/events';
 import { TRACK_INDIVIDUAL, TRACKS, formatKes, listOpenCohorts } from '@/lib/training';
 
-// Cohorts roll forward with the calendar, so this page must not be baked at
-// build time — an October build would still be offering September otherwise.
-export const dynamic = 'force-dynamic';
+// Cohorts roll forward with the calendar, so this page is rebuilt every hour
+// rather than baked at build time — an October build would still be offering
+// September otherwise. The API rejects a closed cohort, so an hour-old list can
+// never take a booking for dates that have closed.
+export const revalidate = 3600;
 
 const track = TRACKS[TRACK_INDIVIDUAL];
 
@@ -37,18 +37,9 @@ export default function RegisterPage() {
 
   return (
     <section className="relative overflow-hidden pt-32 pb-24 md:pt-40 md:pb-32">
-      <PixelEvent
-        event={META_EVENTS.initiateCheckout}
-        params={{
-          content_name: track.name,
-          content_category: 'Training',
-          content_type: 'product',
-          content_ids: [TRACK_INDIVIDUAL],
-          num_items: 1,
-          value: track.priceKes,
-          currency: META_CURRENCY,
-        }}
-      />
+      {/* No InitiateCheckout here. Opening the form is not checkout: it fired
+          one-for-one with PageView. It now fires on the first pay button, in
+          src/components/training/Checkout.js. */}
       <div className="pointer-events-none absolute inset-0 bg-ember-radial" />
       <div className="pointer-events-none absolute inset-0 bg-grid-faint bg-grid-lg opacity-20" />
 

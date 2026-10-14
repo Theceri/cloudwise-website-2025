@@ -40,24 +40,40 @@ export function Reveal({
       return;
     }
 
+    const hide = () => {
+      el.style.opacity = '0';
+      el.style.transform = `translateY(${y}px)`;
+    };
+
     // Rule 1. Only ever hide something that starts below the fold. Anything
     // on screen — or already scrolled past, which is what a restored scroll
     // position gives you — keeps the visible markup the server sent.
-    // Skipping the observer entirely also skips the re-hide branch below, so
-    // such an element stays put even with `once: false`.
-    if (el.getBoundingClientRect().top < window.innerHeight) return;
-
-    el.style.opacity = '0';
-    el.style.transform = `translateY(${y}px)`;
-    el.style.transitionProperty = 'opacity, transform';
-    el.style.transitionDuration = '0.9s';
-    el.style.transitionTimingFunction = 'cubic-bezier(0.22,1,0.36,1)';
-    el.style.transitionDelay = `${delay}s`;
-    el.style.willChange = 'opacity, transform';
+    // The decision is made in the observer's first report, not with
+    // getBoundingClientRect(): that call forced a full layout for every
+    // instance while the page was still being built (665 ms on a mid-range
+    // phone, trace of 9 October 2026).
+    let first = true;
 
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
+          if (first) {
+            first = false;
+            if (entry.isIntersecting || entry.boundingClientRect.top < window.innerHeight) {
+              // On screen or above it: leave it alone for good, even with
+              // `once: false`.
+              io.disconnect();
+              return;
+            }
+            hide();
+            el.style.transitionProperty = 'opacity, transform';
+            el.style.transitionDuration = '0.9s';
+            el.style.transitionTimingFunction = 'cubic-bezier(0.22,1,0.36,1)';
+            el.style.transitionDelay = `${delay}s`;
+            el.style.willChange = 'opacity, transform';
+            return;
+          }
+
           if (entry.isIntersecting) {
             el.style.opacity = '1';
             el.style.transform = 'none';

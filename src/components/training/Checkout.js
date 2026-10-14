@@ -12,6 +12,7 @@ import {
   Smartphone,
 } from 'lucide-react';
 
+import { trackCheckoutStart, trackPurchase } from '@/lib/analytics/funnel';
 import { formatKes } from '@/lib/training';
 import { whatsappLink } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -61,6 +62,24 @@ export function Checkout({ booking, fallback, cardEnabled }) {
   const pollInterval = useRef(WATCH_POLL_INTERVAL_MS);
   const pollMode = useRef('watch'); // 'watch' | 'stk'
   const watchStartedAt = useRef(0);
+
+  // Funnel reporting. Checkout starts at the first pay button, not when the
+  // form opens, and a sale is reported only if this page watched it happen: a
+  // booking that was already paid when the page loaded was reported back then.
+  const checkoutTracked = useRef(false);
+  const unpaidAtLoad = useRef(booking.status !== 'paid');
+  const funnel = {
+    reference: booking.reference,
+    track: booking.track,
+    name: booking.trackName,
+    value: booking.listPrice,
+  };
+
+  function reportCheckoutStart(method) {
+    if (checkoutTracked.current) return;
+    checkoutTracked.current = true;
+    trackCheckoutStart({ ...funnel, method });
+  }
 
   const stopPolling = useCallback(() => {
     if (pollTimer.current) {
@@ -167,6 +186,7 @@ export function Checkout({ booking, fallback, cardEnabled }) {
     setError('');
     setMessage('');
     setState('sending');
+    reportCheckoutStart('mpesa');
 
     try {
       const res = await fetch('/api/payments/mpesa/stk', {
@@ -194,6 +214,7 @@ export function Checkout({ booking, fallback, cardEnabled }) {
   async function payByCard() {
     setError('');
     setState('sending');
+    reportCheckoutStart('card');
     try {
       const res = await fetch('/api/payments/paystack/init', {
         method: 'POST',
@@ -215,7 +236,12 @@ export function Checkout({ booking, fallback, cardEnabled }) {
   }
 
   if (state === 'paid') {
-    return <PaidPanel booking={booking} receipt={receipt} />;
+    return (
+      <>
+        {unpaidAtLoad.current && <PurchaseReport {...funnel} />}
+        <PaidPanel booking={booking} receipt={receipt} />
+      </>
+    );
   }
 
   const busy = state === 'sending' || state === 'waiting';
@@ -504,4 +530,14 @@ function Notice({ tone, children }) {
       <span>{children}</span>
     </p>
   );
+}
+
+/** Reports the sale once, after the paid state first renders. */
+function PurchaseReport(props) {
+  useEffect(() => {
+    trackPurchase(props);
+    // The report is keyed by booking reference; nothing else should re-fire it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.reference]);
+  return null;
 }

@@ -46,8 +46,11 @@ export function Gauge({ size = 220, className = '', accent = '#FF3F1A' }) {
       {ticks.map((_, i) => {
         const a = (-220 + (i / (ticks.length - 1)) * 260) * (Math.PI / 180);
         const r1 = 86;
-        const x1 = cx + Math.cos(a) * r1;
-        const y1 = cy + Math.sin(a) * r1;
+        // Rounded so the server and the browser print the same attribute. Node
+        // and V8 in the browser can differ in the last bits of Math.cos/sin,
+        // which made React report a hydration mismatch on every page load.
+        const x1 = Math.round((cx + Math.cos(a) * r1) * 1000) / 1000;
+        const y1 = Math.round((cy + Math.sin(a) * r1) * 1000) / 1000;
         return <circle key={i} cx={x1} cy={y1} r={1.5} fill={accent} opacity={0.35} />;
       })}
       {/* arc */}

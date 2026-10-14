@@ -5,15 +5,17 @@
  *
  * The funnel, and which half of the stack reports each step:
  *
- *   ViewContent       browser   someone reads /ai-training
- *   InitiateCheckout  browser   someone opens the registration form
- *   Contact           browser   someone clicks through to WhatsApp
- *   Lead              server    the registration is saved, unpaid
- *   Purchase          server    the money is confirmed
+ *   ViewContent       browser          someone reads a training page
+ *   Contact           browser          someone clicks through to WhatsApp
+ *   Lead              browser + server the registration is saved, unpaid
+ *   InitiateCheckout  browser          the first press of a pay button
+ *   Purchase          browser + server the money is confirmed
  *
- * No event is reported by both halves, so none needs deduplicating. The two
- * that decide the campaign — Lead and Purchase — are server-sent because the
- * customer is frequently not in a browser when they happen.
+ * Lead and Purchase are sent by both halves with the same `eventID` (built by
+ * `metaEventId` below), and Meta keeps one. The server copy is the one that
+ * counts when the customer pays from the M-Pesa menu with no browser open; the
+ * browser copy recovers attribution the server lacks when cookies were blocked
+ * at registration. GA4 gets the same steps from src/lib/analytics/funnel.js.
  */
 
 export const META_PIXEL_ID =

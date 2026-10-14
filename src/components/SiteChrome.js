@@ -7,6 +7,7 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { WhatsAppButton } from '@/components/WhatsAppButton';
 import { SmoothScroll } from '@/components/SmoothScroll';
+import { UtmCapture } from '@/components/UtmCapture';
 
 /**
  * Wraps the app in the site chrome (smooth-scroll, navbar, footer, toaster,
@@ -27,6 +28,7 @@ export function SiteChrome({ children }) {
         <main id="main">{children}</main>
         <Footer />
       </SmoothScroll>
+      <UtmCapture />
       <Toaster position="top-right" theme="dark" richColors />
       <WhatsAppButton phoneNumber="+254712658775" />
     </>

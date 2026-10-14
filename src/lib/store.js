@@ -87,7 +87,7 @@ export async function listRegistrations({ track, cohortId, status, since, limit 
       attendance, aiExperience, aiTools, timeConsumingTasks, biggestChallenge,
       goal, liveChallenge, dietary, referralSource, whatsappOptIn,
       amount, paymentMethod, paymentReceipt, paidAt,
-      settlementState, settlementRef, emailsSent, createdAt
+      settlementState, settlementRef, emailsSent, createdAt, utm
     }`,
     params,
     { cache: 'no-store' }

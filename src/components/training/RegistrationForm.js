@@ -14,7 +14,9 @@ import {
   TIME_CONSUMING_TASKS,
   validateRegistration,
 } from '@/lib/registration-form';
-import { formatKes } from '@/lib/training';
+import { readStoredAttribution } from '@/components/UtmCapture';
+import { trackLead } from '@/lib/analytics/funnel';
+import { TRACKS, formatKes } from '@/lib/training';
 
 import {
   Checkbox,
@@ -98,7 +100,13 @@ export function RegistrationForm({ track, cohorts = [], price }) {
         // pageUrl is ignored by validation. The server reads it only to recover
         // the Meta click id when the pixel cookie is missing, so that a sale
         // confirmed days later still points back at the ad that caused it.
-        body: JSON.stringify({ ...payload, pageUrl: window.location.href }),
+        // attribution carries the UTM tags and click ids from the visitor's first
+        // landing (UtmCapture), so the booking can say which ad sent it.
+        body: JSON.stringify({
+          ...payload,
+          pageUrl: window.location.href,
+          attribution: readStoredAttribution(),
+        }),
       });
       const data = await res.json();
 
@@ -109,6 +117,14 @@ export function RegistrationForm({ track, cohorts = [], price }) {
         return;
       }
 
+      // The server sends the same Lead through the Conversions API with the
+      // same event id, so Meta keeps one.
+      trackLead({
+        reference: data.reference,
+        track,
+        name: TRACKS[track]?.name,
+        value: price,
+      });
       router.push(data.checkoutUrl);
     } catch {
       setFormError('We could not reach the server. Check your connection and try again.');
