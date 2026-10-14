@@ -54,7 +54,7 @@ export const REFERRAL_SOURCES = [
 
 export const ATTENDANCE_OPTIONS = [
   { value: 'in-person', label: 'In person, Nairobi' },
-  { value: 'online', label: 'Online via Zoom' },
+  { value: 'online', label: 'Online via Google Meet' },
 ];
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

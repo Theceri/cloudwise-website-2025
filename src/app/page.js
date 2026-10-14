@@ -14,7 +14,7 @@ import { Counter } from '@/components/anim/Counter';
 const WHY = [
   { icon: Brain, title: 'AI-first by default', desc: 'We build with the latest models (Claude, GPT, Gemini) and ship AI that genuinely moves the needle.' },
   { icon: Zap, title: 'Fast, modern & lean', desc: 'Performance-obsessed engineering — quick to load, smooth to use, built to scale.' },
-  { icon: ShieldCheck, title: 'Practitioners, not theorists', desc: 'Certified ICT & AI practitioners who build real products for real businesses every day.' },
+  { icon: ShieldCheck, title: 'Practitioners, not theorists', desc: 'ICT and AI practitioners who build real products for real businesses every day.' },
   { icon: MapPin, title: 'Local, regional reach', desc: 'Nairobi-based and serving teams across East Africa — we understand your market.' },
 ];
 

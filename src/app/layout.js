@@ -80,8 +80,9 @@ const orgJsonLd = {
   foundingDate: COMPANY_INFO.founded,
   address: {
     '@type': 'PostalAddress',
-    streetAddress: `${COMPANY_INFO.address.line1}, ${COMPANY_INFO.address.line2}`,
-    addressLocality: COMPANY_INFO.address.city,
+    streetAddress: COMPANY_INFO.address.line1,
+    addressLocality: `${COMPANY_INFO.address.area}, ${COMPANY_INFO.address.city}`,
+    addressRegion: COMPANY_INFO.address.region,
     addressCountry: 'KE',
   },
   sameAs: SOCIAL_LINKS.map((s) => s.href),

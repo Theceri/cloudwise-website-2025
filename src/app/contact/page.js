@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Phone, Mail, MapPin, Send, MessageCircle } from 'lucide-react';
 import { PageHero } from '@/components/PageHero';
 import { Reveal } from '@/components/anim/Reveal';
-import { COMPANY_INFO, SOCIAL_LINKS, WHATSAPP_NUMBER_RAW } from '@/lib/constants';
+import { COMPANY_INFO, SOCIAL_LINKS, WHATSAPP_NUMBER_RAW, formatAddress } from '@/lib/constants';
 import { toast } from 'sonner';
 
 export default function Contact() {
@@ -32,7 +32,7 @@ export default function Contact() {
           {[
             { icon: Phone, label: 'Call us', value: COMPANY_INFO.phone, href: `tel:${COMPANY_INFO.phoneRaw}` },
             { icon: Mail, label: 'Email us', value: COMPANY_INFO.email, href: `mailto:${COMPANY_INFO.email}` },
-            { icon: MapPin, label: 'Visit us', value: `${COMPANY_INFO.address.line1}, ${COMPANY_INFO.address.city}`, href: 'https://maps.google.com/?q=Cloudwise+Technologies+Nairobi' },
+            { icon: MapPin, label: 'Visit us', value: formatAddress(), href: 'https://maps.google.com/?q=Cloudwise+Technologies+Nairobi' },
           ].map((c, i) => (
             <Reveal key={c.label} delay={i * 0.06}>
               <a href={c.href} target={c.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" className="card-dark group flex h-full items-center gap-4 p-6">

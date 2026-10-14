@@ -30,7 +30,7 @@ import {
 /**
  * The registration form for the AI Productivity Training.
  *
- * It asks the full set of questions — the same ones the Zoom pre-registration
+ * It asks the full set of questions — the same ones the online pre-registration
  * used, because those answers genuinely shape what gets taught.
  */
 export function RegistrationForm({ track, cohorts = [], price }) {
@@ -278,11 +278,11 @@ export function RegistrationForm({ track, cohorts = [], price }) {
                 {
                   value: 'in-person',
                   label: 'In person, Nairobi',
-                  description: 'Delta Annex, Delta Corner, Waiyaki Way',
+                  description: 'Delta Annex, Delta Corner, Westlands',
                 },
                 {
                   value: 'online',
-                  label: 'Online via Zoom',
+                  label: 'Online via Google Meet',
                   description: 'Same session, joining link sent the day before',
                 },
               ]}

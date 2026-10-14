@@ -20,6 +20,8 @@
  * server routes, client components and cron jobs alike.
  */
 
+import { formatAddress } from '@/lib/constants';
+
 export const TRACK_INDIVIDUAL = 'individual';
 export const TRACK_WBH = 'wbh-masterclass';
 
@@ -30,14 +32,17 @@ export const TRACKS = {
     shortName: 'AI Productivity Training',
     audience: 'Individuals & teams',
     priceKes: 13500,
-    strikePriceKes: 30000,
+    // No reference price: nobody has ever paid Ksh 30,000 for a cohort seat, so a
+    // struck-through anchor would be a misleading price claim. Ksh 30,000 is now
+    // the real price of private one-to-one training instead.
+    strikePriceKes: null,
     registerPath: '/ai-training/register',
     landingPath: '/ai-training',
     refPrefix: 'CWI', // legacy references only — see generateReference
     refLetter: 'A',
     // Two 4-hour Saturday sessions per cohort.
     durationLabel: '2 Saturdays · 9:00am–1:00pm each',
-    venue: '4th Floor, Delta Annex, Delta Corner, Waiyaki Way, Nairobi',
+    venue: formatAddress(),
     supportsOnline: true,
     hasCohorts: true,
   },

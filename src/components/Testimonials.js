@@ -12,7 +12,7 @@ const ITEMS = [
   },
   {
     quote:
-      'We brought Cloudwise in to train our HR and operations team. Our team now uses AI every day for sourcing, communication and analysis. Worth every shilling — and more.',
+      'We brought Cloudwise in to train our HR and operations team. Our team now uses AI every day for sourcing, communication and analysis.',
     name: 'Stratostaff',
     role: 'HR & Staffing Solutions',
   },

@@ -1,4 +1,4 @@
-import { COMPANY_INFO, SITE_URL, whatsappLink } from '@/lib/constants';
+import { COMPANY_INFO, SITE_URL, formatAddress, whatsappLink } from '@/lib/constants';
 import { isCardPaymentEnabled } from '@/lib/payments/paystack';
 import {
   TRACK_WBH,
@@ -82,8 +82,8 @@ function scheduleRows(reg) {
     [
       'Where',
       isOnline
-        ? 'Online via Zoom — joining link sent the day before'
-        : escapeHtml(track?.venue || COMPANY_INFO.address.line1),
+        ? 'Online via Google Meet. The link arrives the day before.'
+        : escapeHtml(track?.venue || formatAddress()),
     ],
     ['Your reference', `<code>${escapeHtml(reg.reference)}</code>`],
   ];
