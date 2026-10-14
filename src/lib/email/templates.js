@@ -1,6 +1,8 @@
 import { COMPANY_INFO, SITE_URL, formatAddress, whatsappLink } from '@/lib/constants';
 import { isCardPaymentEnabled } from '@/lib/payments/paystack';
 import {
+  TRACK_ESSENTIALS,
+  TRACK_KICKSTART,
   TRACK_WBH,
   TRACKS,
   describeSchedule,
@@ -66,14 +68,47 @@ function finish({ title, preheader, bodyHtml, footerNote, subject, kicker, attac
  * product name they may not recognise.
  */
 function kickerFor(track) {
-  return track === TRACK_WBH ? 'Women Biz360 Hub × Cloudwise' : 'AI Productivity Training';
+  if (track === TRACK_WBH) return 'Women Biz360 Hub × Cloudwise';
+  if (track === TRACK_KICKSTART) return 'AI Kickstart';
+  if (track === TRACK_ESSENTIALS) return 'AI Essentials';
+  return 'AI Productivity Programme';
+}
+
+/** The booking's schedule, including a Day-Two-only booking paid with a credit. */
+const scheduleOf = (reg) =>
+  describeSchedule({ track: reg.track, cohortId: reg.cohortId, attendsDays: reg.attendsDays });
+
+/**
+ * The Google Meet link, when one is set. Kickstart runs on one recurring call
+ * (KICKSTART_MEET_URL); the Saturday sessions may have a fixed link too
+ * (COHORT_MEET_URL). Without one, the email says when the link will come.
+ */
+function meetLinkFor(reg) {
+  const link = reg.track === TRACK_KICKSTART ? process.env.KICKSTART_MEET_URL : process.env.COHORT_MEET_URL;
+  return link && /^https:\/\/meet\.google\.com\//.test(link) ? link : null;
+}
+
+/** The credit line for a Kickstart or Essentials buyer: code, value, use, expiry. */
+function creditSentence(credit) {
+  if (!credit) return '';
+  const uses = credit.appliesTo?.includes('essentials') ? 'AI Essentials or the full Programme' : 'the full Programme';
+  return `Your credit code is <strong>${escapeHtml(credit.code)}</strong>. It is worth <strong>${escapeHtml(
+    formatKes(credit.amountKes)
+  )}</strong> off ${uses} until <strong>${escapeHtml(formatDay(credit.expiresAt.slice(0, 10), { long: true }))}</strong>. You can also quote the M-Pesa code from your payment SMS.`;
+}
+
+/** Where a credit takes the buyer next. */
+function creditUrl(credit) {
+  const tier = credit?.appliesTo?.includes('essentials') ? 'essentials' : 'programme';
+  return url(`/ai-training/register?tier=${tier}&credit=${encodeURIComponent(credit?.code || '')}`);
 }
 
 /** The event block that appears in almost every message. */
 function scheduleRows(reg) {
   const track = getTrack(reg.track);
-  const schedule = describeSchedule({ track: reg.track, cohortId: reg.cohortId });
+  const schedule = scheduleOf(reg);
   const isOnline = reg.attendance === 'online';
+  const meet = meetLinkFor(reg);
 
   return [
     ['Training', escapeHtml(track?.name || 'AI training')],
@@ -82,7 +117,11 @@ function scheduleRows(reg) {
     [
       'Where',
       isOnline
-        ? 'Online via Google Meet. The link arrives the day before.'
+        ? meet
+          ? `Online on Google Meet: <a href="${escapeHtml(meet)}" style="color:#FF3F1A;">${escapeHtml(meet)}</a>`
+          : reg.track === TRACK_KICKSTART
+            ? 'Online on Google Meet. The link arrives on WhatsApp and email before the session.'
+            : 'Online via Google Meet. The link arrives the day before.'
         : escapeHtml(track?.venue || formatAddress()),
     ],
     ['Your reference', `<code>${escapeHtml(reg.reference)}</code>`],
@@ -96,6 +135,7 @@ function scheduleRows(reg) {
 export function registrationReceived({ registration: reg, paybill }) {
   const track = getTrack(reg.track);
   const payUrl = url(`/checkout/${reg.reference}`);
+  const due = reg.amount;
 
   const paymentSteps = paybill
     ? list(
@@ -103,7 +143,7 @@ export function registrationReceived({ registration: reg, paybill }) {
           'Open M-Pesa and choose <strong>Lipa na M-Pesa → Pay Bill</strong>',
           `Business number: <strong>${escapeHtml(paybill.paybill)}</strong>`,
           `Account number: <strong>${escapeHtml(reg.reference)}</strong>`,
-          `Amount: <strong>${escapeHtml(formatKes(reg.amount))}</strong>`,
+          `Amount: <strong>${escapeHtml(formatKes(due))}</strong>`,
           'Enter your M-Pesa PIN and confirm',
         ],
         { ordered: true }
@@ -115,8 +155,15 @@ export function registrationReceived({ registration: reg, paybill }) {
     ${paragraph(
       `We’ve saved your place on the <strong>${escapeHtml(track?.name || 'training')}</strong>. It’s confirmed the moment payment comes through — seats are limited and we release unpaid places, so it’s worth doing now.`
     )}
-    ${detailTable([...scheduleRows(reg), ['Amount due', escapeHtml(formatKes(reg.amount))]])}
-    ${button(`Pay ${formatKes(reg.amount)} now`, payUrl)}
+    ${detailTable([
+      ...scheduleRows(reg),
+      reg.creditApplied && [
+        'Credit used',
+        `${escapeHtml(formatKes(reg.creditApplied.amountKes))} (${escapeHtml(reg.creditApplied.code)})`,
+      ],
+      ['Amount due', escapeHtml(formatKes(due))],
+    ])}
+    ${button(`Pay ${formatKes(due)} now`, payUrl)}
     ${paragraph(
       isCardPaymentEnabled()
         ? 'You can pay by M-Pesa or by card on that page.'
@@ -143,7 +190,7 @@ export function registrationReceived({ registration: reg, paybill }) {
   return finish({
     subject: `Almost there — complete your ${track?.shortName || 'training'} booking`,
     title: 'Complete your booking',
-    preheader: `Your place is held. Pay ${formatKes(reg.amount)} to confirm it.`,
+    preheader: `Your place is held. Pay ${formatKes(due)} to confirm it.`,
     kicker: kickerFor(reg.track),
     bodyHtml,
     footerNote:
@@ -156,7 +203,7 @@ export function registrationReceived({ registration: reg, paybill }) {
 // ---------------------------------------------------------------------------
 
 export function paymentConfirmed({ registration: reg }) {
-  const intro = resourceIntro({ track: reg.track, cohortId: reg.cohortId });
+  const intro = resourceIntro({ track: reg.track, cohortId: reg.cohortId, attendsDays: reg.attendsDays });
   const bring = whatToBring({ track: reg.track, attendance: reg.attendance });
 
   const bodyHtml = `
@@ -182,7 +229,7 @@ export function paymentConfirmed({ registration: reg }) {
   return finish({
     subject: 'You’re in! 🎉 Your seat is confirmed',
     title: 'Your seat is confirmed',
-    preheader: `Payment received. ${describeSchedule({ track: reg.track, cohortId: reg.cohortId }).headline}.`,
+    preheader: `Payment received. ${scheduleOf(reg).headline}.`,
     kicker: kickerFor(reg.track),
     bodyHtml,
   });
@@ -193,6 +240,8 @@ export function paymentConfirmed({ registration: reg }) {
 // ---------------------------------------------------------------------------
 
 export function welcomePack({ registration: reg }) {
+  if (reg.track === TRACK_KICKSTART) return kickstartWelcome({ registration: reg });
+
   const accounts = READINESS_ACCOUNTS.map(
     (a) =>
       `<a href="${a.url}" style="color:#FF3F1A;font-weight:600;">${escapeHtml(a.name)}</a> — ${escapeHtml(a.why)}${
@@ -259,20 +308,77 @@ export function welcomePack({ registration: reg }) {
   });
 }
 
+/** Kickstart is two hours: three short steps, not the full preparation pack. */
+function kickstartWelcome({ registration: reg }) {
+  const bodyHtml = `
+    ${heading('Before Wednesday: three small things', 1)}
+    ${list(
+      [
+        'Open a free account at <a href="https://claude.ai" style="color:#FF3F1A;font-weight:600;">claude.ai</a> with an email you can reach on the day.',
+        'Join on a laptop if you can. A phone works too.',
+        'Bring one real task you want off your plate: a reply to write, a post to plan, a long document to summarise.',
+      ],
+      { ordered: true }
+    )}
+    ${detailTable(scheduleRows(reg))}
+    ${paragraph('Want a head start? The four-part prompt method we use on the night is on our free Prompt Pack page.')}
+    ${button('Open the Prompt Pack', url('/resources/prompt-pack'))}
+  `;
+
+  return finish({
+    subject: 'Your AI Kickstart: three things before Wednesday',
+    title: 'Before your Kickstart',
+    preheader: 'Open Claude, bring one real task, and join on a laptop if you can.',
+    kicker: kickerFor(reg.track),
+    bodyHtml,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 3c. Credits
+// ---------------------------------------------------------------------------
+
+export function creditExpiring({ credit }) {
+  const bodyHtml = `
+    ${heading(`Your ${escapeHtml(formatKes(credit.amountKes))} credit ends soon`, 1)}
+    ${paragraph(creditSentence(credit))}
+    ${paragraph('Book and pay before that date. The class itself can be later.')}
+    ${button('Use my credit', creditUrl(credit))}
+  `;
+
+  return finish({
+    subject: `Your ${formatKes(credit.amountKes)} AI training credit ends in 3 days`,
+    title: 'Your credit ends soon',
+    preheader: `Code ${credit.code}. Use it before ${formatDay(credit.expiresAt.slice(0, 10), { long: true })}.`,
+    kicker: 'AI Productivity Training',
+    bodyHtml,
+  });
+}
+
 // ---------------------------------------------------------------------------
 // 4. Reminders
 // ---------------------------------------------------------------------------
 
 export function reminder({ registration: reg, daysOut }) {
   const bring = whatToBring({ track: reg.track, attendance: reg.attendance });
+  const isToday = daysOut === 0;
   const isTomorrow = daysOut <= 1;
   const track = getTrack(reg.track);
   const startLabel = formatDay(reg.startDate, { long: true });
 
   const bodyHtml = `
-    ${heading(isTomorrow ? `See you tomorrow, ${escapeHtml(firstName(reg))}` : `Not long now, ${escapeHtml(firstName(reg))}`, 1)}
+    ${heading(
+      isToday
+        ? `See you tonight, ${escapeHtml(firstName(reg))}`
+        : isTomorrow
+          ? `See you tomorrow, ${escapeHtml(firstName(reg))}`
+          : `Not long now, ${escapeHtml(firstName(reg))}`,
+      1
+    )}
     ${paragraph(
-      isTomorrow
+      isToday
+        ? `Your ${escapeHtml(track?.shortName || 'session')} is <strong>tonight at 7:00pm</strong>. Here is everything you need.`
+        : isTomorrow
         ? `Your ${escapeHtml(track?.shortName || 'training')} is <strong>tomorrow</strong>. Here is everything you need.`
         : `Your ${escapeHtml(track?.shortName || 'training')} starts on <strong>${escapeHtml(startLabel)}</strong> — ${daysOut} days away. A quick nudge so nothing catches you out.`
     )}
@@ -296,7 +402,11 @@ export function reminder({ registration: reg, daysOut }) {
   `;
 
   return finish({
-    subject: isTomorrow ? 'See you tomorrow 💛 (what to bring)' : `${daysOut} days to go — your AI training`,
+    subject: isToday
+      ? 'Tonight at 7pm: your AI Kickstart'
+      : isTomorrow
+        ? 'See you tomorrow 💛 (what to bring)'
+        : `${daysOut} days to go — your AI training`,
     title: 'Training reminder',
     preheader: isTomorrow
       ? 'Bring your laptop, charger, and one real business task.'
@@ -355,8 +465,15 @@ export function paymentFailed({ registration: reg, reason, paybill }) {
 // 6. After the training
 // ---------------------------------------------------------------------------
 
-export function completionPack({ registration: reg }) {
+export function completionPack({ registration: reg, credit }) {
+  const next = credit
+    ? highlight(
+        'Your next step costs less',
+        `${creditSentence(credit)}<p style="margin:10px 0 0;"><a href="${creditUrl(credit)}" style="color:#FF3F1A;font-weight:600;">Book with my credit</a></p>`
+      )
+    : '';
   const bodyHtml = `
+    ${next}
     ${heading(`That’s a wrap, ${escapeHtml(firstName(reg))}`, 1)}
     ${paragraph(
       'Thank you for the energy you brought. Here is everything to take with you — the point is what you use on Monday, not what you saw on the day.'
@@ -501,9 +618,14 @@ function rosterSection(groups) {
 }
 
 /** Fires on every signup and every payment, with the full roster attached. */
-export function adminSignupAlert({ registration: reg, roster, event }) {
+export function adminSignupAlert({ registration: reg, roster, event, credit }) {
   const track = getTrack(reg.track);
   const isPayment = event === 'paid';
+  const creditMessage = credit
+    ? `Thank you for joining the ${track?.name || 'training'}. Your ${formatKes(credit.amountKes)} credit code is ${credit.code}. It counts toward ${
+        credit.appliesTo?.includes('essentials') ? 'AI Essentials or the full Programme' : 'the full Programme'
+      } until ${formatDay(credit.expiresAt.slice(0, 10), { long: true })}: ${creditUrl(credit)}`
+    : null;
   const where =
     reg.track === TRACK_WBH
       ? formatDay(TRACKS[TRACK_WBH].eventDate)
@@ -537,7 +659,17 @@ export function adminSignupAlert({ registration: reg, roster, event }) {
         'Bank settlement',
         escapeHtml(reg.settlementState || 'not started'),
       ],
+      reg.creditApplied && ['Credit used', `${escapeHtml(formatKes(reg.creditApplied.amountKes))} · <code>${escapeHtml(reg.creditApplied.code)}</code>`],
+      reg.teamLead && ['Team lead', `${escapeHtml(String(reg.headcount || ''))} people · follow up today`],
     ])}
+    ${
+      creditMessage
+        ? highlight(
+            `Credit issued: ${escapeHtml(credit.code)}`,
+            `<a href="https://wa.me/${String(reg.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(creditMessage)}" style="color:#FF3F1A;font-weight:600;">Send it to ${escapeHtml(firstName(reg))} on WhatsApp</a> (one tap, message ready).`
+          )
+        : ''
+    }
     ${profileBlock(reg)}
     ${heading('Everyone signed up right now')}
     ${paragraph(
@@ -548,7 +680,7 @@ export function adminSignupAlert({ registration: reg, roster, event }) {
   `;
 
   return finish({
-    subject: `${isPayment ? '💰 Paid' : '📝 Signup'}: ${fullName(reg)} — ${track?.shortName || reg.track} (${where})`,
+    subject: `${isPayment ? '💰 Paid' : '📝 Signup'}${reg.teamLead ? ' · TEAM LEAD' : ''}: ${fullName(reg)} — ${track?.shortName || reg.track} (${where})`,
     title: isPayment ? 'Payment received' : 'New registration',
     preheader: `${fullName(reg)} · ${where} · ${formatKes(reg.amount)}`,
     bodyHtml,

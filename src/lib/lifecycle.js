@@ -6,9 +6,10 @@ import * as templates from '@/lib/email/templates';
 import { sendGa4Purchase } from '@/lib/analytics/ga4-server';
 import { sendEvent } from '@/lib/meta/capi';
 import { META_CURRENCY, META_EVENTS, metaEventId } from '@/lib/meta/events';
-import { listRegistrations, patchRegistration } from '@/lib/store';
+import { issueCreditFor, redeemCredit } from '@/lib/credits';
+import { appendReceipt, claimOnce, listRegistrations, patchRegistration, releaseClaim } from '@/lib/store';
 import { maybeSettle } from '@/lib/settlement';
-import { TRACKS } from '@/lib/training';
+import { TRACKS, reportedValue } from '@/lib/training';
 
 /**
  * The state machine's side effects, in one place.
@@ -32,15 +33,18 @@ async function fullRoster() {
  * The `custom_data` block Meta reads to value a conversion.
  *
  * `amount` is what we actually charge, which in test mode is a token shilling.
- * The Purchase event must carry the real price instead, or the return on ad
- * spend figure in Ads Manager is wrong by three orders of magnitude.
+ * The value is the list price less any credit (`reportedValue`), so a Ksh 500
+ * Kickstart followed by a Ksh 5,000 Essentials reports Ksh 5,500 in total, the
+ * same revenue the bank sees, and never counts the Ksh 500 twice.
  */
 function metaCustomData(registration) {
   const track = TRACKS[registration.track];
 
   return {
     currency: META_CURRENCY,
-    value: track?.priceKes ?? registration.amount ?? 0,
+    value: reportedValue(registration),
+    tier: registration.track,
+    credit_applied: Boolean(registration.creditApplied),
     content_name: track?.name || 'Training',
     content_category: 'Training',
     content_type: 'product',
@@ -127,11 +131,24 @@ export async function onPaymentConfirmed({ registration, payment }) {
     ...templates.welcomePack({ registration }),
   });
 
+  // Kickstart and Essentials earn a credit toward the next course. Issued before
+  // the admin alert so the alert can carry the code and a ready WhatsApp link.
+  let credit = null;
+  try {
+    const issued = await issueCreditFor(registration);
+    credit = issued.credit || null;
+    results.credit = issued;
+  } catch (err) {
+    console.error('[lifecycle] credit not issued:', err?.message);
+    results.credit = { issued: false, reason: err?.message };
+  }
+
   results.admin = await sendToAdmins(
     templates.adminSignupAlert({
       registration,
       roster: await fullRoster(),
       event: 'paid',
+      credit,
     })
   );
 
@@ -176,9 +193,15 @@ export async function onPaymentFailed({ registration, reason }) {
 /**
  * Mark a registration paid and fire the confirmation side effects.
  *
- * Shared by the M-Pesa callback, the M-Pesa status poll and the Paystack
- * webhook, so all three converge on identical behaviour. The `sendOnce` claims
- * inside make it safe to call from more than one of them for the same payment.
+ * Shared by the M-Pesa callback, the M-Pesa status poll, the paybill (C2B)
+ * webhook, the manual reconcile route and the Paystack paths, so all of them
+ * converge on identical behaviour. Every booking is paid in full in one
+ * payment; there are no deposits.
+ *
+ * Each payment is handled once, keyed by its receipt: paying an STK prompt
+ * notifies us twice (the STK callback and the C2B confirmation, same M-Pesa
+ * code). The `sendOnce` claims inside the side effects make the rest safe to
+ * repeat.
  */
 export async function confirmPayment({ registration, payment, method, receipt, paidAt }) {
   if (registration.status === 'paid') {
@@ -186,17 +209,57 @@ export async function confirmPayment({ registration, payment, method, receipt, p
     return { alreadyPaid: true };
   }
 
+  const paidAmount = Number(payment?.amount) || 0;
+  const key = receipt || payment?.externalId || 'unknown';
+  const claim = `payment-counted.${registration.reference}.${key}`;
+  if (!(await claimOnce(claim))) {
+    return { alreadyCounted: true };
+  }
+
+  try {
+    return await recordPayment({ registration, payment, method, receipt, paidAt, paidAmount, key });
+  } catch (err) {
+    // Nothing was saved, so let the provider's retry count this payment.
+    await releaseClaim(claim);
+    throw err;
+  }
+}
+
+/**
+ * Side effects run after the payment is saved. They must never throw back into
+ * `confirmPayment`, whose claim would then be released and the same payment
+ * counted again on the provider's retry.
+ */
+async function safely(label, fn) {
+  try {
+    return await fn();
+  } catch (err) {
+    console.error(`[lifecycle] ${label} failed:`, err?.message);
+    return { ok: false, reason: err?.message };
+  }
+}
+
+async function recordPayment({ registration, payment, method, receipt, paidAt, paidAmount, key }) {
+  const when = paidAt || new Date().toISOString();
+  await appendReceipt(registration.reference, { receipt: receipt || key, amount: paidAmount, method, paidAt: when }).catch(
+    (err) => console.error('[lifecycle] receipt not recorded:', err?.message)
+  );
+
   const paidFields = {
     status: 'paid',
     paymentMethod: method,
     paymentReceipt: receipt || null,
-    paidAt: paidAt || new Date().toISOString(),
+    paidAt: when,
   };
 
   await patchRegistration(registration.reference, paidFields);
 
   const updated = { ...registration, ...paidFields };
-  const effects = await onPaymentConfirmed({ registration: updated, payment });
+
+  // A credit held by this booking is now spent.
+  await redeemCredit(updated).catch((err) => console.error('[lifecycle] credit not redeemed:', err?.message));
+
+  const effects = await safely('payment effects', () => onPaymentConfirmed({ registration: updated, payment }));
 
   return { alreadyPaid: false, registration: updated, effects };
 }

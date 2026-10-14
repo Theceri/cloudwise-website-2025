@@ -46,7 +46,9 @@ export const trainingRegistration = defineType({
       readOnly: true,
       options: {
         list: [
-          { title: 'AI Productivity Training (individual)', value: 'individual' },
+          { title: 'AI Kickstart', value: 'kickstart' },
+          { title: 'AI Essentials', value: 'essentials' },
+          { title: 'AI Productivity Programme', value: 'individual' },
           { title: 'Women Biz360 Hub masterclass', value: 'wbh-masterclass' },
         ],
       },
@@ -57,7 +59,8 @@ export const trainingRegistration = defineType({
       title: 'Cohort',
       type: 'string',
       readOnly: true,
-      description: 'e.g. 2026-09. Empty for the Women Biz360 masterclass.',
+      description:
+        'Cohort id (2026-11) for Essentials and the Programme; session id (ks-2026-10-28) for Kickstart. Empty for the Women Biz360 masterclass.',
     }),
     defineField({
       name: 'cohortLabel',
@@ -145,6 +148,36 @@ export const trainingRegistration = defineType({
       readOnly: true,
     }),
     defineField({ name: 'referralSource', title: 'How they heard about us', type: 'string', readOnly: true }),
+    defineField({
+      name: 'buyerType',
+      title: 'Describes themselves as',
+      type: 'string',
+      readOnly: true,
+      options: {
+        list: [
+          { title: 'Runs a business', value: 'owner' },
+          { title: 'Works for an organisation', value: 'employee' },
+          { title: 'Registering colleagues', value: 'colleagues' },
+          { title: 'Student or job seeker', value: 'student' },
+        ],
+      },
+    }),
+    defineField({ name: 'headcount', title: 'People registering', type: 'number', readOnly: true }),
+    defineField({
+      name: 'teamLead',
+      title: 'Team lead',
+      type: 'boolean',
+      readOnly: true,
+      description: 'Registering colleagues, or 3 or more people. Follow up the same day.',
+    }),
+    defineField({
+      name: 'attendsDays',
+      title: 'Attends',
+      type: 'array',
+      of: [{ type: 'string' }],
+      readOnly: true,
+      description: '"day-two" only when an Essentials credit paid for Day One.',
+    }),
 
     // --- Consent ----------------------------------------------------------
     defineField({
@@ -162,7 +195,39 @@ export const trainingRegistration = defineType({
     }),
 
     // --- Money ------------------------------------------------------------
-    defineField({ name: 'amount', title: 'Amount (KES)', type: 'number', readOnly: true }),
+    defineField({ name: 'listPrice', title: 'List price (KES)', type: 'number', readOnly: true }),
+    defineField({
+      name: 'creditApplied',
+      title: 'Credit applied',
+      type: 'object',
+      readOnly: true,
+      fields: [
+        defineField({ name: 'code', title: 'Credit code', type: 'string', readOnly: true }),
+        defineField({ name: 'amountKes', title: 'Credit (KES)', type: 'number', readOnly: true }),
+        defineField({ name: 'sourceReference', title: 'Earned on booking', type: 'string', readOnly: true }),
+        defineField({ name: 'sourceReceipt', title: 'Earned with receipt', type: 'string', readOnly: true }),
+      ],
+    }),
+    defineField({ name: 'amount', title: 'Amount due (KES)', type: 'number', readOnly: true }),
+    defineField({
+      name: 'receipts',
+      title: 'All receipts',
+      type: 'array',
+      readOnly: true,
+      description: 'Every confirmed payment on this booking, with its M-Pesa code or card reference.',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            defineField({ name: 'receipt', title: 'Receipt', type: 'string' }),
+            defineField({ name: 'amount', title: 'Amount (KES)', type: 'number' }),
+            defineField({ name: 'method', title: 'Method', type: 'string' }),
+            defineField({ name: 'paidAt', title: 'Paid at', type: 'datetime' }),
+          ],
+          preview: { select: { title: 'receipt', subtitle: 'amount' } },
+        },
+      ],
+    }),
     defineField({
       name: 'paymentMethod',
       title: 'Paid with',

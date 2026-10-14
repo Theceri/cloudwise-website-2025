@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { confirmPayment, onPaymentFailed } from '@/lib/lifecycle';
 import { isDarajaConfigured, stkQuery } from '@/lib/payments/daraja';
 import { getRegistration, latestPaymentFor, patchPayment } from '@/lib/store';
-import { normaliseReference } from '@/lib/training';
+import { normaliseReference, reportedValue } from '@/lib/training';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -36,6 +36,7 @@ export async function GET(request, { params }) {
       reference: ref,
       track: registration.track,
       amount: registration.amount,
+      value: reportedValue(registration),
       receipt: registration.paymentReceipt || null,
       method: registration.paymentMethod || null,
     });

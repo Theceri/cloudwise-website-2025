@@ -495,12 +495,18 @@ function PaidPanel({ booking, receipt }) {
         {receipt && <Row label="M-Pesa receipt" value={receipt} mono />}
       </dl>
 
+      <p className="mx-auto mt-6 max-w-md text-sm text-white/60">
+        {booking.track === 'kickstart'
+          ? 'Your Google Meet link arrives on WhatsApp and email before the session. Afterwards you get every prompt in writing and a Ksh 500 credit toward your next course.'
+          : 'You join the Cloudwise WhatsApp support community after the session. It has no end date.'}
+      </p>
+
       <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <Link href="/resources" className="btn-ember text-base">
-          Open your resources <ArrowUpRight size={18} />
-        </Link>
-        <Link href="/ai-training" className="btn-ghost text-base">
-          Back to the training
+        <a href={`/api/registrations/${booking.reference}/ics`} className="btn-ember text-base">
+          Add to calendar <ArrowUpRight size={18} />
+        </a>
+        <Link href="/resources" className="btn-ghost text-base">
+          Open your resources
         </Link>
       </div>
     </div>
