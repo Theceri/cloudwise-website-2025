@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowUpRight, BookOpen, ClipboardList, Sparkles } from 'lucide-react';
+import { ArrowUpRight, BookOpen, ClipboardList, Sparkles, Wrench } from 'lucide-react';
 
 import { PageHero } from '@/components/PageHero';
 import { Reveal } from '@/components/anim/Reveal';
@@ -22,7 +22,20 @@ const ICONS = {
   'ai-readiness': BookOpen,
   'prompt-pack': Sparkles,
   'session-prep': ClipboardList,
+  'ai-tools-kenya': Wrench,
 };
+
+// The tools guide is its own page (src/app/resources/ai-tools-kenya), not a
+// RESOURCE_INDEX entry, because it is not part of the welcome email.
+const CARDS = [
+  ...RESOURCE_INDEX,
+  {
+    slug: 'ai-tools-kenya',
+    title: 'The AI tools worth learning',
+    tag: 'Start here',
+    summary: 'What Claude, ChatGPT, Gemini, Copilot, NotebookLM and Meta AI are each for, and what never to paste.',
+  },
+];
 
 export default function ResourcesPage() {
   return (
@@ -35,8 +48,8 @@ export default function ResourcesPage() {
 
       <section className="border-t border-white/10 bg-ink py-20 md:py-28">
         <div className="container-px">
-          <div className="grid gap-4 md:grid-cols-3">
-            {RESOURCE_INDEX.map((resource, i) => {
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {CARDS.map((resource, i) => {
               const Icon = ICONS[resource.slug] || BookOpen;
               return (
                 <Reveal key={resource.slug} delay={i * 0.07}>
@@ -76,12 +89,12 @@ export default function ResourcesPage() {
                   Reading about it only gets you so far.
                 </h2>
                 <p className="mt-2 text-white/65">
-                  In the training you build these into your own business, with us beside you — and
-                  leave with the thing already working.
+                  In the training you build these into your own business, with us beside you, and
+                  leave with the thing already working. It starts at Ksh 500.
                 </p>
               </div>
               <Link href="/ai-training" className="btn-ember text-base">
-                See the training <ArrowUpRight size={18} />
+                See courses and prices <ArrowUpRight size={18} />
               </Link>
             </div>
           </Reveal>

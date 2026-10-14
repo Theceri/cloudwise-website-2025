@@ -64,14 +64,24 @@ export const NAVIGATION_LINKS = [
     highlight: true,
     children: [
       {
-        name: 'For individuals & teams',
+        name: 'Kickstart (Ksh 500)',
+        href: '/ai-training/kickstart',
+        description: '2 hours online, Wednesdays 7pm',
+      },
+      {
+        name: 'Courses and pricing',
         href: '/ai-training',
-        description: 'Two Saturdays a month, online or in Nairobi',
+        description: 'Kickstart, Essentials and the full Programme',
+      },
+      {
+        name: 'Private and team training',
+        href: '/ai-training/teams',
+        description: 'One-to-one, or 10 people or more',
       },
       {
         name: 'Free resources',
         href: '/resources',
-        description: 'Prompt pack, readiness guide and session checklist',
+        description: 'Prompt pack, readiness guide and AI tools',
       },
     ],
   },

@@ -26,7 +26,12 @@ export default async function sitemap() {
   const staticRoutes = [
     { url: '/', priority: 1.0, changeFrequency: 'weekly' },
     { url: '/ai-training', priority: 0.95, changeFrequency: 'weekly' },
-    { url: '/ai-training/register', priority: 0.9, changeFrequency: 'weekly' },
+    // The register page is a form and is noindexed; the tier pages carry the content.
+    { url: '/ai-training/kickstart', priority: 0.9, changeFrequency: 'weekly' },
+    { url: '/ai-training/essentials', priority: 0.9, changeFrequency: 'weekly' },
+    { url: '/ai-training/programme', priority: 0.9, changeFrequency: 'weekly' },
+    { url: '/ai-training/teams', priority: 0.85, changeFrequency: 'monthly' },
+    { url: '/resources/ai-tools-kenya', priority: 0.7, changeFrequency: 'monthly' },
     { url: '/resources', priority: 0.8, changeFrequency: 'monthly' },
     { url: '/resources/prompt-pack', priority: 0.75, changeFrequency: 'monthly' },
     { url: '/resources/ai-readiness', priority: 0.7, changeFrequency: 'monthly' },
