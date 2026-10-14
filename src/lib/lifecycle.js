@@ -3,6 +3,7 @@ import 'server-only';
 import { paybillInstructions } from '@/lib/payments/daraja';
 import { sendOnce, sendToAdmins } from '@/lib/email/send';
 import * as templates from '@/lib/email/templates';
+import { sendGa4Purchase } from '@/lib/analytics/ga4-server';
 import { sendEvent } from '@/lib/meta/capi';
 import { META_CURRENCY, META_EVENTS, metaEventId } from '@/lib/meta/events';
 import { listRegistrations, patchRegistration } from '@/lib/store';
@@ -108,6 +109,7 @@ export async function onPaymentConfirmed({ registration, payment }) {
     customData: metaCustomData(registration),
     eventTime: registration.paidAt,
   }).catch((err) => ({ sent: false, reason: err?.message }));
+  const ga4Purchase = sendGa4Purchase({ registration });
 
   results.customer = await sendOnce({
     reference: registration.reference,
@@ -134,6 +136,7 @@ export async function onPaymentConfirmed({ registration, payment }) {
   );
 
   results.metaPurchase = await metaPurchase;
+  results.ga4Purchase = await ga4Purchase;
 
   // Sweep the collection to the bank. Runs last so a settlement problem cannot
   // delay the customer's confirmation.

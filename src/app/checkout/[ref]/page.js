@@ -50,6 +50,10 @@ export default async function CheckoutPage({ params }) {
     status: registration.status,
     phone: registration.phone || '',
     receipt: registration.paymentReceipt || null,
+    track: registration.track,
+    // The list price, for analytics. `amount` is what is charged, which in test
+    // mode is a token shilling.
+    listPrice: track?.priceKes ?? registration.amount,
     trackName: track?.name || 'AI training',
     scheduleHeadline: schedule.headline,
     emailMasked: maskEmail(registration.email || ''),

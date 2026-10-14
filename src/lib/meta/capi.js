@@ -172,6 +172,12 @@ export function readAttribution(request, { eventSourceUrl } = {}) {
 
   const forwarded = request.headers.get('x-forwarded-for') || '';
 
+  // GA4's client id lives in the `_ga` cookie as GA1.1.<random>.<timestamp>.
+  // The Measurement Protocol wants only the last two parts. Kept here, beside
+  // the Meta cookies, because this is the last moment any of them exist.
+  const ga = cookie('_ga');
+  const gaClientId = ga ? ga.split('.').slice(-2).join('.') || null : null;
+
   return {
     fbp: cookie('_fbp'),
     fbc,
@@ -179,6 +185,7 @@ export function readAttribution(request, { eventSourceUrl } = {}) {
     clientIp: forwarded.split(',')[0].trim() || null,
     userAgent: request.headers.get('user-agent') || null,
     eventSourceUrl: eventSourceUrl || null,
+    gaClientId,
     capturedAt: new Date().toISOString(),
   };
 }

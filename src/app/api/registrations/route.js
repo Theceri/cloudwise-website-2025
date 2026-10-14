@@ -15,6 +15,27 @@ import {
 } from '@/lib/training';
 
 export const runtime = 'nodejs';
+
+const UTM_FIELDS = [
+  'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'fbclid', 'gclid', 'landingPage',
+];
+
+/**
+ * Keep only the known source fields, as short strings. The browser sends what
+ * it stored on the first landing (src/components/UtmCapture.js); anything else
+ * in the object is dropped rather than written to the roster.
+ */
+function cleanUtm(input) {
+  if (!input || typeof input !== 'object') return null;
+  const out = {};
+  for (const key of UTM_FIELDS) {
+    if (typeof input[key] === 'string' && input[key].trim()) out[key] = input[key].trim().slice(0, 200);
+  }
+  if (typeof input.capturedAt === 'string' && !Number.isNaN(Date.parse(input.capturedAt))) {
+    out.capturedAt = new Date(input.capturedAt).toISOString();
+  }
+  return Object.keys(out).length ? out : null;
+}
 export const dynamic = 'force-dynamic';
 
 /**
@@ -72,6 +93,7 @@ export async function POST(request) {
     // last moment the cookies exist, so they are stored and replayed with the
     // Purchase event whenever the money actually lands.
     metaAttribution: readAttribution(request, { eventSourceUrl: body?.pageUrl }),
+    utm: cleanUtm(body?.attribution),
   };
 
   let registration;

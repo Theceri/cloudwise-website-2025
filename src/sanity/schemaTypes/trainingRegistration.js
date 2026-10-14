@@ -229,7 +229,28 @@ export const trainingRegistration = defineType({
         defineField({ name: 'clientIp', title: 'Client IP', type: 'string', readOnly: true }),
         defineField({ name: 'userAgent', title: 'User agent', type: 'string', readOnly: true }),
         defineField({ name: 'eventSourceUrl', title: 'Page submitted from', type: 'string', readOnly: true }),
+        defineField({ name: 'gaClientId', title: 'GA4 client id', type: 'string', readOnly: true }),
         defineField({ name: 'capturedAt', title: 'Captured at', type: 'datetime', readOnly: true }),
+      ],
+    }),
+    defineField({
+      name: 'utm',
+      title: 'Ad source (UTM)',
+      type: 'object',
+      readOnly: true,
+      options: { collapsible: true, collapsed: true },
+      description:
+        'The tags on the link that first brought this person to the site, kept for 30 days in their browser and sent with the registration.',
+      fields: [
+        defineField({ name: 'utm_source', title: 'Source', type: 'string', readOnly: true }),
+        defineField({ name: 'utm_medium', title: 'Medium', type: 'string', readOnly: true }),
+        defineField({ name: 'utm_campaign', title: 'Campaign', type: 'string', readOnly: true }),
+        defineField({ name: 'utm_content', title: 'Ad (content)', type: 'string', readOnly: true }),
+        defineField({ name: 'utm_term', title: 'Term', type: 'string', readOnly: true }),
+        defineField({ name: 'fbclid', title: 'Meta click id', type: 'string', readOnly: true }),
+        defineField({ name: 'gclid', title: 'Google click id', type: 'string', readOnly: true }),
+        defineField({ name: 'landingPage', title: 'Landing page', type: 'string', readOnly: true }),
+        defineField({ name: 'capturedAt', title: 'First seen', type: 'datetime', readOnly: true }),
       ],
     }),
     defineField({

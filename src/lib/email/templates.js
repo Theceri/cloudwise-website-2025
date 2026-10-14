@@ -525,6 +525,12 @@ export function adminSignupAlert({ registration: reg, roster, event }) {
       ['Business', escapeHtml(reg.organization || '—')],
       ['Format', reg.attendance === 'online' ? 'Online' : 'In person'],
       ['Reference', `<code>${escapeHtml(reg.reference)}</code>`],
+      reg.utm && [
+        'Ad source',
+        escapeHtml(
+          [reg.utm.utm_source, reg.utm.utm_campaign, reg.utm.utm_content].filter(Boolean).join(' · ') || '—'
+        ),
+      ],
       isPayment && ['Paid with', escapeHtml(reg.paymentMethod || '—')],
       isPayment && ['Receipt', `<code>${escapeHtml(reg.paymentReceipt || '—')}</code>`],
       isPayment && [

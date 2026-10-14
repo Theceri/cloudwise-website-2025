@@ -3,6 +3,8 @@
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 
+import { trackGoogle } from '@/components/GoogleTagRouteViews';
+
 /**
  * Fire a pixel event from anywhere in the browser.
  *
@@ -48,6 +50,7 @@ function useWhatsAppContactTracking() {
       if (!link) return;
       if (!/^https?:\/\/(wa\.me|api\.whatsapp\.com)\//i.test(link.href)) return;
       trackPixel('Contact', { content_name: 'WhatsApp' });
+      trackGoogle('whatsapp_click', { link_url: link.href, page_path: window.location.pathname });
     }
 
     document.addEventListener('click', onClick, { capture: true });
