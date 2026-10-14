@@ -11,11 +11,21 @@ export function HeroCanvas({ className = '' }) {
 
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) return;
-    // lighter cloud on small / low-power screens
-    const small = window.innerWidth < 768;
-    setDensity(small ? 0.5 : 1);
-    setEnabled(true);
+    if (reduced) return undefined;
+    // Phones and tablets keep the CSS glow below. Three.js is the heaviest
+    // code on the site, and on a phone it competed with the first paint
+    // (traces of 14 October 2026). Large screens with a mouse get the
+    // canvas, mounted once the browser is idle so it never delays the hero.
+    if (!window.matchMedia('(min-width: 768px) and (pointer: fine)').matches) return undefined;
+
+    setDensity(1);
+    const start = () => setEnabled(true);
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(start, { timeout: 2000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = setTimeout(start, 800);
+    return () => clearTimeout(id);
   }, []);
 
   return (

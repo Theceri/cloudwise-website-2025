@@ -16,6 +16,9 @@ export function BrandLogo({ className = '', priority = false }) {
       width={478}
       height={254}
       priority={priority}
+      // Shown 44px tall, so about 83px wide. Without `sizes`, Next.js offered
+      // the browser a 1,080px-wide file for it.
+      sizes="96px"
       className={cn('h-11 w-auto', className)}
     />
   );

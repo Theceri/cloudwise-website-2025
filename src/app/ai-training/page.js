@@ -13,9 +13,13 @@ import { SITE_URL, COMPANY_INFO, formatAddress, whatsappLink } from '@/lib/const
 import { META_CURRENCY, META_EVENTS } from '@/lib/meta/events';
 import { TRACK_INDIVIDUAL, TRACKS, formatKes, listOpenCohorts } from '@/lib/training';
 
-// The next-cohort strip is derived from today's date, so this page cannot be
-// baked at build time without eventually advertising dates that have passed.
-export const dynamic = 'force-dynamic';
+// The next-cohort strip is derived from today's date, so the page is rebuilt
+// every hour rather than baked once at build time. It was `force-dynamic`,
+// which rebuilt it for every visitor (140 KB of HTML, never cached) and slowed
+// the first paint on phones. An hour is safe: a cohort closes two days before
+// day one, and the registration API refuses a closed cohort however stale the
+// page is (isCohortOpen in src/app/api/registrations/route.js).
+export const revalidate = 3600;
 
 export const metadata = {
   title: 'AI Productivity Training in Nairobi — Work Smarter with AI',
