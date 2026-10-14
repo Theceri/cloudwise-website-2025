@@ -1,6 +1,13 @@
 import 'server-only';
 
-import { claimOnce, releaseClaim, patchPayment, patchRegistration, paymentId } from '@/lib/store';
+import {
+  claimOnce,
+  listUnsettledPayments,
+  patchPayment,
+  patchRegistration,
+  paymentId,
+  releaseClaim,
+} from '@/lib/store';
 
 import { darajaB2bAdapter } from './daraja-b2b';
 import { sasapayAdapter } from './sasapay';
@@ -24,6 +31,14 @@ import { sasapayAdapter } from './sasapay';
  * Design follows the state machine in sasapay-test/docs/AUTO_SETTLEMENT_PLAN.md:
  * a claim makes the sweep exactly-once, the payout's own callback closes the
  * loop, and a failure leaves the money safely where it is.
+ *
+ * When, chosen with SETTLEMENT_SCHEDULE:
+ *
+ *   immediate   (default) Each confirmed M-Pesa payment is swept straight away,
+ *               and the daily job retries any that failed.
+ *   daily       Nothing is swept at payment time. The daily job (9:00am EAT)
+ *               sweeps every unsettled M-Pesa payment in ONE transfer, which
+ *               pays the B2B charge once a day instead of once a payment.
  */
 
 const ADAPTERS = {
@@ -50,6 +65,7 @@ export function settlementConfig() {
     floatBuffer: Number(process.env.SETTLEMENT_FLOAT_BUFFER || 0),
     bankName: process.env.SETTLEMENT_BANK_NAME || 'Equity Bank',
     accountNumber: process.env.SETTLEMENT_ACCOUNT_NUMBER || '',
+    schedule: (process.env.SETTLEMENT_SCHEDULE || 'immediate').toLowerCase() === 'daily' ? 'daily' : 'immediate',
   };
 }
 
@@ -89,6 +105,9 @@ export async function maybeSettle(payment, { force = false } = {}) {
   const cfg = settlementConfig();
 
   if (!cfg.enabled) return { settled: false, reason: 'disabled' };
+
+  // On the daily schedule a payment waits, as `pending`, for settleBatch.
+  if (cfg.schedule === 'daily' && !force) return { settled: false, reason: 'scheduled for the daily sweep' };
 
   const adapter = ADAPTERS[cfg.adapter];
   if (!adapter) return { settled: false, reason: `unknown adapter: ${cfg.adapter}` };
@@ -177,31 +196,152 @@ export async function maybeSettle(payment, { force = false } = {}) {
 }
 
 /**
+ * Sweep every unsettled M-Pesa payment to the bank in one transfer.
+ * Called by the daily job when SETTLEMENT_SCHEDULE=daily.
+ *
+ * Each payment is claimed exactly as a single sweep would claim it, so a
+ * payment can never be in two transfers. The batch is recorded as a
+ * `settlementBatch` document listing its payments; the provider's result
+ * callback settles or fails all of them together.
+ */
+export async function settleBatch({ now = new Date() } = {}) {
+  const cfg = settlementConfig();
+  if (!cfg.enabled) return { settled: false, reason: 'disabled' };
+  const adapter = ADAPTERS[cfg.adapter];
+  if (!adapter) return { settled: false, reason: `unknown adapter: ${cfg.adapter}` };
+  if (!cfg.accountNumber) return { settled: false, reason: 'no destination account configured' };
+
+  const candidates = (await listUnsettledPayments({ limit: 200 })).filter(
+    (p) => p.status === 'completed' && SWEEPABLE_PROVIDERS.has(p.provider)
+  );
+
+  // Claim each payment. A failed or stale one is revived, as a forced retry would.
+  const claimed = [];
+  for (const payment of candidates) {
+    const lockKey = `settle.${paymentId(payment.provider, payment.externalId)}`;
+    if (payment.settlementState !== 'pending') await releaseClaim(lockKey);
+    if (await claimOnce(lockKey)) claimed.push(payment);
+  }
+  if (!claimed.length) return { settled: false, reason: 'nothing to sweep' };
+
+  const collected = claimed.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const amount = sweepAmountFor(collected, cfg);
+
+  const releaseAll = async (state, message) => {
+    for (const payment of claimed) {
+      await patchPayment(payment.provider, payment.externalId, {
+        settlementState: state,
+        settlementMessage: message,
+      }).catch(() => {});
+      await releaseClaim(`settle.${paymentId(payment.provider, payment.externalId)}`);
+    }
+  };
+
+  if (collected < cfg.minAmount || amount <= 0) {
+    // Leave them pending for tomorrow's run rather than skipping them for good.
+    await releaseAll('pending', `Waiting: Ksh ${collected} is below the daily sweep minimum.`);
+    return { settled: false, reason: 'below minimum', collected };
+  }
+
+  const day = now.toISOString().slice(0, 10).replace(/-/g, '');
+  const batchId = `settlement-batch.${day}-${Date.now().toString(36)}`;
+  const { writeClient } = await import('@/sanity/lib/writeClient');
+  await writeClient.create({
+    _id: batchId,
+    _type: 'settlementBatch',
+    state: 'queued',
+    adapter: cfg.adapter,
+    paymentIds: claimed.map((p) => paymentId(p.provider, p.externalId)),
+    collected,
+    amount,
+    createdAt: now.toISOString(),
+  });
+
+  for (const payment of claimed) {
+    await patchPayment(payment.provider, payment.externalId, {
+      settlementState: 'queued',
+      settlementAdapter: cfg.adapter,
+      settlementAmount: Number(payment.amount) || 0,
+    });
+  }
+
+  try {
+    const result = await adapter.settle({ amount, reference: `BATCH-${day}`, cfg });
+
+    for (const payment of claimed) {
+      await patchPayment(payment.provider, payment.externalId, {
+        settlementState: 'settling',
+        settlementRef: result.reference,
+        settlementMessage: `Part of the daily sweep ${batchId}.`,
+      });
+      await patchRegistration(payment.registrationRef, { settlementState: 'settling' }).catch(() => {});
+    }
+    await writeClient
+      .patch(batchId)
+      .set({ state: 'settling', settlementRef: result.reference, message: result.message || '' })
+      .commit();
+
+    return { settled: true, state: 'settling', reference: result.reference, amount, payments: claimed.length };
+  } catch (err) {
+    console.error('[settlement] daily sweep failed:', err?.message);
+    const message = String(err?.message || err).slice(0, 300);
+    await releaseAll('failed', message);
+    await writeClient.patch(batchId).set({ state: 'failed', message }).commit().catch(() => {});
+    return { settled: false, reason: err?.message || 'settlement failed' };
+  }
+}
+
+/**
  * Close the loop when the provider reports the payout's outcome.
  * Called from the settlement result callbacks.
+ *
+ * A single sweep matches one payment; a daily sweep matches every payment in
+ * the batch, because they share the provider's reference.
  */
 export async function recordSettlementResult({ settlementRef, succeeded, message }) {
   const { writeClient } = await import('@/sanity/lib/writeClient');
 
-  const payment = await writeClient.fetch(
-    '*[_type == "trainingPayment" && settlementRef == $ref][0]',
+  const payments = await writeClient.fetch(
+    '*[_type == "trainingPayment" && settlementRef == $ref]',
     { ref: settlementRef },
     { cache: 'no-store' }
   );
-  if (!payment) return { matched: false };
+  if (!payments.length) return { matched: false };
 
   const state = succeeded ? 'settled' : 'failed';
-  await patchPayment(payment.provider, payment.externalId, {
-    settlementState: state,
-    settlementMessage: String(message || '').slice(0, 300),
-    ...(succeeded ? { settledAt: new Date().toISOString() } : {}),
-  });
-  await patchRegistration(payment.registrationRef, { settlementState: state }).catch(() => {});
+  for (const payment of payments) {
+    await patchPayment(payment.provider, payment.externalId, {
+      settlementState: state,
+      settlementMessage: String(message || '').slice(0, 300),
+      ...(succeeded ? { settledAt: new Date().toISOString() } : {}),
+    });
+    await patchRegistration(payment.registrationRef, { settlementState: state }).catch(() => {});
 
-  // A failed sweep must be retryable, so give the claim back.
-  if (!succeeded) {
-    await releaseClaim(`settle.${paymentId(payment.provider, payment.externalId)}`);
+    // A failed sweep must be retryable, so give the claim back.
+    if (!succeeded) {
+      await releaseClaim(`settle.${paymentId(payment.provider, payment.externalId)}`);
+    }
   }
 
-  return { matched: true, state, registrationRef: payment.registrationRef, payment };
+  // The batch record, if this was a daily sweep.
+  const batchId = await writeClient.fetch(
+    '*[_type == "settlementBatch" && settlementRef == $ref][0]._id',
+    { ref: settlementRef },
+    { cache: 'no-store' }
+  );
+  if (batchId) {
+    await writeClient
+      .patch(batchId)
+      .set({ state, message: String(message || '').slice(0, 300), ...(succeeded ? { settledAt: new Date().toISOString() } : {}) })
+      .commit()
+      .catch(() => {});
+  }
+
+  return {
+    matched: true,
+    state,
+    registrationRef: payments[0].registrationRef,
+    payment: payments[0],
+    payments: payments.length,
+  };
 }

@@ -899,9 +899,19 @@ Restart `npm run dev`.
 | `SETTLEMENT_MODE=fixed` + `SETTLEMENT_VALUE=5000` | Sends Ksh 5,000, leaves the rest |
 | `SETTLEMENT_MIN_AMOUNT=500` | Ignores payments under Ksh 500, so transfer fees do not eat small amounts |
 | `SETTLEMENT_FLOAT_BUFFER=2000` | Always leaves Ksh 2,000 behind as working float |
+| `SETTLEMENT_SCHEDULE=immediate` | The default. Sweeps each M-Pesa payment as soon as it is confirmed |
+| `SETTLEMENT_SCHEDULE=daily` | Sweeps nothing at payment time. At 9:00am EAT the daily job sends every unsettled M-Pesa payment to the bank in **one** transfer |
 
-Start with `full` and zeros. Adjust once you see the transfer fees on real
-transactions.
+Start with `full`, zeros and `immediate`. Adjust once you see the transfer fees
+on real transactions.
+
+**On the daily schedule:**
+
+- **What the settings apply to:** `SETTLEMENT_MODE`, `SETTLEMENT_FLOAT_BUFFER` and `SETTLEMENT_MIN_AMOUNT` apply to the day's total, not to each payment.
+- **A small day:** if the total is below the minimum, the payments stay `pending` and go out with tomorrow's sweep.
+- **The record:** each daily sweep is a record under **Training → Daily bank sweeps** in `/studio`. It lists its payments, the total collected and the amount sent.
+- **The result:** Safaricom's result marks every payment in the sweep `settled` or `failed` together. A failed sweep is retried the next morning, and the admins are emailed as for a single sweep.
+- **When to choose it:** if Safaricom charges a fixed fee for each B2B transfer, one transfer a day costs less than one for each payment.
 
 #### 8.A.5 Test it
 
