@@ -87,11 +87,35 @@ export async function listRegistrations({ track, cohortId, status, since, limit 
       attendance, aiExperience, aiTools, timeConsumingTasks, biggestChallenge,
       goal, liveChallenge, dietary, referralSource, whatsappOptIn,
       amount, paymentMethod, paymentReceipt, paidAt,
-      settlementState, settlementRef, emailsSent, createdAt, utm
+      settlementState, settlementRef, emailsSent, createdAt, utm,
+      buyerType, headcount, teamLead, listPrice, attendsDays, creditApplied, receipts
     }`,
     params,
     { cache: 'no-store' }
   );
+}
+
+/**
+ * How many seats a session or cohort has sold on one track. Used to stop a
+ * Kickstart session taking a 101st booking on a 100-person Google Meet.
+ */
+export async function countPaidRegistrations({ track, cohortId }) {
+  assertConfigured();
+  return writeClient.fetch(
+    `count(*[_type == "trainingRegistration" && track == $track && cohortId == $cohortId && status == "paid"])`,
+    { track, cohortId },
+    { cache: 'no-store' }
+  );
+}
+
+/** Add one confirmed payment to the booking's list of receipts. */
+export async function appendReceipt(reference, entry) {
+  assertConfigured();
+  return writeClient
+    .patch(registrationId(reference))
+    .setIfMissing({ receipts: [] })
+    .append('receipts', [{ _key: `${String(entry.receipt || Date.now()).replace(/[^A-Za-z0-9]/g, '')}`, ...entry }])
+    .commit();
 }
 
 /** Paid registrations whose training starts on a given ISO date. Drives reminders. */

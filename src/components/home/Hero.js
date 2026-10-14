@@ -50,7 +50,7 @@ export function Hero() {
             </Link>
           </Magnetic>
           <Link href="/ai-training" className="btn-ghost text-base">
-            Explore AI training
+            AI training from Ksh 500
           </Link>
         </div>
 

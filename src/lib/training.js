@@ -1,12 +1,24 @@
 /**
  * Training domain model — tracks, pricing, cohorts and payment references.
  *
- * One track is sold:
+ * Three tracks are sold, as a ladder (tiered plan CW-2026-AIT-01 rev4):
  *
- *   individual      Cloudwise AI Productivity Training. Rolling monthly cohorts,
- *                   two half-day Saturday sessions (1st & 2nd Saturday).
+ *   kickstart       AI Kickstart. Ksh 500. Two hours live on Google Meet, every
+ *                   Wednesday 7:00–9:00pm EAT. Earns a Ksh 500 credit.
+ *   essentials      AI Essentials. Ksh 5,500. Four hours, the first Saturday of
+ *                   a cohort (it is Day One of the Programme). Earns a Ksh 5,500
+ *                   credit toward the Programme.
+ *   individual      AI Productivity Programme. Ksh 13,500. Rolling monthly
+ *                   cohorts, two half-day Saturday sessions (1st & 2nd
+ *                   Saturday). The id stays "individual" because every
+ *                   existing booking uses it.
  *
- * A second is retired:
+ * Every class is paid in full, at booking. There are no deposits or
+ * instalments (decided 15 October 2026): part payments invite buyers who will
+ * not pay the full price and requests for refunds, and the code is simpler
+ * without them.
+ *
+ * A fourth is retired:
  *
  *   wbh-masterclass Women Biz360 Hub × Cloudwise AI Masterclass. A one-off dated
  *                   event, run on 15 September 2026 and not running again. Its
@@ -23,28 +35,87 @@
 import { formatAddress } from '@/lib/constants';
 
 export const TRACK_INDIVIDUAL = 'individual';
+export const TRACK_PROGRAMME = TRACK_INDIVIDUAL;
+export const TRACK_KICKSTART = 'kickstart';
+export const TRACK_ESSENTIALS = 'essentials';
 export const TRACK_WBH = 'wbh-masterclass';
 
+/** The private one-to-one programme: 8 hours, one person. Quoted, not booked online. */
+export const PRIVATE_PRICE_KES = 30000;
+/** Team training: the Programme rebuilt around a team's own work. */
+export const TEAM_PRICE_PER_PERSON_KES = 13500;
+export const TEAM_MIN_PEOPLE = 10;
+
 export const TRACKS = {
+  [TRACK_KICKSTART]: {
+    id: TRACK_KICKSTART,
+    tier: 1,
+    param: 'kickstart',
+    name: 'AI Kickstart',
+    shortName: 'Kickstart',
+    audience: 'Anyone new to AI',
+    priceKes: 500,
+    strikePriceKes: null,
+    registerPath: '/ai-training/register?tier=kickstart',
+    landingPath: '/ai-training/kickstart',
+    refLetter: 'K',
+    durationLabel: '2 hours · Wednesday 7:00pm–9:00pm EAT',
+    lengthLabel: '2 hours',
+    formatLabel: 'Live on Google Meet',
+    venue: 'Online, on Google Meet',
+    supportsOnline: true,
+    onlineOnly: true,
+    hasCohorts: false,
+    hasSessions: true,
+    capacity: 100,
+    // What a paid booking earns toward a bigger course. See src/lib/credits.js.
+    credit: { amountKes: 500, days: 14, appliesTo: ['essentials', 'individual'] },
+  },
+  [TRACK_ESSENTIALS]: {
+    id: TRACK_ESSENTIALS,
+    tier: 2,
+    param: 'essentials',
+    name: 'AI Essentials',
+    shortName: 'Essentials',
+    audience: 'Professionals and business owners',
+    priceKes: 5500,
+    strikePriceKes: null,
+    registerPath: '/ai-training/register?tier=essentials',
+    landingPath: '/ai-training/essentials',
+    refLetter: 'E',
+    durationLabel: '1 Saturday · 9:00am–1:00pm',
+    lengthLabel: '4 hours',
+    formatLabel: 'Delta Annex or Google Meet',
+    venue: formatAddress(),
+    supportsOnline: true,
+    hasCohorts: true,
+    days: ['day-one'],
+    credit: { amountKes: 5500, days: 60, appliesTo: ['individual'] },
+  },
   [TRACK_INDIVIDUAL]: {
     id: TRACK_INDIVIDUAL,
-    name: 'AI Productivity Training',
-    shortName: 'AI Productivity Training',
+    tier: 3,
+    param: 'programme',
+    name: 'AI Productivity Programme',
+    shortName: 'Programme',
     audience: 'Individuals & teams',
     priceKes: 13500,
     // No reference price: nobody has ever paid Ksh 30,000 for a cohort seat, so a
     // struck-through anchor would be a misleading price claim. Ksh 30,000 is now
     // the real price of private one-to-one training instead.
     strikePriceKes: null,
-    registerPath: '/ai-training/register',
-    landingPath: '/ai-training',
+    registerPath: '/ai-training/register?tier=programme',
+    landingPath: '/ai-training/programme',
     refPrefix: 'CWI', // legacy references only — see generateReference
     refLetter: 'A',
     // Two 4-hour Saturday sessions per cohort.
     durationLabel: '2 Saturdays · 9:00am–1:00pm each',
+    lengthLabel: '8 hours',
+    formatLabel: 'Delta Annex or Google Meet',
     venue: formatAddress(),
     supportsOnline: true,
     hasCohorts: true,
+    days: ['day-one', 'day-two'],
   },
   // Retired — read-only. See the module comment above.
   [TRACK_WBH]: {
@@ -71,6 +142,18 @@ export const TRACKS = {
 };
 
 export const TRACK_IDS = Object.keys(TRACKS);
+
+/** The three public tiers, cheapest first. */
+export const PUBLIC_TIERS = [TRACK_KICKSTART, TRACK_ESSENTIALS, TRACK_PROGRAMME];
+
+/**
+ * `?tier=` on the register page → a track id. Anything unknown, including the
+ * retired masterclass, falls back to the Programme.
+ */
+export function tierFromParam(value) {
+  const match = PUBLIC_TIERS.find((id) => TRACKS[id].param === value || id === value);
+  return match || TRACK_PROGRAMME;
+}
 
 export function getTrack(trackId) {
   return TRACKS[trackId] || null;
@@ -263,6 +346,141 @@ export function isCohortOpen(cohortId, { now = new Date() } = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// Kickstart sessions — every Wednesday, 7:00–9:00pm East Africa Time
+// ---------------------------------------------------------------------------
+
+/** The first Kickstart. Nothing earlier is ever listed. */
+const KICKSTART_EPOCH = '2026-10-28';
+export const KICKSTART_START = '19:00';
+export const KICKSTART_END = '21:00';
+/** Booking closes at 5:00pm EAT on the day (14:00 UTC), two hours before the start. */
+const KICKSTART_CLOSE_UTC_HOUR = 14;
+
+/**
+ * Wednesdays that will not run, as ISO dates, from KICKSTART_SKIP_DATES
+ * ("2026-12-23,2026-12-30"). Lets a week be cancelled without a code change.
+ * Read on the server only; pages pass the resulting list to the browser.
+ */
+function kickstartSkipDates() {
+  const raw = typeof process !== 'undefined' ? process.env.KICKSTART_SKIP_DATES : '';
+  return new Set(
+    String(raw || '')
+      .split(',')
+      .map((d) => d.trim())
+      .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+  );
+}
+
+function buildKickstartSession(date) {
+  const iso = isoDay(date);
+  const closesAt = new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), KICKSTART_CLOSE_UTC_HOUR)
+  );
+  return {
+    // The session id is stored in the registration's `cohortId` field, so the
+    // reminder and follow-up machinery works for every track unchanged.
+    id: `ks-${iso}`,
+    date: iso,
+    label: formatDay(date),
+    longLabel: formatDay(date, { long: true }),
+    closesAt: closesAt.toISOString(),
+  };
+}
+
+/** The next `count` open Kickstart sessions, soonest first. */
+export function listKickstartSessions({ now = new Date(), count = 4 } = {}) {
+  const skip = kickstartSkipDates();
+  const sessions = [];
+  const epoch = new Date(`${KICKSTART_EPOCH}T00:00:00Z`);
+  const today = utcDate(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+
+  // Start from whichever is later, the epoch or today, moved on to a Wednesday.
+  let cursor = new Date(Math.max(epoch.getTime(), today.getTime()));
+  cursor.setUTCDate(cursor.getUTCDate() + ((3 - cursor.getUTCDay() + 7) % 7));
+
+  // Bounded so a bad clock or a long skip list can never spin here.
+  for (let i = 0; i < 104 && sessions.length < count; i += 1) {
+    const session = buildKickstartSession(cursor);
+    if (!skip.has(session.date) && new Date(session.closesAt) > now) sessions.push(session);
+    cursor = new Date(cursor);
+    cursor.setUTCDate(cursor.getUTCDate() + 7);
+  }
+  return sessions;
+}
+
+export function getKickstartSession(sessionId) {
+  const match = /^ks-(\d{4}-\d{2}-\d{2})$/.exec(sessionId || '');
+  if (!match) return null;
+  const date = new Date(`${match[1]}T00:00:00Z`);
+  if (Number.isNaN(date.getTime()) || date.getUTCDay() !== 3) return null;
+  if (match[1] < KICKSTART_EPOCH) return null;
+  return buildKickstartSession(date);
+}
+
+export function isKickstartSessionOpen(sessionId, { now = new Date() } = {}) {
+  const session = getKickstartSession(sessionId);
+  if (!session || kickstartSkipDates().has(session.date)) return false;
+  return new Date(session.closesAt) > now;
+}
+
+/** Essentials runs on day one of each cohort, so its dates are the cohorts' first Saturdays. */
+export function listEssentialsDates({ now = new Date(), count = 3 } = {}) {
+  return listOpenCohorts({ now, count }).map((cohort) => ({
+    id: cohort.id,
+    label: formatDay(cohort.dayOne),
+    longLabel: formatDay(cohort.dayOne, { long: true }),
+    date: cohort.dayOne,
+    closesAt: cohort.closesAt,
+  }));
+}
+
+/**
+ * Open dates for a public tier, in one shape for the pages, the next-dates
+ * strip and the Course JSON-LD: { id, label, closesAt, days: [isoDay, ...] }.
+ */
+export function openDatesFor(trackId, { now = new Date(), count = 3 } = {}) {
+  if (trackId === TRACK_KICKSTART) {
+    return listKickstartSessions({ now, count }).map((s) => ({
+      id: s.id,
+      label: s.label,
+      closesAt: s.closesAt,
+      days: [s.date],
+    }));
+  }
+  if (trackId === TRACK_ESSENTIALS) {
+    return listEssentialsDates({ now, count }).map((d) => ({
+      id: d.id,
+      label: d.label,
+      closesAt: d.closesAt,
+      days: [d.date],
+    }));
+  }
+  return listOpenCohorts({ now, count }).map((c) => ({
+    id: c.id,
+    label: c.label,
+    closesAt: c.closesAt,
+    days: [c.dayOne, c.dayTwo],
+  }));
+}
+
+/** Is the date a booking names still open, whatever the track? */
+export function isBookingDateOpen(trackId, dateId, { now = new Date() } = {}) {
+  if (trackId === TRACK_KICKSTART) return isKickstartSessionOpen(dateId, { now });
+  return isCohortOpen(dateId, { now });
+}
+
+/**
+ * The revenue a paid booking represents, for Meta and GA4: the list price less
+ * any credit applied. Never the charged `amount`, which in test mode is a token
+ * shilling. A credit is counted on the booking that earned it, so subtracting
+ * it here keeps the ladder's revenue from being counted twice.
+ */
+export function reportedValue(registration) {
+  const list = Number(registration?.listPrice) || TRACKS[registration?.track]?.priceKes || Number(registration?.amount) || 0;
+  return Math.max(list - (Number(registration?.creditApplied?.amountKes) || 0), 0);
+}
+
+// ---------------------------------------------------------------------------
 // Event summary — one shape both tracks render from
 // ---------------------------------------------------------------------------
 
@@ -271,7 +489,41 @@ export function isCohortOpen(cohortId, { now = new Date() } = {}) {
  * summary and the admin digest. Weekday names are always derived from the date
  * itself so a wrong day can never be printed.
  */
-export function describeSchedule({ track, cohortId }) {
+export function describeSchedule({ track, cohortId, attendsDays }) {
+  if (track === TRACK_KICKSTART) {
+    const session = getKickstartSession(cohortId);
+    return session
+      ? {
+          headline: session.label,
+          detail: `${formatTime(KICKSTART_START)}–${formatTime(KICKSTART_END)} EAT · live on Google Meet`,
+          days: [session.date],
+        }
+      : { headline: 'Date to be confirmed', detail: '', days: [] };
+  }
+
+  if (track === TRACK_ESSENTIALS) {
+    const cohort = getCohort(cohortId);
+    return cohort
+      ? {
+          headline: formatDay(cohort.dayOne),
+          detail: '9:00am–1:00pm · online or at Delta Annex, Westlands',
+          days: [cohort.dayOne],
+        }
+      : { headline: 'Date to be confirmed', detail: '', days: [] };
+  }
+
+  // A Programme booking paid with an Essentials credit: Day One is already done.
+  if (Array.isArray(attendsDays) && attendsDays.length === 1 && attendsDays[0] === 'day-two') {
+    const cohort = getCohort(cohortId);
+    return cohort
+      ? {
+          headline: `Day Two: ${formatDay(cohort.dayTwo)}`,
+          detail: '9:00am–1:00pm · Day Two of the Programme',
+          days: [cohort.dayTwo],
+        }
+      : { headline: 'Day Two, date to be confirmed', detail: '', days: [] };
+  }
+
   if (track === TRACK_WBH) {
     const t = TRACKS[TRACK_WBH];
     return {
@@ -292,17 +544,15 @@ export function describeSchedule({ track, cohortId }) {
 }
 
 /** The first day a registration's training actually starts — drives reminders. */
-export function startDateFor({ track, cohortId }) {
-  if (track === TRACK_WBH) return TRACKS[TRACK_WBH].eventDate;
-  const cohort = getCohort(cohortId);
-  return cohort ? cohort.dayOne : null;
+export function startDateFor({ track, cohortId, attendsDays }) {
+  const days = describeSchedule({ track, cohortId, attendsDays }).days;
+  return days.length ? days[0] : null;
 }
 
 /** The last day of a registration's training — drives the follow-up pack. */
-export function endDateFor({ track, cohortId }) {
-  if (track === TRACK_WBH) return TRACKS[TRACK_WBH].eventDate;
-  const cohort = getCohort(cohortId);
-  return cohort ? cohort.dayTwo : null;
+export function endDateFor({ track, cohortId, attendsDays }) {
+  const days = describeSchedule({ track, cohortId, attendsDays }).days;
+  return days.length ? days[days.length - 1] : null;
 }
 
 /** Whole days between today and a training start date. Negative once past. */
@@ -321,7 +571,8 @@ const REF_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // no 0/O/1/I — read 
 
 /**
  * The reference a customer types as the M-Pesa account number, and the key
- * every record hangs off. Format: A7F3K2 (AI training) or W7F3K2 (Women Biz360).
+ * every record hangs off. Format: A7F3K2 (Programme), K7F3K2 (Kickstart),
+ * E7F3K2 (Essentials) or W7F3K2 (Women Biz360, retired).
  *
  * Six characters, no separator. This is typed on a feature phone keypad by
  * someone standing at a till, so every character is a chance to get it wrong —
@@ -344,7 +595,7 @@ export function generateReference(trackId) {
   return `${prefix}${body}`;
 }
 
-const CURRENT_RE = new RegExp(`^[AW][${REF_ALPHABET}]{${REF_BODY_LENGTH}}$`);
+const CURRENT_RE = new RegExp(`^[AWKE][${REF_ALPHABET}]{${REF_BODY_LENGTH}}$`);
 // Bookings taken before the reference was shortened. Their documents are stored
 // under the hyphenated id, so those must keep resolving forever.
 const LEGACY_RE = new RegExp(`^CW[IW][${REF_ALPHABET}]{6}$`);

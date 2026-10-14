@@ -12,6 +12,7 @@ import {
   formatKes,
   getTrack,
   normaliseReference,
+  reportedValue,
 } from '@/lib/training';
 
 export const dynamic = 'force-dynamic';
@@ -41,6 +42,7 @@ export default async function CheckoutPage({ params }) {
   const schedule = describeSchedule({
     track: registration.track,
     cohortId: registration.cohortId,
+    attendsDays: registration.attendsDays,
   });
   const isOnline = registration.attendance === 'online';
 
@@ -51,9 +53,10 @@ export default async function CheckoutPage({ params }) {
     phone: registration.phone || '',
     receipt: registration.paymentReceipt || null,
     track: registration.track,
-    // The list price, for analytics. `amount` is what is charged, which in test
-    // mode is a token shilling.
-    listPrice: track?.priceKes ?? registration.amount,
+    // The value reported to Meta and GA4: list price less any credit, the same
+    // figure the server sends. `amount` is what is charged, which in test mode
+    // is a token shilling.
+    listPrice: reportedValue(registration),
     trackName: track?.name || 'AI training',
     scheduleHeadline: schedule.headline,
     emailMasked: maskEmail(registration.email || ''),
@@ -113,22 +116,30 @@ export default async function CheckoutPage({ params }) {
                 </p>
                 <p className="flex items-start gap-3 text-white/75">
                   <Laptop size={16} className="mt-0.5 shrink-0 text-ember" />
-                  100% hands-on — bring your laptop
+                  {registration.track === 'kickstart'
+                    ? 'A laptop is best; a phone works'
+                    : 'Hands-on from the first minute: bring your laptop'}
                 </p>
               </div>
 
-              <div className="mt-6 flex items-end justify-between">
-                <div>
-                  <p className="text-sm text-white/45">Total</p>
-                  <p className="font-display text-3xl font-bold text-white">
-                    {formatKes(registration.amount)}
+              {registration.creditApplied && (
+                <div className="mt-6 space-y-1.5 text-sm">
+                  <p className="flex justify-between text-white/65">
+                    <span>{track?.name}</span>
+                    <span>{formatKes(registration.listPrice ?? track?.priceKes)}</span>
+                  </p>
+                  <p className="flex justify-between text-ember">
+                    <span>Credit {registration.creditApplied.code}</span>
+                    <span>− {formatKes(registration.creditApplied.amountKes)}</span>
                   </p>
                 </div>
-                {track?.strikePriceKes && (
-                  <p className="pb-1 text-sm text-white/35 line-through">
-                    {formatKes(track.strikePriceKes)}
-                  </p>
-                )}
+              )}
+
+              <div className="mt-6">
+                <p className="text-sm text-white/65">Total, paid in full</p>
+                <p className="font-display text-3xl font-bold text-white">
+                  {formatKes(registration.amount)}
+                </p>
               </div>
 
               <p className="mt-5 font-mono text-[0.65rem] uppercase tracking-eyebrow text-white/35">

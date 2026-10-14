@@ -19,7 +19,7 @@ This plan is the single list of changes to www.cloudwise.co.ke. Hand it back one
 9. Phase 3. Mobile speed
 10. Phase 4. The three-tier product model
 11. Phase 5. Credits: pay for a small class, use it on a bigger one
-12. Phase 6. Programme instalments
+12. Phase 6. Removed: no deposits or instalments
 13. Phase 7. The new and rewritten training pages
 14. Phase 8. Payments: paybill fallback, cards and the bank sweep
 15. Phase 9. Technical SEO and structured data
@@ -36,7 +36,7 @@ This plan is the single list of changes to www.cloudwise.co.ke. Hand it back one
 
 ## 1. How to use this plan
 
-1. Ask for one phase at a time, for example "do phase 1". Phases 0 to 3 can run in any order. Phase 4 must come before phases 5, 6 and 7.
+1. Ask for one phase at a time, for example "do phase 1". Phases 0 to 3 can run in any order. Phase 4 must come before phases 5 and 7.
 2. For each phase, Claude creates a branch from `main` named in the phase heading, makes the changes, runs the checks in section 21, and opens a pull request. Claude does not merge without your approval.
 3. Phase 0 and parts of phase 8 are actions only you can do (Safaricom, Paystack, Vercel, Meta, Google). Each one says exactly what to send or click.
 4. When a step says **Decision**, the step cannot start until you answer. The plan gives the default that applies if you say "use the default".
@@ -49,7 +49,7 @@ This plan is the single list of changes to www.cloudwise.co.ke. Hand it back one
 | 2 | Phase 1 | The page currently promises things the course does not deliver. |
 | 3 | Phase 2 | Without measurement, no later change can be judged. |
 | 4 | Phase 3 | 25 to 31% of Meta clicks reach the page; slow mobile load is a likely cause. |
-| 5 | Phases 4, 5, 6, 7 | The tier ladder, credits, instalments and the new pages. One release, before the Kickstart ads start. |
+| 5 | Phases 4, 5, 7 | The tier ladder, credits and the new pages. One release, before the Kickstart ads start. |
 | 6 | Phase 8 | Turns on each payment switch as its external blocker clears. |
 | 7 | Phases 9 to 12 | SEO, local, content and layout. |
 | 8 | Phases 13 and 14 | Follow-up systems and the optional light theme. |
@@ -79,7 +79,8 @@ These are settled. Do not reopen them while building.
 |---|---|---|
 | **Kickstart** | **KES 500.** 2 hours, live on Google Meet only, Wednesdays 7:00 to 9:00 pm EAT, weekly, up to 100 people. First session Wednesday 28 October 2026. | Tiered plan rev4 §1, §4 |
 | **Essentials** | **KES 5,500** (raised from KES 4,500 on 14 October 2026). 4 hours, the first Saturday of each cohort, 9:00 am to 1:00 pm, Delta Annex or Google Meet. It is Day One of the Programme. | Paul, 14 Oct 2026 |
-| **Programme** | **KES 13,500**, or two M-Pesa payments of KES 6,750. 8 hours over the first and second Saturday of each month. | Rev4 §4 |
+| **Programme** | **KES 13,500**. 8 hours over the first and second Saturday of each month. | Rev4 §4 |
+| **Payment** | **Every class is paid in full when it is booked.** No deposits and no instalments. Part payments invite buyers who will not pay the full price and requests for refunds, and they make the code more complex. | Paul, 15 Oct 2026 |
 | **Credits** | Kickstart: KES 500 off Essentials or the Programme, valid 14 days after the Kickstart session. Essentials: KES 5,500 off the Programme, valid 60 days after the Essentials Saturday, so Day Two costs KES 8,000. A credit is worth the list price of the class bought, not the amount paid after an earlier credit. | Rev4 §4 and Paul, 14 Oct 2026 |
 | **Private one-to-one** | **KES 30,000** for 8 hours, one person. It replaces the struck-through "Was Ksh 30,000". | Rev4 §6, §12 |
 | **Team training** | **KES 13,500 per person**, 10 people or more. Quoted formats: free demonstration, executive briefing, Microsoft 365 and Copilot version. | Rev4 §6 |
@@ -104,7 +105,7 @@ These are settled. Do not reopen them while building.
 | SEO audit, 14 Oct 2026: technical, content, schema, sitemap, performance, visual, GEO, agentic, SXO and local reports | `docs/audits/2026-10-14/*.md` (this repo) |
 | Chrome DevTools mobile traces, 14 Oct 2026 | `Website_Performance_Audit_2026-10-14.pdf` in `D:\conveniences\Cloudwise\sales and marketing` |
 | Search Console (90 days, through Windsor.ai) and GA4 (14 days of data) | `AI_Training_Search_and_Traffic_Report_2026-10-14.pdf`, same folder |
-| Tier ladder, syllabus, page copy, ad copy | `Cloudwise_AI_Training_Tiered_Plan_CW-2026-AIT-01_rev4.pdf`, same folder |
+| Tier ladder, syllabus, page copy, ad copy | `Cloudwise_AI_Training_Tiered_Plan_CW-2026-AIT-01_rev5.pdf`, same folder |
 | Meta pixel, CAPI and UTM findings | `Meta_Ads_Review_AI_Training_2026-09-25.md`, `Meta_CAPI_Token_and_Retargeting_Setup_Guide.md`, `Meta_UTM_Tracking_Setup_Guide.md`, same folder |
 | Google Business Profile | `Cloudwise_Google_Business_Profile_Audit_and_Guide.pdf`, same folder |
 | Payment setup and the switches that are off | `docs/PAYMENTS_SETUP.md` §6.5, §7, §8 and `docs/VERCEL_DEPLOY_AND_ENV.md` "What is set up right now" |
@@ -131,7 +132,6 @@ Ordered by likely impact on AI training enquiries and paid seats. "Phase" says w
 | 10 | Next date and price visible on the first phone screen, plus a sticky book bar | Visual audit: dates start 1,550 px down | `src/app/ai-training/page.js`, new sticky bar component | 7, 12 |
 | 11 | One host: permanent redirect from the bare domain | 307 redirect; Google indexes both hosts | Vercel domain settings | 0.5 |
 | 12 | Turn on the paybill fallback, cards and the bank sweep | Built, switched off | Vercel settings, `src/app/api/payments/paybill/c2b/route.js` | 8 |
-| 13 | Programme in two instalments of KES 6,750 | Rev4 §4 | `src/lib/lifecycle.js`, payment routes | 6 |
 | 14 | Turn the Prompt Pack into a door to the Kickstart | "how to prompt someone": 55 impressions, position 8.8 | `src/app/resources/[slug]/page.js`, `src/lib/resources.js` | 11 |
 | 15 | Fix the address everywhere and the contact map | Map centred 3 km away, no Westlands | `src/lib/constants.js` and 10 other files | 1.2, 10 |
 | 16 | Share images on training pages | No `og:image` on /ai-training, register, resources | page `metadata` objects | 9 |
@@ -313,7 +313,7 @@ Check: `grep -rniE "zapier|\bmake\b ai|midjourney|dall|perplexity" src` returns 
 |---|---|
 | `src/app/ai-training/page.js:44-49` `VALUE_STACK` | Remove the `worth` property and the `<span>` that renders it (line 280). The section is rewritten in phase 7. |
 | `src/app/ai-training/page.js:222`, `:226-228` | Remove "Was Ksh 30,000" and the "SAVE 55%" badge. |
-| `src/app/ai-training/page.js:107` (FAQ) | "Ksh 13,500 per person, or two M-Pesa payments of Ksh 6,750. Private one-to-one training is Ksh 30,000." (Instalments ship in phase 6. Until then, say "Ksh 13,500 per person.") |
+| `src/app/ai-training/page.js:107` (FAQ) | "Ksh 13,500 per person. Private one-to-one training is Ksh 30,000." |
 | `src/app/ai-training/page.js:470` | Remove "introductory pricing closes once the cohort is full". Use "Seats are limited to keep every session hands-on." |
 | `src/app/ai-training/register/page.js:101-103` | Remove the struck-through price. |
 | `src/components/home/TrainingBand.js:45` | Remove the struck-through Ksh 30,000. |
@@ -521,7 +521,7 @@ Apply the same `load()` pattern in `src/components/MicrosoftClarity.js`. The `cl
 
 ## 10. Phase 4. The three-tier product model
 
-**Branch:** `feat/training-tiers` · **Depends on:** phase 1 · **Ships with:** phases 5, 6 and 7 as one release (`release/training-ladder`). Each phase is a separate pull request into that release branch.
+**Branch:** `feat/training-tiers` · **Depends on:** phase 1 · **Ships with:** phases 5 and 7 as one release (batch B, branch `feat/training-ladder`).
 
 ### 4.1 Tracks in `src/lib/training.js`
 
@@ -557,7 +557,7 @@ export const TRACK_PROGRAMME = TRACK_INDIVIDUAL; // 'individual', unchanged for 
 },
 ```
 
-Change the Programme (`individual`) entry: `tier: 3`, `name: 'AI Productivity Programme'`, `shortName: 'Programme'`, `strikePriceKes: null`, `landingPath: '/ai-training/programme'`, `registerPath: '/ai-training/register?tier=programme'`, `days: ['day-one', 'day-two']`, `instalments: { count: 2, amountKes: 6750 }`.
+Change the Programme (`individual`) entry: `tier: 3`, `name: 'AI Productivity Programme'`, `shortName: 'Programme'`, `strikePriceKes: null`, `landingPath: '/ai-training/programme'`, `registerPath: '/ai-training/register?tier=programme'`, `days: ['day-one', 'day-two']`. No instalment settings: every class is paid in full.
 
 Add `export const PUBLIC_TIERS = [TRACK_KICKSTART, TRACK_ESSENTIALS, TRACK_PROGRAMME];` and `export const PRIVATE_PRICE_KES = 30000;` and `export const TEAM_PRICE_PER_PERSON_KES = 13500; export const TEAM_MIN_PEOPLE = 10;`.
 
@@ -610,7 +610,6 @@ In `src/lib/registration-form.js`:
 | "Where does your time go?" (`timeConsumingTasks`) | Optional | Required, at least one | Required, at least one |
 | AI experience | Optional | Required | Required |
 | The rest of the current questionnaire | Hidden | Hidden | Shown, as today |
-| Payment plan (`full` or `instalments`) | | | Required, default `full` |
 | Credit code or M-Pesa code (`creditCode`) | | Optional | Optional |
 
 3. Add `BUYER_TYPES` and `HEADCOUNT_MAX = 50` to the module.
@@ -625,7 +624,7 @@ In `src/lib/registration-form.js`:
 In `src/sanity/schemaTypes/trainingRegistration.js`:
 
 1. `track` options: add `{ title: 'AI Kickstart', value: 'kickstart' }` and `{ title: 'AI Essentials', value: 'essentials' }`. Rename the `individual` title to "AI Productivity Programme".
-2. Add read-only fields: `sessionId` (string), `buyerType` (string), `headcount` (number), `teamLead` (boolean), `listPrice` (number), `paymentPlan` (`full` or `instalments`), `attendsDays` (array of strings), and the credit and instalment fields from phases 5 and 6.
+2. Add read-only fields: `sessionId` (string), `buyerType` (string), `headcount` (number), `teamLead` (boolean), `listPrice` (number), `attendsDays` (array of strings), `receipts` (every payment's M-Pesa code or card reference), and the credit fields from phase 5.
 3. Add a Studio filter in `src/sanity/structure.js` for each tier, beside the existing roster views.
 
 ### 4.7 Emails
@@ -661,7 +660,7 @@ In `src/lib/email/templates.js`:
 | How many per booking | One. Credits do not stack. If a person holds two, the larger valid one is applied. |
 | Who can use it | The person who paid. Matched by phone number (normalised `2547XXXXXXXX`) or by email, plus the code when the code is used. |
 | Payment evidence kept | The M-Pesa receipt code (or the Paystack reference) of the payment that earned the credit, the source booking reference, the amount and the date. |
-| Instalments | Not available when a credit is applied. The remaining amount is paid in full. |
+| Payment | The amount after the credit is paid in full when booking. |
 | Expired, used or transferred | Not refundable and not transferable to another person. A seat transfer (rev4 §4) moves the booking, not the credit. |
 | Essentials buyer upgrading | Pays KES 8,000 and attends Day Two only. The form offers the Day Two Saturday of their own cohort, and any later Day Two that falls within the 60 days. |
 
@@ -711,7 +710,7 @@ In `src/app/api/registrations/route.js`, after validation:
 
 1. Call `findCredit({ code: value.creditCode, phone, email, track })`.
 2. If the buyer typed a code and nothing matched, return 400 with `errors.creditCode: 'We could not find a credit for that code with this phone number or email. Check the code, or leave it empty.'`
-3. If a credit is found, reserve it. Store on the registration: `listPrice: priceFor(track)`, `creditApplied: { code, amountKes, sourceReference, sourceReceipt }`, `amount: priceAfterCredit(...)`, and force `paymentPlan: 'full'`.
+3. If a credit is found, reserve it. Store on the registration: `listPrice: priceFor(track)`, `creditApplied: { code, amountKes, sourceReference, sourceReceipt }`, and `amount: priceAfterCredit(...)`.
 4. If the credit is an Essentials credit and the track is the Programme:
    - set `attendsDays: ['day-two']`;
    - accept only an open cohort whose `dayTwo` is on or before the credit's `expiresAt` date (the form lists only those, see 5.1);
@@ -759,46 +758,14 @@ On a preview deployment with `TEST_PAYMENT_AMOUNT_KES` unset and the sandbox Dar
 
 ---
 
-## 12. Phase 6. Programme instalments
+## 12. Phase 6. Removed: no deposits or instalments
 
-**Branch:** `feat/programme-instalments` · **Depends on:** phase 4
+**Decided 15 October 2026.** Every class is paid in full when it is booked: Ksh 500, Ksh 5,500 or Ksh 13,500, less any credit. There is no deposit, no balance, no `deposit-paid` status and no balance reminder. The existing part-payment handling in `src/app/api/payments/paybill/c2b/route.js` stays as it was: a short paybill payment is recorded and flagged to the admins, and it never confirms a seat.
 
-### 6.1 Rules
+What phase 6 had added that is still useful moved elsewhere:
 
-1. Programme only, at full price, with no credit applied.
-2. Deposit KES 6,750 at booking. Balance KES 6,750, due by 23:59 EAT two days before Day Two.
-3. The seat on Day One is confirmed by the deposit. Day Two access opens when the balance is paid.
-4. No refunds (rev4 §4).
-
-### 6.2 Data
-
-Add to `trainingRegistration`: `paymentPlan`, `amountPaid` (number), `balanceDue` (number), `balanceDueBy` (date), `status` option `deposit-paid` ("Deposit paid") between `pending` and `paid`.
-
-### 6.3 Payment logic
-
-1. A booking with `paymentPlan: 'instalments'` stores `amount: 13500`, `amountPaid: 0`.
-2. The STK push (`src/app/api/payments/mpesa/stk/route.js`) charges `nextInstalmentFor(registration)`: 6,750 when `amountPaid` is 0, otherwise `amount - amountPaid`. Put this function in `src/lib/training.js`.
-3. In the three confirmation paths (`stk-callback`, `c2b`, Paystack `webhook`), replace the "amount equals registration.amount" test with a shared function `applyPayment({ registration, paidAmount })` in `src/lib/lifecycle.js`:
-   - add `paidAmount` to `amountPaid`;
-   - if `amountPaid >= amount`: call `confirmPayment` (status `paid`, as today);
-   - else if the plan is `instalments` and `amountPaid >= 6750`: set `status: 'deposit-paid'`, `balanceDue`, `balanceDueBy`, send a new email `depositReceived` (with the balance link `/checkout/<ref>`), fire **no** Purchase yet;
-   - else: the existing part-payment handling in `c2b/route.js` (lines 85-104, 160-180) stays.
-4. The Purchase event fires once, when the booking reaches `paid`, with the full value 13,500.
-5. Every M-Pesa receipt is kept: add an array `receipts` (`{ receipt, amount, paidAt, method }`) to the registration, appended on each payment, so both instalment codes are on record.
-6. Settlement (`maybeSettle`) already runs for each payment record, so each instalment is swept on its own.
-
-### 6.4 Checkout page
-
-1. `src/app/checkout/[ref]/page.js` and `Checkout.js` show "Deposit: Ksh 6,750 now. Balance: Ksh 6,750 by Thu 12 Nov." and, after the deposit, "Deposit received. Pay the balance of Ksh 6,750 by …".
-2. The paybill instructions show the instalment amount.
-
-### 6.5 Reminders
-
-The daily cron sends `balanceReminder` 5 days and 2 days before `balanceDueBy` to `deposit-paid` bookings, keyed `balance-reminder.<days>`. On the day after `balanceDueBy`, the admin digest lists unpaid balances.
-
-### 6.6 Done when
-
-Book with instalments, pay the deposit, check `deposit-paid` and the email, pay the balance with the paybill, check `paid`, one Purchase and two receipts.
+- every payment's M-Pesa code or card reference is kept in a `receipts` list on the booking (phase 5, payment evidence);
+- each payment is counted once per receipt, so the STK callback and the paybill confirmation for the same M-Pesa code cannot confirm a booking twice (`confirmPayment` in `src/lib/lifecycle.js`).
 
 ---
 
@@ -836,7 +803,7 @@ File: `src/app/ai-training/page.js` (rewrite).
 | Private and team block | rev4 §7 copy, with buttons "See team and private training" (to `/ai-training/teams`) and "Book a 30-minute call" (WhatsApp link with a prefilled message). |
 | Trainer | `TrainerCard` (step 11.1). |
 | Proof | `Testimonials` with the trained-organisations line. |
-| FAQ | Combined FAQ from rev4 §7: which option, what is "your own AI assistant", does the Ksh 500 count, two payments, recordings (no), certificate, missed date, plus "Is this a ChatGPT course?" ("It is taught on Claude, and ChatGPT, Gemini and Copilot are run against the same task so you see the differences."). Each question in an `<h3>` (step 9.8). |
+| FAQ | Combined FAQ from rev4 §7: which option, what is "your own AI assistant", does the Ksh 500 count, how to pay (in full by M-Pesa), recordings (no), certificate, missed date, plus "Is this a ChatGPT course?" ("It is taught on Claude, and ChatGPT, Gemini and Copilot are run against the same task so you see the differences."). Each question in an `<h3>` (step 9.8). |
 | Final call to action | "Not sure? Start with the Ksh 500 Kickstart." Buttons to Kickstart and WhatsApp. |
 | Sticky bar | `StickyBookBar`. |
 
@@ -852,7 +819,7 @@ File: `src/app/ai-training/essentials/page.js`. Copy from rev4 §7 "Copy: Essent
 
 ### 7.5 `/ai-training/programme` (new)
 
-File: `src/app/ai-training/programme/page.js`. The current page content, rewritten from rev4 §5.2 and §5.3: Day One and Day Two session tables, "Three things happen even if everything else is cut", inclusions from rev4 §2 (no "Worth" labels), price block "Ksh 13,500 per person, or two M-Pesa payments of Ksh 6,750" with "Private one-to-one: Ksh 30,000" beside it, the line "Not sure yet? Try the Ksh 500 Kickstart first. It counts toward this price.", and the policy box (certificate, no recordings, transfer, no refunds, Google Meet link the day before). Closing button "Join the Programme · Ksh 13,500 or 2 × 6,750".
+File: `src/app/ai-training/programme/page.js`. The current page content, rewritten from rev4 §5.2 and §5.3: Day One and Day Two session tables, "Three things happen even if everything else is cut", inclusions from rev4 §2 (no "Worth" labels), price block "Ksh 13,500 per person, paid in full when you book" with "Private one-to-one: Ksh 30,000" beside it, the line "Not sure yet? Try the Ksh 500 Kickstart first. It counts toward this price.", and the policy box (certificate, no recordings, transfer, no refunds, Google Meet link the day before). Closing button "Join the Programme · Ksh 13,500".
 
 ### 7.6 `/ai-training/teams` (new)
 
@@ -926,7 +893,7 @@ Add `/ai-training/kickstart`, `/ai-training/essentials`, `/ai-training/programme
 The code is complete: `src/app/api/payments/paybill/c2b/route.js`, `validation/route.js`, `reconcile/route.js`, and `paybillInstructions` in `src/lib/payments/daraja.js`. When it is on, the checkout shows the paybill 4131947 and the account number (the booking reference) the whole time, so a buyer whose STK prompt does not arrive can pay from the M-Pesa menu.
 
 1. In Vercel, remove `PAYBILL_FALLBACK_ENABLED` for Production. Redeploy.
-2. Test with real money: register at full price, do **not** use the prompt, pay **Ksh 1** to paybill 4131947 with the reference as the account number. The booking must show a part payment and the admins must get the "Part payment" email. Then pay the remaining amount. The booking becomes `paid`. (This also tests phase 6 if the booking used instalments.)
+2. Test with real money: register at full price, do **not** use the prompt, pay **Ksh 1** to paybill 4131947 with the reference as the account number. The booking must show a part payment and the admins must get the "Part payment" email. Then pay the remaining amount. The booking still does not confirm, because a seat needs the full amount in one payment: record the balance by hand with the reconcile route (`docs/VERCEL_DEPLOY_AND_ENV.md`, "If a payment does get stranded") and pass the full amount to accept it.
 3. Record the result in `docs/VERCEL_DEPLOY_AND_ENV.md` "What is set up right now".
 
 ### 8.2 Card payments, after Paystack approves
@@ -1193,7 +1160,7 @@ The site uses `text-white/xx` 213 times, `border-white/xx` 139 times and `bg-ink
 1. `npm run lint` passes.
 2. Stop `next dev`, then `npm run build` passes. Start `next dev` again after.
 3. Open the Vercel preview and check every page the phase changed, on a phone width and a desktop width.
-4. For money phases (4, 5, 6, 8): run the test in the phase's "Done when" on the preview with sandbox keys, or at `TEST_PAYMENT_AMOUNT_KES=2` on a preview only. **Never set `TEST_PAYMENT_AMOUNT_KES` on Production.**
+4. For money phases (4, 5, 8): run the test in the phase's "Done when" on the preview with sandbox keys, or at `TEST_PAYMENT_AMOUNT_KES=2` on a preview only. **Never set `TEST_PAYMENT_AMOUNT_KES` on Production.**
 5. After the merge to `main` and the production deploy: open the live page (not only "Ready"), and for tracking phases check Meta Test events and GA4 Realtime.
 6. If something breaks: Vercel → Deployments → the last good row → **Promote to Production** (`docs/VERCEL_DEPLOY_AND_ENV.md`).
 7. Update `docs/VERCEL_DEPLOY_AND_ENV.md` "What is set up right now" whenever a switch or price changes.
@@ -1220,7 +1187,7 @@ The site uses `text-white/xx` 213 times, `border-white/xx` 139 times and `bg-ink
 | `src/lib/resources.js` Perplexity in accounts to open | 1.3 |
 | Rev4 §7 page structure: hub, Kickstart, Essentials, Programme, register by tier, thank-you, teams, reviews, ai-tools-kenya, navigation | 7.2, 7.3, 7.4, 7.5, 7.7, 7.8, 7.6, 13.3, 7.9, 7.10 |
 | Rev4 §7 technical: credit codes, pixel events, per-tier metadata and OG, Course and Offer data, mobile speed, HubSpot, certificates | Phase 5, phase 2, 7 and 9.1, 9.6, phase 3, 13.1, 13.2 |
-| Rev4 §4 instalments | Phase 6 |
+| No deposits or instalments (15 Oct 2026) | Section 3, phase 6 note |
 | Buyer type and headcount on the form; team leads the same day | 4.5, 13.1 |
 | Meta Ads review: Purchase with value, Lead, InitiateCheckout at the right step, Conversions API with event ids, conversion domain, UTM tags | 2.1 to 2.5, 0.2, 0.6 |
 | Meta Ads review: show the next date with its closing date, later dates smaller | 7.1 `NextDates` |

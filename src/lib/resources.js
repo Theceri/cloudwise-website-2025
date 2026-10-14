@@ -287,7 +287,7 @@ Help me turn this into a simple, realistic daily to-do list (Monday to Saturday)
  * so the sentence is right however far ahead they book — and reads as a
  * confirmation of the dates they chose, which is what they want to see first.
  */
-export function resourceIntro({ track, cohortId } = {}) {
+export function resourceIntro({ track, cohortId, attendsDays } = {}) {
   if (track === TRACK_WBH) {
     return {
       greeting: 'Karibu — your seat is confirmed',
@@ -297,7 +297,30 @@ export function resourceIntro({ track, cohortId } = {}) {
     };
   }
 
-  const schedule = describeSchedule({ track, cohortId });
+  const schedule = describeSchedule({ track, cohortId, attendsDays });
+
+  if (track === 'kickstart') {
+    return {
+      greeting: 'Welcome — your Kickstart is booked',
+      body: `Your session is on ${schedule.headline}, 7:00pm to 9:00pm, live on Google Meet. In two hours you set up Claude, learn one prompt method that works, and finish three real tasks.`,
+      signoff: 'See you on Wednesday.',
+      partner: 'Cloudwise AI Kickstart',
+    };
+  }
+
+  if (track === 'essentials' || (attendsDays?.length === 1 && attendsDays[0] === 'day-two')) {
+    return {
+      greeting: 'Welcome — your seat is confirmed',
+      body: `Your Saturday is ${schedule.headline}, 9:00am to 1:00pm. ${
+        track === 'essentials'
+          ? 'You will leave with your own AI assistant, built for the job that eats your week.'
+          : 'Day Two connects and upgrades the assistant you built on Day One.'
+      } This pack is how you arrive ready to build.`,
+      signoff: 'See you in the room.',
+      partner: 'Cloudwise AI Productivity Training',
+    };
+  }
+
   const when = schedule.days.length
     ? `Your two Saturdays are ${schedule.headline}.`
     : 'You have two Saturdays with us.';

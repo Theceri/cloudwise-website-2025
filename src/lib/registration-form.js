@@ -5,13 +5,15 @@
  * agree on exactly one definition of "valid". Safe to import from client
  * components — no server-only dependencies.
  *
- * Only the individual track can be registered for. The Women Biz360 masterclass
- * is retired, so a submission naming it is treated as the individual track
- * rather than honoured — there is no page that can produce one, and a forged
- * post must not be able to buy a seat at the old partner price.
+ * Three tracks can be registered for: Kickstart, Essentials and the Programme.
+ * Each asks for less than the one above it, because a Ksh 500 buyer should not
+ * fill in the questionnaire that shapes an eight-hour programme. The Women
+ * Biz360 masterclass is retired, so a submission naming it is treated as the
+ * Programme rather than honoured — there is no page that can produce one, and a
+ * forged post must not be able to buy a seat at the old partner price.
  */
 
-import { TRACK_INDIVIDUAL } from '@/lib/training';
+import { TRACK_ESSENTIALS, TRACK_KICKSTART, TRACK_PROGRAMME, tierFromParam } from '@/lib/training';
 
 export const INDUSTRIES = [
   'Agriculture', 'Automotive', 'Banking & Finance', 'Beauty & Wellness',
@@ -57,6 +59,48 @@ export const ATTENDANCE_OPTIONS = [
   { value: 'online', label: 'Online via Google Meet' },
 ];
 
+/** "Which best describes you?" — drives team follow-up the same day. */
+export const BUYER_TYPES = [
+  { value: 'owner', label: 'I run a business' },
+  { value: 'employee', label: 'I work for an organisation' },
+  { value: 'colleagues', label: 'I am registering colleagues' },
+  { value: 'student', label: 'I am a student or job seeker' },
+];
+export const HEADCOUNT_MAX = 50;
+/** Three or more people, or "registering colleagues", is a team lead. */
+export const TEAM_LEAD_HEADCOUNT = 3;
+
+/**
+ * "Where does your time go?" → the assistant built on Day One (tiered plan
+ * rev4, §5.2). Shown on the confirmation screen and in the welcome email.
+ */
+export const ASSISTANT_FOR_TASK = {
+  'Social media & marketing': 'Content Manager',
+  'Proposals, quotes & tenders': 'Quotation Builder, or Proposal and Tender Analyst',
+  'Customer messages & follow-up': 'Customer Reply Agent, or Follow-Up Officer',
+  'Paperwork & admin': 'Inbox Officer, or Meeting-to-Minutes Agent',
+  'Reports & documents': 'Report Writer',
+  Research: 'Research Assistant',
+  'Accounting & invoicing': 'Numbers Reader',
+};
+
+export function assistantFor(tasks = []) {
+  for (const task of tasks) if (ASSISTANT_FOR_TASK[task]) return ASSISTANT_FOR_TASK[task];
+  return null;
+}
+
+/** Which questions each track asks. */
+export function formShapeFor(track) {
+  return {
+    kickstart: track === TRACK_KICKSTART,
+    profile: track !== TRACK_KICKSTART, // buyer type, headcount, time, experience
+    fullQuestionnaire: track === TRACK_PROGRAMME,
+    credit: track === TRACK_ESSENTIALS || track === TRACK_PROGRAMME,
+  };
+}
+
+export const CREDIT_CODE_RE = /^[A-Z0-9-]{6,20}$/;
+
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const PHONE_RE = /^(?:\+?254|0)?[17]\d{8}$/;
 
@@ -89,8 +133,9 @@ export function validateRegistration(input = {}) {
   const errors = {};
   const value = {};
 
-  const track = TRACK_INDIVIDUAL;
+  const track = tierFromParam(input.track);
   value.track = track;
+  const shape = formShapeFor(track);
 
   const text = (field, { required = false, min = 0 } = {}) => {
     const raw = typeof input[field] === 'string' ? input[field].trim() : '';
@@ -127,17 +172,43 @@ export function validateRegistration(input = {}) {
   value.dietary = text('dietary');
   value.liveChallenge = text('liveChallenge');
 
-  value.attendance = input.attendance === 'online' ? 'online' : 'in-person';
-  if (!['online', 'in-person'].includes(input.attendance)) {
-    errors.attendance = 'Choose how you would like to attend.';
+  if (shape.kickstart) {
+    // Kickstart runs on Google Meet only.
+    value.attendance = 'online';
+  } else {
+    value.attendance = input.attendance === 'online' ? 'online' : 'in-person';
+    if (!['online', 'in-person'].includes(input.attendance)) {
+      errors.attendance = 'Choose how you would like to attend.';
+    }
   }
 
+  // For Kickstart this is the session id ("ks-2026-10-28"); for the others the
+  // cohort id ("2026-11"). One field, so reminders work the same for all.
   value.cohortId = typeof input.cohortId === 'string' ? input.cohortId.trim() : '';
-  if (!value.cohortId) errors.cohortId = 'Choose the dates you want to attend.';
+  if (!value.cohortId) {
+    errors.cohortId = shape.kickstart ? 'Choose the Wednesday you want.' : 'Choose the dates you want to attend.';
+  }
 
   value.city = text('city');
   value.industry = text('industry');
-  value.aiExperience = text('aiExperience', { required: true });
+  value.aiExperience = text('aiExperience', { required: shape.profile });
+
+  if (shape.profile) {
+    value.buyerType = BUYER_TYPES.some((b) => b.value === input.buyerType) ? input.buyerType : '';
+    if (!value.buyerType) errors.buyerType = 'Choose the one that describes you best.';
+
+    const headcount = Number.parseInt(input.headcount, 10);
+    value.headcount = Number.isFinite(headcount) ? headcount : 0;
+    if (value.headcount < 1 || value.headcount > HEADCOUNT_MAX) {
+      errors.headcount = `Enter a number from 1 to ${HEADCOUNT_MAX}.`;
+    }
+  }
+
+  const code = typeof input.creditCode === 'string' ? input.creditCode.trim().toUpperCase().replace(/\s+/g, '') : '';
+  value.creditCode = shape.credit && code ? code.slice(0, 20) : '';
+  if (value.creditCode && !CREDIT_CODE_RE.test(value.creditCode)) {
+    errors.creditCode = 'That does not look like a credit code or an M-Pesa code.';
+  }
   value.biggestChallenge = text('biggestChallenge');
   value.goal = text('goal');
   value.referralSource = text('referralSource');
@@ -148,6 +219,9 @@ export function validateRegistration(input = {}) {
       .filter((v) => typeof v === 'string' && v.trim())
       .map((v) => v.trim().slice(0, 120))
       .slice(0, 20);
+  }
+  if (shape.profile && !value.timeConsumingTasks.length) {
+    errors.timeConsumingTasks = 'Pick at least one. It decides the assistant you build.';
   }
 
   value.deviceReady = input.deviceReady !== false;

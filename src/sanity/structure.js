@@ -11,6 +11,13 @@ import {
 
 import { listOpenCohorts, formatDay, TRACKS, TRACK_WBH } from '@/lib/training';
 
+const trackList = (S, title, track) =>
+  S.documentList()
+    .title(title)
+    .filter('_type == "trainingRegistration" && track == $track')
+    .params({ track })
+    .defaultOrdering(byNewest);
+
 const byNewest = [{ field: 'createdAt', direction: 'desc' }];
 
 /** One list item per upcoming individual-track cohort, plus its roster. */
@@ -93,6 +100,21 @@ export const structure = (S) =>
                 ),
 
               S.listItem()
+                .title('⚡ Kickstart (Ksh 500)')
+                .icon(UsersIcon)
+                .child(trackList(S, 'AI Kickstart', 'kickstart')),
+
+              S.listItem()
+                .title('🧩 Essentials (Ksh 5,500)')
+                .icon(UsersIcon)
+                .child(trackList(S, 'AI Essentials', 'essentials')),
+
+              S.listItem()
+                .title('🎓 Programme (Ksh 13,500)')
+                .icon(UsersIcon)
+                .child(trackList(S, 'AI Productivity Programme', 'individual')),
+
+              S.listItem()
                 .title('📅 Individual cohorts')
                 .icon(CalendarIcon)
                 .child(S.list().title('Individual cohorts').items(cohortItems(S))),
@@ -106,6 +128,16 @@ export const structure = (S) =>
                   S.documentList()
                     .title('Paid registrations')
                     .filter('_type == "trainingRegistration" && status == "paid"')
+                    .defaultOrdering(byNewest)
+                ),
+
+              S.listItem()
+                .title('👥 Team leads')
+                .icon(UsersIcon)
+                .child(
+                  S.documentList()
+                    .title('Team leads (colleagues, or 3+ people)')
+                    .filter('_type == "trainingRegistration" && teamLead == true')
                     .defaultOrdering(byNewest)
                 ),
 
@@ -138,6 +170,25 @@ export const structure = (S) =>
                     .title('Payments')
                     .defaultOrdering(byNewest)
                 ),
+
+              S.listItem()
+                .title('🔎 Payments by receipt')
+                .icon(CreditCardIcon)
+                .child(
+                  S.documentTypeList('trainingPayment')
+                    .title('Search payments by M-Pesa code')
+                    .defaultOrdering([{ field: 'receipt', direction: 'asc' }])
+                ),
+
+              S.listItem()
+                .title('🎟️ Credits')
+                .icon(CreditCardIcon)
+                .child(S.documentTypeList('trainingCredit').title('Credits').defaultOrdering(byNewest)),
+
+              S.listItem()
+                .title('🏢 Team enquiries')
+                .icon(UsersIcon)
+                .child(S.documentTypeList('teamEnquiry').title('Team enquiries').defaultOrdering(byNewest)),
 
               S.listItem()
                 .title('🏦 Awaiting bank settlement')

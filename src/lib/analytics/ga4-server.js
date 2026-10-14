@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { GA_MEASUREMENT_ID } from '@/lib/analytics/google';
-import { TRACKS } from '@/lib/training';
+import { TRACKS, reportedValue } from '@/lib/training';
 
 /**
  * GA4 Measurement Protocol — the server-side half of the Google tag.
@@ -37,9 +37,8 @@ export async function sendGa4Purchase({ registration }) {
   if (!isGa4ServerConfigured()) return { sent: false, reason: 'not configured' };
 
   const track = TRACKS[registration.track];
-  // The list price, as the Meta Purchase reports: in test mode the charged
-  // amount is a token shilling.
-  const value = track?.priceKes ?? registration.amount ?? 0;
+  // The same value the Meta Purchase reports: the list price less any credit.
+  const value = reportedValue(registration);
 
   const body = {
     client_id: clientIdFor(registration),

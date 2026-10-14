@@ -7,6 +7,8 @@ import { siteSettings } from './siteSettings';
 import { trainingRegistration } from './trainingRegistration';
 import { trainingPayment } from './trainingPayment';
 import { systemLock } from './systemLock';
+import { trainingCredit } from './trainingCredit';
+import { teamEnquiry } from './teamEnquiry';
 
 export const schema = {
   types: [
@@ -18,6 +20,8 @@ export const schema = {
     siteSettings,
     trainingRegistration,
     trainingPayment,
+    trainingCredit,
+    teamEnquiry,
     systemLock,
     // Objects
     blockContent,

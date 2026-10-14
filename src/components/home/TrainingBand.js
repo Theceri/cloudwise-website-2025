@@ -6,10 +6,10 @@ import { Reveal } from '@/components/anim/Reveal';
 import { Gauge } from '@/components/anim/Gauge';
 
 const INCLUDES = [
-  '8 hours of live, hands-on AI training',
-  'AI toolkit, prompt library & templates',
-  'Your session workbook & documents to keep',
-  'WhatsApp support community, with no end date',
+  'AI Kickstart: 2 hours live online, Ksh 500',
+  'AI Essentials: build your own AI assistant in one Saturday, Ksh 5,500',
+  'AI Productivity Programme: two Saturdays, your assistant connected to live tools, Ksh 13,500',
+  'What you pay for a smaller class counts toward the next',
 ];
 
 export function TrainingBand() {
@@ -34,22 +34,22 @@ export function TrainingBand() {
 
             <Reveal delay={0.15} className="mt-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/80">
               <CalendarDays size={16} className="text-ember" />
-              Every 1st &amp; 2nd Saturday · 9am–1pm · Online or in Nairobi
+              Kickstart on Wednesdays · Saturday classes monthly · Online or in Westlands
             </Reveal>
 
             <Reveal delay={0.2} className="mt-9 flex flex-wrap items-center gap-3">
               <Link href="/ai-training" className="btn-ember">
-                See training details <ArrowUpRight size={18} />
+                See courses and prices <ArrowUpRight size={18} />
               </Link>
-              <span className="text-sm text-white/45">
-                <span className="font-semibold text-white">Ksh 13,500</span> / person
+              <span className="text-sm text-white/65">
+                From <span className="font-semibold text-white">Ksh 500</span>. The full Programme is Ksh 13,500.
               </span>
             </Reveal>
           </div>
 
           <Reveal delay={0.1}>
             <div className="card-dark p-8">
-              <p className="eyebrow-muted mb-5">Everything included</p>
+              <p className="eyebrow-muted mb-5">Three ways in</p>
               <ul className="space-y-4">
                 {INCLUDES.map((item) => (
                   <li key={item} className="flex items-start gap-3">
@@ -61,7 +61,7 @@ export function TrainingBand() {
                 ))}
               </ul>
               <div className="mt-7 grid grid-cols-3 gap-3 border-t border-white/10 pt-6 text-center">
-                {[['100%', 'Hands-on'], ['72', 'Prompts'], ['2', 'Saturdays']].map(([n, l]) => (
+                {[['100%', 'Hands-on'], ['72', 'Prompts'], ['3', 'Ways in']].map(([n, l]) => (
                   <div key={l}>
                     <div className="font-display text-2xl font-bold text-white">{n}</div>
                     <div className="mt-1 text-xs text-white/45">{l}</div>

@@ -1,361 +1,235 @@
 import Link from 'next/link';
-import {
-  Clock, FileText, Users, Gift, Check, ArrowUpRight,
-  CalendarDays, MapPin, Laptop, BookOpen, ShieldCheck,
-} from 'lucide-react';
+import { ArrowUpRight, Laptop, ShieldCheck } from 'lucide-react';
+
 import { Reveal } from '@/components/anim/Reveal';
 import { AnimatedHeading } from '@/components/anim/AnimatedHeading';
 import { Gauge } from '@/components/anim/Gauge';
 import { Faq } from '@/components/Faq';
 import { PixelEvent } from '@/components/PixelEvent';
 import { Testimonials } from '@/components/Testimonials';
-import { SITE_URL, COMPANY_INFO, formatAddress, whatsappLink } from '@/lib/constants';
+import { ComparisonTable, TierLadder } from '@/components/training/TierCards';
+import { StickyBookBar } from '@/components/training/StickyBookBar';
+import { TrainerCard } from '@/components/training/TrainerCard';
+import { SITE_URL, formatAddress, whatsappLink } from '@/lib/constants';
 import { META_CURRENCY, META_EVENTS } from '@/lib/meta/events';
-import { TRACK_INDIVIDUAL, TRACKS, formatKes, listOpenCohorts } from '@/lib/training';
+import { JsonLd, breadcrumbJsonLd, courseJsonLd } from '@/lib/seo/jsonld';
+import { TEN_ASSISTANTS, TOOLS, hubFaq } from '@/lib/training-content';
+import {
+  PRIVATE_PRICE_KES,
+  PUBLIC_TIERS,
+  TEAM_MIN_PEOPLE,
+  TEAM_PRICE_PER_PERSON_KES,
+  TRACKS,
+  TRACK_ESSENTIALS,
+  TRACK_KICKSTART,
+  TRACK_PROGRAMME,
+  formatKes,
+  openDatesFor,
+} from '@/lib/training';
 
-// The next-cohort strip is derived from today's date, so the page is rebuilt
-// every hour rather than baked once at build time. It was `force-dynamic`,
-// which rebuilt it for every visitor (140 KB of HTML, never cached) and slowed
-// the first paint on phones. An hour is safe: a cohort closes two days before
-// day one, and the registration API refuses a closed cohort however stale the
-// page is (isCohortOpen in src/app/api/registrations/route.js).
+// The next dates are derived from today's date, so the page is rebuilt every
+// hour rather than baked once at build time. It was `force-dynamic`, which
+// rebuilt it for every visitor and slowed the first paint on phones. An hour is
+// safe: the registration API refuses a closed date however stale the page is.
 export const revalidate = 3600;
 
+const kickstart = TRACKS[TRACK_KICKSTART];
+const essentials = TRACKS[TRACK_ESSENTIALS];
+const programme = TRACKS[TRACK_PROGRAMME];
+
 export const metadata = {
-  title: 'AI Productivity Training in Nairobi — Work Smarter with AI',
+  title: { absolute: 'AI Training in Nairobi, Kenya: Courses from Ksh 500 · Cloudwise' },
   description:
-    'Hands-on AI productivity training by Cloudwise. Two Saturday sessions every month (1st & 2nd Saturday, 9am–1pm), online or in Nairobi. Ksh 13,500 — includes the AI toolkit, prompt library & support community.',
+    'Hands-on AI training on Claude in Nairobi and online. A 2-hour Kickstart for Ksh 500, a 4-hour Essentials for Ksh 5,500, or the full 8-hour Programme. Build your own AI assistant.',
   alternates: { canonical: '/ai-training' },
   openGraph: {
-    title: 'Cloudwise AI Productivity Training — Work Smarter with AI',
+    type: 'website',
+    siteName: 'Cloudwise',
+    title: 'AI Training in Nairobi, Kenya — from Ksh 500',
     description:
-      'Practical, hands-on AI training for you and your team. Every 1st & 2nd Saturday. Includes the AI toolkit, prompt library & support community.',
+      'Build your own AI assistant and use it at work this week. Kickstart, Essentials or the full Programme, in Westlands or online.',
     url: `${SITE_URL}/ai-training`,
+    images: [{ url: '/dt-banner-5.png', width: 1200, height: 630, alt: 'Cloudwise AI training' }],
   },
   // Without this the card inherits the root layout's generic company blurb, so
   // every share of the training page on X sold the company rather than the course.
   twitter: {
     card: 'summary_large_image',
-    title: 'AI Productivity Training in Nairobi — Cloudwise',
-    description:
-      'Two hands-on Saturdays, 9am–1pm. Online or in Nairobi. Ksh 13,500, including the AI toolkit, prompt library and support community.',
+    title: 'AI Training in Nairobi, Kenya — Cloudwise',
+    description: 'Three ways in, from a 2-hour Kickstart for Ksh 500 to the full 8-hour Programme.',
+    images: ['/dt-banner-5.png'],
   },
 };
 
-const REGISTER_MSG =
-  "Hi Cloudwise, I'd like to register for the AI Productivity Training. I have a question before I book.";
-
-const VALUE_STACK = [
-  { icon: Clock, title: '8 hours of live AI training', desc: 'Two Saturday sessions, in person or online. Practical and hands-on.' },
-  { icon: BookOpen, title: 'Your session workbook', desc: 'Every exercise, plus the documents we build together on your real work.' },
-  { icon: FileText, title: 'The 72-prompt Prompt Pack', desc: 'Prompts, templates and workflow guides to keep.' },
-  { icon: Users, title: 'WhatsApp support community', desc: 'Ongoing questions and answers after the training, with no end date.' },
-];
-
-const DAY_ONE = [
-  'What AI actually is — and what it isn’t',
-  'Getting started with Claude, ChatGPT & Gemini',
-  'Writing prompts that get real results',
-  'AI for writing: emails, reports, proposals',
-  'AI for research & information gathering',
-  'Hands-on practice with your real tasks',
-];
-const DAY_TWO = [
-  'AI for marketing: social media, ads & content',
-  'AI for data: analysing reports & spreadsheets',
-  'Building automations with AI tools',
-  'AI for customer service & communication',
-  'Ethical AI use & avoiding mistakes',
-  'Building your personal AI system',
-];
-
-// Only tools the course actually teaches. The site must never name one it does
-// not — decided 14 October 2026 (tiered plan rev4, §12).
-const TOOLS = [
-  { name: 'Claude', desc: 'Your own AI assistant, built as a Claude Project and kept after the class' },
-  { name: 'Claude connectors', desc: 'Day Two: AI reading a live CRM, invoices and a calendar, then stopping for your approval' },
-  { name: 'NotebookLM', desc: 'Research that answers only from your own documents' },
-  { name: 'ChatGPT, Gemini & Copilot', desc: 'The same task run on each, so you see the real differences' },
-  { name: 'Voice & camera', desc: 'Dictate on your phone, and turn a photo of a receipt into a spreadsheet' },
-  { name: 'Claude Design & HeyGen', desc: 'Day Two demonstration: from brief to flyer, and to a 30-second presenter video' },
-];
-
-const WHO = [
-  'You run or work in a business and want to save hours every week',
-  'You’ve heard about AI but have no idea where to start',
-  'You want to stay ahead — not get left behind',
-  'You want practical skills — not just theory',
-];
-
-const RESOURCES = [
-  { tag: 'Before', icon: BookOpen, title: 'Your welcome pack', desc: 'The accounts to open and a 15-minute warm-up. Read it any time in our free AI readiness guide.', href: '/resources/ai-readiness' },
-  { tag: 'During', icon: Laptop, title: 'Live Workbook + Prompt Library', desc: 'Every exercise, plus the 72-prompt Prompt Pack organised by use case. Yours to keep.' },
-  { tag: 'After', icon: Users, title: 'Toolkit + Cheat-Sheet + Community', desc: 'Your full prompt library, an AI cheat-sheet, and the Cloudwise AI WhatsApp support group.' },
-];
-
-/**
- * Built per request, not once at module load: the first answer names real dates,
- * and a constant evaluated at import would keep serving whatever cohorts were
- * open the last time the server booted.
- */
-const buildFaqItems = (cohorts) => [
-  {
-    q: 'When does the training happen?',
-    a:
-      'Every month, on the first and second Saturday, 9am–1pm each day (4 hours per session). ' +
-      (cohorts.length
-        ? `The next cohort runs ${cohorts[0].label}` +
-          (cohorts[1] ? `, and the one after that runs ${cohorts[1].label}.` : '.') +
-          ' Pick the pair that suits you when you register.'
-        : 'Dates for every open cohort are listed on the registration page.'),
-  },
-  { q: 'Is it online or in person?', a: `Both. You can join live online on Google Meet (the link arrives the day before), or attend in person at our Nairobi office: ${formatAddress()}. Choose whichever suits you when you register.` },
-  { q: 'How much does it cost and what’s included?', a: 'Ksh 13,500 per person. It includes 8 hours of live training, the 72-prompt Prompt Pack, your session workbook, and our WhatsApp support community. Private one-to-one training is Ksh 30,000.' },
-  { q: 'Do I need a tech background?', a: 'No. The training is designed for everyday business people. If you can use a browser and send an email, you can do this. Every session is hands-on with your real tasks.' },
-  { q: 'What should I bring?', a: 'A laptop or tablet with internet access. Every session is hands-on — you’ll be practising live on real tools from minute one.' },
-  { q: 'Can you train my whole team?', a: 'Yes. We run private team and organisation trainings tailored to your workflows — we’ve trained teams at Bamburi Cement, FEKAN Howell LLP, TechCamp and Stratostaff. Message us to arrange a session.' },
-  { q: 'How do I pay?', a: 'Register on the website and pay by M-Pesa or card on the next screen. With M-Pesa you get a prompt on your phone — and if it doesn’t arrive, the paybill and account number are right there so you can pay directly. Your confirmation and preparation pack are emailed the moment payment clears.' },
-];
-
-const buildCourseJsonLd = (cohorts) => ({
-  '@context': 'https://schema.org',
-  '@type': 'Course',
-  name: 'Cloudwise AI Productivity Training',
-  description:
-    'A hands-on training that gives you and your team the exact skills to use Artificial Intelligence for real business results. No tech background required.',
-  provider: {
-    '@type': 'Organization',
-    name: COMPANY_INFO.legalName,
-    sameAs: SITE_URL,
-  },
-  offers: {
-    '@type': 'Offer',
-    price: '13500',
-    priceCurrency: 'KES',
-    category: 'Paid',
-    url: `${SITE_URL}/ai-training`,
-    availability: 'https://schema.org/InStock',
-  },
-  hasCourseInstance: cohorts.map((cohort) => ({
-    '@type': 'CourseInstance',
-    name: `Cloudwise AI Productivity Training — ${cohort.monthLabel} cohort`,
-    courseMode: ['Online', 'Onsite'],
-    courseWorkload: 'PT8H',
-    startDate: cohort.dayOne,
-    endDate: cohort.dayTwo,
-    courseSchedule: {
-      '@type': 'Schedule',
-      repeatCount: 2,
-      repeatFrequency: 'P1W',
-      byDay: 'https://schema.org/Saturday',
-      startTime: '09:00',
-      endTime: '13:00',
-      startDate: cohort.dayOne,
-      endDate: cohort.dayTwo,
-    },
-    location: {
-      '@type': 'Place',
-      name: 'Cloudwise, Delta Annex, Delta Corner',
-      address: formatAddress({ withCountry: true }),
-    },
-  })),
-});
-
-const buildFaqJsonLd = (faqItems) => ({
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: faqItems.map((f) => ({
-    '@type': 'Question',
-    name: f.q,
-    acceptedAnswer: { '@type': 'Answer', text: f.a },
-  })),
-});
+const ASK_MSG = "Hi Cloudwise, I'd like to ask about the AI training before I book.";
+const TEAM_MSG = "Hi Cloudwise, I'd like to book a 30-minute call about AI training for my team.";
 
 export default function AiTrainingPage() {
-  const cohorts = listOpenCohorts({ count: 3 });
-  const faqItems = buildFaqItems(cohorts);
-  const courseJsonLd = buildCourseJsonLd(cohorts);
-  const faqJsonLd = buildFaqJsonLd(faqItems);
+  const dates = Object.fromEntries(PUBLIC_TIERS.map((id) => [id, openDatesFor(id, { count: 3 })]));
+  const nextKickstart = dates[TRACK_KICKSTART][0];
+  const nextEssentials = dates[TRACK_ESSENTIALS][0];
+  const faqItems = hubFaq({ nextKickstart: nextKickstart?.label, nextEssentials: nextEssentials?.label });
+
+  const jsonLd = [
+    courseJsonLd({
+      path: '/ai-training',
+      name: 'Cloudwise AI Productivity Training',
+      description:
+        'Hands-on AI training on Claude in Nairobi and online: a 2-hour Kickstart, a 4-hour Essentials Saturday, or the 8-hour Programme. Every participant builds their own AI assistant.',
+      tiers: PUBLIC_TIERS,
+      dates,
+    }),
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+    },
+    breadcrumbJsonLd([['AI Training', '/ai-training']]),
+  ];
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <JsonLd data={jsonLd} />
 
       <PixelEvent
         event={META_EVENTS.viewContent}
         params={{
-          content_name: TRACKS[TRACK_INDIVIDUAL].name,
+          content_name: 'AI Productivity Training',
           content_category: 'Training',
           content_type: 'product',
-          content_ids: [TRACK_INDIVIDUAL],
-          value: TRACKS[TRACK_INDIVIDUAL].priceKes,
+          content_ids: PUBLIC_TIERS,
+          value: programme.priceKes,
           currency: META_CURRENCY,
         }}
       />
 
       {/* HERO */}
-      <section className="relative overflow-hidden pt-36 pb-20 md:pt-44 md:pb-28">
+      <section id="hero" className="relative overflow-hidden pt-28 pb-20 md:pt-44 md:pb-28">
         <div className="pointer-events-none absolute inset-0 bg-ember-radial" />
-        <div className="pointer-events-none absolute -right-24 top-24 opacity-50 md:opacity-70">
+        <div className="pointer-events-none absolute -right-24 top-24 opacity-20 md:opacity-70">
           <Gauge size={420} />
         </div>
         <div className="pointer-events-none absolute inset-0 bg-grid-faint bg-grid-lg opacity-30" />
 
         <div className="container-px relative">
-          <Reveal as="p" className="eyebrow mb-5">AI Productivity Training · Nairobi</Reveal>
+          <Reveal as="p" className="eyebrow mb-5">AI Productivity Training · Nairobi and online</Reveal>
           <AnimatedHeading
             as="h1"
-            text="Work Smarter with AI."
-            className="max-w-3xl text-balance font-display text-5xl font-bold leading-[1.0] text-white md:text-7xl lg:text-8xl"
+            text="AI training in Nairobi: build your own AI assistant."
+            className="max-w-4xl text-balance font-display text-5xl font-bold leading-[1.0] text-white md:text-7xl"
           />
           <Reveal as="p" delay={0.1} className="mt-7 max-w-xl text-lg leading-relaxed text-white/65">
-            A hands-on training that gives you — and your team — the exact skills to use
-            Artificial Intelligence for real business results. No tech background required.
+            Three ways in, from a two-hour online session for {formatKes(kickstart.priceKes)} to the full
+            eight-hour programme. Every session is hands-on, on your own work, taught on Claude. No tech
+            background needed.
           </Reveal>
 
-          <Reveal delay={0.16} className="mt-8 flex flex-wrap items-center gap-3">
-            <Link href="/ai-training/register" className="btn-ember text-base">
-              Register &amp; pay online <ArrowUpRight size={18} />
-            </Link>
-            <a href="#curriculum" className="btn-ghost text-base">See the curriculum</a>
-          </Reveal>
-
-          {/* price + schedule cards */}
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:max-w-3xl">
-            <Reveal className="card-dark flex items-center justify-between p-6">
-              <div>
-                <p className="font-display text-4xl font-bold text-white">{formatKes(TRACKS[TRACK_INDIVIDUAL].priceKes)}</p>
-                <p className="mt-1 text-sm text-white/65">per person · all materials included</p>
-              </div>
-            </Reveal>
-            <Reveal delay={0.08} className="card-dark space-y-3 p-6 text-sm">
-              <p className="flex items-center gap-3 text-white/80"><CalendarDays size={16} className="text-ember" /> Every 1st &amp; 2nd Saturday · 9am–1pm</p>
-              <p className="flex items-center gap-3 text-white/80"><MapPin size={16} className="text-ember" /> Online (Google Meet) or in person, Westlands</p>
-              <p className="flex items-center gap-3 text-white/80"><Laptop size={16} className="text-ember" /> 100% hands-on — bring your laptop</p>
-            </Reveal>
-          </div>
-
-          {/* Next cohorts — the single most-asked question, answered up front. */}
-          {cohorts.length > 0 && (
-            <Reveal delay={0.2} className="mt-6 lg:max-w-3xl">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-                <p className="font-mono text-[0.6rem] uppercase tracking-eyebrow text-white/40">
-                  Next cohorts
-                </p>
-                <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
-                  {cohorts.map((cohort, i) => (
-                    <li key={cohort.id} className="flex items-center gap-2 text-sm text-white/75">
-                      <span className={i === 0 ? 'h-1.5 w-1.5 rounded-full bg-ember' : 'h-1.5 w-1.5 rounded-full bg-white/25'} />
-                      <span>
-                        {cohort.label}
-                        {i === 0 && <span className="ml-2 text-ember">Next</span>}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          {(nextKickstart || nextEssentials) && (
+            <Reveal delay={0.12} className="mt-6">
+              <p className="inline-flex flex-wrap items-center gap-x-3 gap-y-1 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/80">
+                <span className="h-1.5 w-1.5 rounded-full bg-ember" />
+                {nextKickstart && (
+                  <span>
+                    Next Kickstart: {nextKickstart.label} · {formatKes(kickstart.priceKes)}
+                  </span>
+                )}
+                {nextEssentials && <span className="text-white/65">Essentials: {nextEssentials.label}</span>}
+              </p>
             </Reveal>
           )}
+
+          <Reveal delay={0.16} className="mt-8 flex flex-wrap items-center gap-3">
+            <Link href={kickstart.landingPath} className="btn-ember w-full text-base sm:w-auto">
+              Book the {formatKes(kickstart.priceKes)} session <ArrowUpRight size={18} />
+            </Link>
+            <a href="#options" className="btn-ghost w-full text-base sm:w-auto">
+              Compare the options
+            </a>
+          </Reveal>
         </div>
       </section>
 
-      {/* VALUE STACK */}
-      <section className="border-t border-white/10 bg-ink-800/30 py-24 md:py-32">
+      {/* WHAT IT IS — one passage an AI assistant or a search engine can quote */}
+      <section className="border-t border-white/10 bg-ink-800/30 py-16 md:py-24">
+        <div className="container-px max-w-3xl">
+          <Reveal as="h2" className="font-display text-3xl font-bold text-white md:text-4xl">
+            What is the Cloudwise AI Productivity Training?
+          </Reveal>
+          <Reveal as="p" delay={0.05} className="mt-6 text-lg leading-relaxed text-white/75">
+            It is hands-on AI training run by Cloudwise Limited, an ICT company at {formatAddress()}, and live
+            online on Google Meet. There are three options. The AI Kickstart is two hours online on a Wednesday
+            evening for {formatKes(kickstart.priceKes)}. AI Essentials is one Saturday morning, four hours, for{' '}
+            {formatKes(essentials.priceKes)}. The AI Productivity Programme is two Saturday mornings, eight hours,
+            for {formatKes(programme.priceKes)}. It is taught on Claude, on free accounts, with ChatGPT, Gemini and
+            Copilot compared on the same task. In Essentials and the Programme, every participant builds their own
+            AI assistant for the job that takes most of their week, and keeps it. Every class is paid in full when
+            you book. Sessions are not recorded; you receive every prompt in writing, a certificate, and a WhatsApp
+            support community with no end date.
+          </Reveal>
+        </div>
+      </section>
+
+      {/* OPTIONS */}
+      <section id="options" className="scroll-mt-24 border-t border-white/10 bg-ink py-16 md:py-32">
         <div className="container-px">
-          <div className="mb-14 max-w-2xl">
-            <Reveal as="p" className="eyebrow mb-4">The value stack</Reveal>
+          <div className="mb-12 max-w-2xl">
+            <Reveal as="p" className="eyebrow mb-4">Courses and prices</Reveal>
             <Reveal as="h2" delay={0.05} className="text-balance font-display text-4xl font-bold text-white md:text-5xl">
-              Everything included in your Ksh 13,500.
+              Start small. Every step counts toward the next.
             </Reveal>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {VALUE_STACK.map((v, i) => (
-              <Reveal key={v.title} delay={i * 0.06}>
-                <div className="card-dark flex h-full items-start gap-5 p-7">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-ember/10 text-ember">
-                    <v.icon size={22} />
-                  </div>
-                  <div>
-                    <h3 className="font-display text-lg font-semibold text-white">{v.title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-white/55">{v.desc}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+          <TierLadder />
+          <Reveal delay={0.1} className="mt-12">
+            <ComparisonTable />
+          </Reveal>
+        </div>
+      </section>
 
-          {/* before day one */}
-          <Reveal delay={0.1} className="mt-4">
-            <div className="flex items-start gap-5 rounded-3xl border border-ember/30 bg-ember/[0.07] p-7">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-ember text-white">
-                <Gift size={22} />
-              </div>
-              <div>
-                <h3 className="font-display text-lg font-semibold text-white">Before day one: your welcome pack</h3>
-                <p className="mt-2 text-sm text-white/65">
-                  The accounts to open and a 15-minute warm-up, so you arrive ready to build. Read it any
-                  time in our{' '}
-                  <Link href="/resources/ai-readiness" className="text-ember hover:underline">
-                    free AI readiness guide
-                  </Link>
-                  .
-                </p>
-              </div>
+      {/* WHAT YOU BUILD */}
+      <section className="border-t border-white/10 bg-ink-800/30 py-16 md:py-32">
+        <div className="container-px grid gap-12 lg:grid-cols-2">
+          <div>
+            <Reveal as="p" className="eyebrow mb-4">What you build</Reveal>
+            <Reveal as="h2" delay={0.05} className="text-balance font-display text-4xl font-bold text-white md:text-5xl">
+              Your own AI assistant, built for your job.
+            </Reveal>
+            <Reveal as="p" delay={0.1} className="mt-6 max-w-lg text-lg leading-relaxed text-white/65">
+              An assistant set up once, for one recurring job, so it already knows who you are, what the job is,
+              what it must never get wrong and what the finished work looks like. You build it in Claude during
+              Essentials or Day One of the Programme, test it on your real work, and keep it.
+            </Reveal>
+          </div>
+          <Reveal delay={0.1}>
+            <div className="card-dark overflow-hidden">
+              <table className="w-full text-left text-sm">
+                <caption className="sr-only">The assistant you build, by where your time goes</caption>
+                <thead className="bg-white/[0.04]">
+                  <tr>
+                    <th scope="col" className="p-4 font-medium text-white/65">Your time goes to</th>
+                    <th scope="col" className="p-4 font-medium text-white/65">You build</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {TEN_ASSISTANTS.map(([task, assistant]) => (
+                    <tr key={task} className="border-t border-white/10">
+                      <td className="p-4 text-white/75">{task}</td>
+                      <td className="p-4 font-medium text-white">{assistant}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </Reveal>
         </div>
       </section>
 
-      {/* CURRICULUM */}
-      <section id="curriculum" className="border-t border-white/10 bg-ink py-24 md:py-32">
-        <div className="container-px">
-          <div className="mb-14 max-w-2xl">
-            <Reveal as="p" className="eyebrow mb-4">How it works</Reveal>
-            <Reveal as="h2" delay={0.05} className="text-balance font-display text-4xl font-bold text-white md:text-5xl">
-              Two Saturdays, 9am to 1pm.
-            </Reveal>
-            <Reveal as="p" delay={0.1} className="mt-5 text-white/55">
-              Two focused Saturday sessions — 4 hours each — on the first and second Saturday of the month.
-            </Reveal>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            {[
-              { day: 'Day One', label: 'AI Foundations & Core Tools', list: DAY_ONE },
-              { day: 'Day Two', label: 'Advanced Workflows & Business AI', list: DAY_TWO },
-            ].map((d, i) => (
-              <Reveal key={d.day} delay={i * 0.08}>
-                <div className="card-dark h-full p-8">
-                  <div className="mb-6 flex items-baseline gap-3">
-                    <span className="font-display text-5xl font-bold text-ember">{i + 1 < 10 ? `0${i + 1}` : i + 1}</span>
-                    <div>
-                      <p className="font-mono text-[0.65rem] uppercase tracking-eyebrow text-white/40">{d.day} · Saturday · 9am–1pm</p>
-                      <h3 className="font-display text-xl font-semibold text-white">{d.label}</h3>
-                    </div>
-                  </div>
-                  <ul className="space-y-3">
-                    {d.list.map((item) => (
-                      <li key={item} className="flex items-start gap-3 text-white/75">
-                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-ember" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* TOOLS */}
-      <section className="border-t border-white/10 bg-ink-800/30 py-24 md:py-32">
+      <section className="border-t border-white/10 bg-ink py-16 md:py-32">
         <div className="container-px">
-          <div className="mb-14 max-w-2xl">
-            <Reveal as="p" className="eyebrow mb-4">What you’ll use</Reveal>
+          <div className="mb-12 max-w-2xl">
+            <Reveal as="p" className="eyebrow mb-4">The tools</Reveal>
             <Reveal as="h2" delay={0.05} className="text-balance font-display text-4xl font-bold text-white md:text-5xl">
-              The AI tools we’ll master together.
+              What we teach, and on which tools.
             </Reveal>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -367,7 +241,7 @@ export default function AiTrainingPage() {
                   </span>
                   <div>
                     <h3 className="font-display font-semibold text-white">{t.name}</h3>
-                    <p className="text-sm text-white/50">{t.desc}</p>
+                    <p className="text-sm text-white/65">{t.desc}</p>
                   </div>
                 </div>
               </Reveal>
@@ -376,88 +250,60 @@ export default function AiTrainingPage() {
           <Reveal delay={0.1} className="mt-4">
             <p className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-sm text-white/70">
               <Laptop size={18} className="shrink-0 text-ember" />
-              <span><strong className="text-white">Please bring your laptop.</strong> Every session is hands-on — you’ll practise live on real tools from minute one.</span>
+              <span>
+                <strong className="text-white">Bring your laptop.</strong> Every session is hands-on, on your own
+                work, from the first minute.
+              </span>
             </p>
           </Reveal>
         </div>
       </section>
 
-      {/* WHO + RESOURCES */}
-      <section className="border-t border-white/10 bg-ink py-24 md:py-32">
-        <div className="container-px grid gap-16 lg:grid-cols-2">
-          <div>
-            <Reveal as="p" className="eyebrow mb-4">Who should attend</Reveal>
-            <Reveal as="h2" delay={0.05} className="mb-8 text-balance font-display text-3xl font-bold text-white md:text-4xl">
-              This training is for you if…
-            </Reveal>
-            <ul className="space-y-4">
-              {WHO.map((w, i) => (
-                <Reveal key={w} delay={i * 0.06}>
-                  <li className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-white/80">
-                    <Check size={18} className="mt-0.5 shrink-0 text-ember" /> {w}
-                  </li>
-                </Reveal>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <Reveal as="p" className="eyebrow mb-4">Before, during &amp; after</Reveal>
-            <Reveal as="h2" delay={0.05} className="mb-8 text-balance font-display text-3xl font-bold text-white md:text-4xl">
-              Resources you’ll keep.
-            </Reveal>
-            <div className="space-y-4">
-              {RESOURCES.map((r, i) => (
-                <Reveal key={r.title} delay={i * 0.06}>
-                  <div className="card-dark flex items-start gap-4 p-6">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ember/10 text-ember">
-                      <r.icon size={20} />
-                    </div>
-                    <div>
-                      <span className="font-mono text-[0.6rem] uppercase tracking-eyebrow text-ember">{r.tag}</span>
-                      <h3 className="font-display font-semibold text-white">{r.title}</h3>
-                      <p className="mt-1 text-sm text-white/55">{r.desc}</p>
-                      {r.href && (
-                        <Link href={r.href} className="mt-2 inline-block text-sm text-ember hover:underline">
-                          Open the guide
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                </Reveal>
-              ))}
+      {/* PRIVATE AND TEAM */}
+      <section className="border-t border-white/10 bg-ink-800/30 py-16 md:py-32">
+        <div className="container-px">
+          <Reveal>
+            <div className="card-dark grid gap-8 p-8 md:p-12 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+              <div>
+                <p className="eyebrow mb-4">Private and team training</p>
+                <h2 className="text-balance font-display text-3xl font-bold text-white md:text-4xl">
+                  Built around you, or around your team.
+                </h2>
+                <p className="mt-5 text-lg leading-relaxed text-white/70">
+                  Want it built around you alone? The private programme is eight hours, one-to-one, for{' '}
+                  {formatKes(PRIVATE_PRICE_KES)}. Training a team of {TEAM_MIN_PEOPLE} or more?{' '}
+                  {formatKes(TEAM_PRICE_PER_PERSON_KES)} per person, built on your own reports, tenders and
+                  systems, with the syllabus sent for your approval first. Every team booking includes an AI use
+                  policy template.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3">
+                <Link href="/ai-training/teams" className="btn-ember text-base">
+                  See team and private training <ArrowUpRight size={18} />
+                </Link>
+                <a href={whatsappLink(TEAM_MSG)} target="_blank" rel="noopener noreferrer" className="btn-ghost text-base">
+                  Book a 30-minute call
+                </a>
+              </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* WHY CLOUDWISE */}
-      <section className="border-t border-white/10 bg-ink-800/30 py-24 md:py-32">
-        <div className="container-px grid items-center gap-12 lg:grid-cols-2">
-          <div>
-            <Reveal as="p" className="eyebrow mb-4">Why Cloudwise</Reveal>
-            <Reveal as="h2" delay={0.05} className="text-balance font-display text-4xl font-bold text-white md:text-5xl">
-              Trained by ICT practitioners, not academics.
-            </Reveal>
-            <Reveal as="p" delay={0.1} className="mt-6 max-w-lg text-lg leading-relaxed text-white/60">
-              Cloudwise is a Nairobi-based ICT company with hands-on experience building AI-powered
-              products for businesses across East Africa. We teach what actually works in real
-              business environments.
-            </Reveal>
-            <ul className="mt-7 space-y-3">
-              {['ICT and AI practitioners, not academics', 'Trained organisations including Bamburi Cement, FEKAN Howell LLP, TechCamp and Stratostaff', 'Hands-on from the first minute'].map((x) => (
-                <li key={x} className="flex items-center gap-3 text-white/80">
+      {/* TRAINER */}
+      <section className="border-t border-white/10 bg-ink py-16 md:py-24">
+        <div className="container-px max-w-4xl">
+          <Reveal>
+            <TrainerCard />
+          </Reveal>
+          <Reveal delay={0.05} className="mt-6">
+            <ul className="flex flex-wrap gap-x-8 gap-y-3 text-white/80">
+              {['ICT and AI practitioners, not academics', 'Hands-on from the first minute', 'Taught on your own work'].map((x) => (
+                <li key={x} className="flex items-center gap-3">
                   <ShieldCheck size={18} className="text-ember" /> {x}
                 </li>
               ))}
             </ul>
-          </div>
-          <Reveal delay={0.1}>
-            <div className="card-dark p-10 text-center">
-              <p className="font-display text-7xl font-bold text-gradient-ember">100%</p>
-              <p className="mt-3 text-lg text-white/70">Hands-on. No filler theory.</p>
-              <p className="mt-1 text-sm text-white/45">Every minute on real tools, your real tasks.</p>
-            </div>
           </Reveal>
         </div>
       </section>
@@ -466,31 +312,30 @@ export default function AiTrainingPage() {
 
       <Faq items={faqItems} eyebrow="FAQ" title="AI training, answered" />
 
-      {/* REGISTER CTA */}
-      <section className="relative overflow-hidden border-t border-white/10 bg-ink py-24 md:py-32">
+      {/* FINAL CTA */}
+      <section className="relative overflow-hidden border-t border-white/10 bg-ink py-16 md:py-32">
         <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-[55rem] -translate-x-1/2 rounded-full bg-ember/15 blur-3xl" />
         <div className="container-px relative text-center">
-          <Reveal as="p" className="eyebrow mb-4">Register today</Reveal>
+          <Reveal as="p" className="eyebrow mb-4">Not sure yet?</Reveal>
           <Reveal as="h2" className="mx-auto max-w-3xl text-balance font-display text-4xl font-bold text-white md:text-6xl">
-            Ready to work smarter with AI?
+            Start with the {formatKes(kickstart.priceKes)} Kickstart.
           </Reveal>
-          <Reveal as="p" delay={0.08} className="mx-auto mt-6 max-w-xl text-lg text-white/60">
-            Seats are limited to keep every session hands-on. Payment includes the workbook, the
-            72-prompt Prompt Pack and the support community.
+          <Reveal as="p" delay={0.08} className="mx-auto mt-6 max-w-xl text-lg text-white/65">
+            Two hours on a Wednesday evening, three real tasks done, and the {formatKes(kickstart.credit.amountKes)}{' '}
+            counts toward Essentials or the Programme.
           </Reveal>
           <Reveal delay={0.14} className="mt-9 flex flex-wrap justify-center gap-3">
-            <Link href="/ai-training/register" className="btn-ember text-base">
-              Register &amp; pay · {formatKes(TRACKS[TRACK_INDIVIDUAL].priceKes)} <ArrowUpRight size={18} />
+            <Link href={kickstart.landingPath} className="btn-ember text-base">
+              See the Kickstart <ArrowUpRight size={18} />
             </Link>
-            <a href={whatsappLink(REGISTER_MSG)} target="_blank" rel="noopener noreferrer" className="btn-ghost text-base">
+            <a href={whatsappLink(ASK_MSG)} target="_blank" rel="noopener noreferrer" className="btn-ghost text-base">
               Ask a question on WhatsApp
             </a>
           </Reveal>
-          <p className="mt-6 font-mono text-xs uppercase tracking-eyebrow text-white/35">
-            Saturdays · 9am–1pm · 1st &amp; 2nd Saturday monthly · Online or in-person, Nairobi
-          </p>
         </div>
       </section>
+
+      <StickyBookBar href={kickstart.landingPath} label={`From ${formatKes(kickstart.priceKes)} · Book`} />
     </>
   );
 }
