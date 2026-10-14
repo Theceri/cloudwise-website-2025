@@ -1018,12 +1018,12 @@ In `src/components/Faq.js`, wrap each question `<button>` in an `<h3 className="
 
 ### 9.9 Blog fixes
 
-1. Add to `redirects()` in `next.config.mjs`: `{ source: '/blog/how-to-turn-WhatsApp-conversations-into-sales', destination: '/blog/how-to-turn-whatsapp-conversations-into-sales', permanent: true }`. Do this in the same release as the Studio slug change (step 0.6).
+1. **Built as a case-insensitive lookup, not a fixed redirect.** In `src/app/blog/[slug]/page.js`, when no post matches the slug exactly, find one whose slug matches ignoring case and redirect permanently to it. A fixed redirect would have sent the live post to a 404 until the Studio slug changes; this works before and after you lowercase the slug (step 0.6).
 2. `src/app/blog/category/[slug]/page.js`: when the category slug is `ai-training`, show an intro paragraph and a card linking to `/ai-training`. Google already shows this category page for "ai training".
 
 ### 9.10 IndexNow
 
-1. Create `public/<key>.txt` holding the key, with the key in `INDEXNOW_KEY`.
+1. Create `public/<key>.txt` holding the key. Built: `public/ff72f301a6c43d6de3f3a67313ad2640.txt`, read by `src/lib/indexnow.js` (an `INDEXNOW_KEY` variable can replace it). Pings are sent only from the production deployment.
 2. In `src/app/api/revalidate/route.js`, after a Sanity publish, POST the changed URL to `https://api.indexnow.org/indexnow`.
 3. In `src/app/api/cron/daily/route.js`, POST the training URLs once a day if their dates changed.
 

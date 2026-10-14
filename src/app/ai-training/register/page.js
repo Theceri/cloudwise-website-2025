@@ -34,7 +34,11 @@ export async function generateMetadata({ searchParams }) {
       title: `Book ${track.name} — Cloudwise`,
       description: TIER_DETAILS[track.id].pitch,
       url: `${SITE_URL}/ai-training/register`,
+      type: 'website',
+      siteName: 'Cloudwise',
+      images: [{ url: `/og/${track.param}.png`, width: 1200, height: 630, alt: track.name }],
     },
+    twitter: { card: 'summary_large_image', images: [`/og/${track.param}.png`] },
   };
 }
 

@@ -36,9 +36,9 @@ export const metadata = {
     title: 'AI Productivity Programme — two Saturdays, your own AI assistant',
     description: details.pitch,
     url: `${SITE_URL}/ai-training/programme`,
-    images: [{ url: '/dt-banner-5.png', width: 1200, height: 630, alt: 'Cloudwise AI Productivity Programme' }],
+    images: [{ url: '/og/programme.png', width: 1200, height: 630, alt: 'Cloudwise AI Productivity Programme' }],
   },
-  twitter: { card: 'summary_large_image', images: ['/dt-banner-5.png'] },
+  twitter: { card: 'summary_large_image', images: ['/og/programme.png'] },
 };
 
 export default function ProgrammePage() {

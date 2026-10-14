@@ -49,7 +49,7 @@ export const metadata = {
     description:
       'Build your own AI assistant and use it at work this week. Kickstart, Essentials or the full Programme, in Westlands or online.',
     url: `${SITE_URL}/ai-training`,
-    images: [{ url: '/dt-banner-5.png', width: 1200, height: 630, alt: 'Cloudwise AI training' }],
+    images: [{ url: '/og/ai-training.png', width: 1200, height: 630, alt: 'Cloudwise AI training' }],
   },
   // Without this the card inherits the root layout's generic company blurb, so
   // every share of the training page on X sold the company rather than the course.
@@ -57,7 +57,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'AI Training in Nairobi, Kenya — Cloudwise',
     description: 'Three ways in, from a 2-hour Kickstart for Ksh 500 to the full 8-hour Programme.',
-    images: ['/dt-banner-5.png'],
+    images: ['/og/ai-training.png'],
   },
 };
 

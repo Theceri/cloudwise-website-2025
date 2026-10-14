@@ -29,9 +29,9 @@ export const metadata = {
     title: 'AI Essentials — leave with your own AI assistant',
     description: details.pitch,
     url: `${SITE_URL}/ai-training/essentials`,
-    images: [{ url: '/dt-banner-5.png', width: 1200, height: 630, alt: 'Cloudwise AI Essentials' }],
+    images: [{ url: '/og/essentials.png', width: 1200, height: 630, alt: 'Cloudwise AI Essentials' }],
   },
-  twitter: { card: 'summary_large_image', images: ['/dt-banner-5.png'] },
+  twitter: { card: 'summary_large_image', images: ['/og/essentials.png'] },
 };
 
 export default function EssentialsPage() {

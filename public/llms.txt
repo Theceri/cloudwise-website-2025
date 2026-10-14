@@ -1,0 +1,24 @@
+# Cloudwise Limited
+
+> Cloudwise Limited is an ICT company at 4th Floor, Delta Annex, Delta Corner, Westlands, Nairobi, Kenya. It builds software, websites and AI agents for businesses, and runs hands-on AI training on Claude for individuals and teams, in Nairobi and online. It is not cloudwise.africa and not Cloudwise Academy.
+
+## AI training
+
+- [AI training overview](https://www.cloudwise.co.ke/ai-training): the three options compared, with prices, dates and the FAQ.
+- [AI Kickstart](https://www.cloudwise.co.ke/ai-training/kickstart): Ksh 500. Two hours live on Google Meet, Wednesdays 7:00pm to 9:00pm EAT. Claude set up, one prompt method, three real tasks done.
+- [AI Essentials](https://www.cloudwise.co.ke/ai-training/essentials): Ksh 5,500. One Saturday, 9:00am to 1:00pm, in Westlands or online. Each participant builds their own AI assistant as a Claude Project.
+- [AI Productivity Programme](https://www.cloudwise.co.ke/ai-training/programme): Ksh 13,500. Two Saturdays, eight hours. Adds a live connected workflow and a 30-day plan.
+- [Team and private training](https://www.cloudwise.co.ke/ai-training/teams): Ksh 13,500 per person for 10 or more people; private one-to-one training Ksh 30,000.
+
+Every class is paid in full by M-Pesa when booked. A Kickstart payment counts toward Essentials or the Programme for 14 days; an Essentials payment counts toward the Programme for 60 days. Sessions are not recorded. Participants receive the class prompts in writing, a certificate (Essentials and the Programme), and a WhatsApp support community.
+
+## Free resources
+
+- [Prompt Pack](https://www.cloudwise.co.ke/resources/prompt-pack): the four-part prompt method and ten prompts.
+- [AI tools guide](https://www.cloudwise.co.ke/resources/ai-tools-kenya): what Claude, ChatGPT, Gemini, Copilot, NotebookLM and Meta AI are each for.
+- [AI readiness guide](https://www.cloudwise.co.ke/resources/ai-readiness): the accounts to open and a 15-minute warm-up.
+
+## Company
+
+- [Services](https://www.cloudwise.co.ke/services): AI agents, web and mobile apps, e-commerce, cloud, data and automation.
+- [Contact](https://www.cloudwise.co.ke/contact): hello@cloudwise.co.ke, +254 712 658 775.

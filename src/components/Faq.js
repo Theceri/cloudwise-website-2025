@@ -22,19 +22,24 @@ export function Faq({ items, eyebrow = 'FAQ', title = 'Questions, answered' }) {
             const isOpen = open === i;
             return (
               <div key={i}>
-                <button
-                  onClick={() => setOpen(isOpen ? -1 : i)}
-                  className="flex w-full items-center justify-between gap-6 py-6 text-left"
-                  aria-expanded={isOpen}
-                >
-                  <span className={`font-display text-lg font-medium transition-colors md:text-xl ${isOpen ? 'text-ember' : 'text-white'}`}>
-                    {item.q}
-                  </span>
-                  <Plus
-                    size={22}
-                    className={`shrink-0 text-white/40 transition-transform duration-300 ${isOpen ? 'rotate-45 text-ember' : ''}`}
-                  />
-                </button>
+                {/* The question is a heading, so text extractors and AI crawlers
+                    read it as one (GEO audit, 14 October 2026). The button
+                    inside keeps the accordion working as before. */}
+                <h3 className="m-0">
+                  <button
+                    onClick={() => setOpen(isOpen ? -1 : i)}
+                    className="flex w-full items-center justify-between gap-6 py-6 text-left"
+                    aria-expanded={isOpen}
+                  >
+                    <span className={`font-display text-lg font-medium transition-colors md:text-xl ${isOpen ? 'text-ember' : 'text-white'}`}>
+                      {item.q}
+                    </span>
+                    <Plus
+                      size={22}
+                      className={`shrink-0 text-white/40 transition-transform duration-300 ${isOpen ? 'rotate-45 text-ember' : ''}`}
+                    />
+                  </button>
+                </h3>
                 <div
                   className="grid transition-all duration-300 ease-out"
                   style={{ gridTemplateRows: isOpen ? '1fr' : '0fr' }}

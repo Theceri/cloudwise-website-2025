@@ -18,9 +18,9 @@ export const metadata = {
     title: 'Corporate AI training in Kenya — built on your team’s own work',
     description: 'Team programmes, executive briefings, Microsoft 365 and Copilot days, and private one-to-one training.',
     url: `${SITE_URL}/ai-training/teams`,
-    images: [{ url: '/dt-banner-5.png', width: 1200, height: 630, alt: 'Cloudwise team AI training' }],
+    images: [{ url: '/og/teams.png', width: 1200, height: 630, alt: 'Cloudwise team AI training' }],
   },
-  twitter: { card: 'summary_large_image', images: ['/dt-banner-5.png'] },
+  twitter: { card: 'summary_large_image', images: ['/og/teams.png'] },
 };
 
 const CALL_MSG = "Hi Cloudwise, I'd like to book a 30-minute call about AI training for my team.";

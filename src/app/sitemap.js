@@ -5,77 +5,81 @@ const SERVICE_IDS = ['ai', 'web', 'mobile', 'ecommerce', 'cloud', 'data', 'autom
 
 export const revalidate = 3600;
 
-export default async function sitemap() {
-  const now = new Date();
+/**
+ * The date each static page last changed in a way a reader would notice.
+ *
+ * Real dates, not the time of the request: every URL used to carry the same
+ * timestamp, so search engines learned to ignore the field (sitemap audit,
+ * 14 October 2026). **Update the date when you change a page.** Google
+ * ignores `priority` and `changeFrequency`, so they are not sent.
+ */
+const STATIC_ROUTES = [
+  ['/', '2026-10-15'],
+  ['/ai-training', '2026-10-15'],
+  // The register page is a form and is noindexed; the tier pages carry the content.
+  ['/ai-training/kickstart', '2026-10-15'],
+  ['/ai-training/essentials', '2026-10-15'],
+  ['/ai-training/programme', '2026-10-15'],
+  ['/ai-training/teams', '2026-10-15'],
+  ['/resources', '2026-10-15'],
+  ['/resources/ai-tools-kenya', '2026-10-15'],
+  ['/resources/prompt-pack', '2026-10-14'],
+  ['/resources/ai-readiness', '2026-10-14'],
+  ['/resources/session-prep', '2026-10-14'],
+  ['/services', '2026-06-17'],
+  ['/about', '2026-06-17'],
+  ['/portfolio', '2026-06-17'],
+  ['/contact', '2026-10-14'],
+  ['/blog', '2026-06-29'],
+];
+const SERVICES_UPDATED = '2026-06-29';
+const PROJECTS_UPDATED = '2025-10-07';
 
+export default async function sitemap() {
   // Sanity is imported lazily so a missing/unset blog config never breaks the
   // core site's sitemap — it just falls back to the static routes.
   let posts = [];
   let categories = [];
   try {
     const { client } = await import('@/sanity/lib/client');
-    const { sitemapPostsQuery, categorySlugsQuery } = await import('@/sanity/lib/queries');
-    [posts, categories] = await Promise.all([
-      client.fetch(sitemapPostsQuery),
-      client.fetch(categorySlugsQuery),
-    ]);
-  } catch {
-    // If Sanity is unreachable or unconfigured, still return the static routes.
+    const { sitemapPostsQuery, sitemapCategoriesQuery } = await import('@/sanity/lib/queries');
+    // Not from the CDN: the sitemap was served days stale after new posts.
+    const fresh = client.withConfig({ useCdn: false });
+    [posts, categories] = await Promise.all([fresh.fetch(sitemapPostsQuery), fresh.fetch(sitemapCategoriesQuery)]);
+  } catch (err) {
+    console.error('[sitemap] Sanity fetch failed:', err?.message);
+    // At runtime, throwing keeps the last good sitemap in Vercel's cache
+    // instead of quietly publishing one with every blog URL missing. During a
+    // build there is no earlier copy, so fall back to the static routes rather
+    // than fail the deploy.
+    if (process.env.NEXT_PHASE !== 'phase-production-build') throw err;
   }
 
-  const staticRoutes = [
-    { url: '/', priority: 1.0, changeFrequency: 'weekly' },
-    { url: '/ai-training', priority: 0.95, changeFrequency: 'weekly' },
-    // The register page is a form and is noindexed; the tier pages carry the content.
-    { url: '/ai-training/kickstart', priority: 0.9, changeFrequency: 'weekly' },
-    { url: '/ai-training/essentials', priority: 0.9, changeFrequency: 'weekly' },
-    { url: '/ai-training/programme', priority: 0.9, changeFrequency: 'weekly' },
-    { url: '/ai-training/teams', priority: 0.85, changeFrequency: 'monthly' },
-    { url: '/resources/ai-tools-kenya', priority: 0.7, changeFrequency: 'monthly' },
-    { url: '/resources', priority: 0.8, changeFrequency: 'monthly' },
-    { url: '/resources/prompt-pack', priority: 0.75, changeFrequency: 'monthly' },
-    { url: '/resources/ai-readiness', priority: 0.7, changeFrequency: 'monthly' },
-    { url: '/resources/session-prep', priority: 0.6, changeFrequency: 'monthly' },
-    { url: '/services', priority: 0.9, changeFrequency: 'monthly' },
-    { url: '/about', priority: 0.7, changeFrequency: 'monthly' },
-    { url: '/portfolio', priority: 0.7, changeFrequency: 'monthly' },
-    { url: '/contact', priority: 0.6, changeFrequency: 'yearly' },
-    { url: '/blog', priority: 0.6, changeFrequency: 'weekly' },
-  ].map((r) => ({ ...r, url: `${SITE_URL}${r.url}`, lastModified: now }));
+  const staticRoutes = STATIC_ROUTES.map(([path, date]) => ({
+    url: `${SITE_URL}${path}`,
+    lastModified: new Date(`${date}T00:00:00Z`),
+  }));
 
   const serviceRoutes = SERVICE_IDS.map((id) => ({
     url: `${SITE_URL}/services/${id}`,
-    lastModified: now,
-    changeFrequency: 'monthly',
-    priority: 0.6,
+    lastModified: new Date(`${SERVICES_UPDATED}T00:00:00Z`),
   }));
 
   const projectRoutes = projects.map((p) => ({
     url: `${SITE_URL}/portfolio/${p.slug}`,
-    lastModified: now,
-    changeFrequency: 'monthly',
-    priority: 0.5,
+    lastModified: new Date(`${PROJECTS_UPDATED}T00:00:00Z`),
   }));
 
   const postRoutes = posts.map((p) => ({
     url: `${SITE_URL}/blog/${p.slug}`,
-    lastModified: p._updatedAt ? new Date(p._updatedAt) : now,
-    changeFrequency: 'monthly',
-    priority: 0.6,
+    lastModified: new Date(p._updatedAt || p.publishedAt),
   }));
 
+  // Only categories with at least one published post, dated by their newest.
   const categoryRoutes = categories.map((c) => ({
     url: `${SITE_URL}/blog/category/${c.slug}`,
-    lastModified: now,
-    changeFrequency: 'weekly',
-    priority: 0.4,
+    lastModified: new Date(c.lastUpdated),
   }));
 
-  return [
-    ...staticRoutes,
-    ...serviceRoutes,
-    ...projectRoutes,
-    ...postRoutes,
-    ...categoryRoutes,
-  ];
+  return [...staticRoutes, ...serviceRoutes, ...projectRoutes, ...postRoutes, ...categoryRoutes];
 }

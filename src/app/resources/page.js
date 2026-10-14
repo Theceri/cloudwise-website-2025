@@ -15,7 +15,11 @@ export const metadata = {
     title: 'Free AI Resources — Cloudwise',
     description: 'Ten prompts that do real work in your business today. Free, no signup.',
     url: `${SITE_URL}/resources`,
+    type: 'website',
+    siteName: 'Cloudwise',
+    images: [{ url: '/og/resources.png', width: 1200, height: 630, alt: 'Free AI resources from Cloudwise' }],
   },
+  twitter: { card: 'summary_large_image', images: ['/og/resources.png'] },
 };
 
 const ICONS = {

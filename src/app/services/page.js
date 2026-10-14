@@ -8,6 +8,8 @@ import {
 import { PageHero } from '@/components/PageHero';
 import { Reveal } from '@/components/anim/Reveal';
 import { CtaBand } from '@/components/CtaBand';
+import { SITE_URL } from '@/lib/constants';
+import { JsonLd, breadcrumbJsonLd } from '@/lib/seo/jsonld';
 
 const SERVICES = [
   { id: 'ai', icon: Brain, title: 'AI Agent Development', desc: 'Intelligent agents, NLP and automation that learn, adapt and act on real business tasks.', img: '/Agent-Development.png', features: ['Custom AI models', 'Natural language processing', 'AI-powered automation'] },
@@ -23,6 +25,22 @@ const SERVICES = [
 export default function Services() {
   return (
     <>
+      <JsonLd
+        data={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            name: 'Cloudwise services',
+            itemListElement: SERVICES.map((svc, i) => ({
+              '@type': 'ListItem',
+              position: i + 1,
+              name: svc.title,
+              url: `${SITE_URL}/services/${svc.id}`,
+            })),
+          },
+          breadcrumbJsonLd([['Services', '/services']]),
+        ]}
+      />
       <PageHero
         eyebrow="What we do"
         title="Services built to move your business forward."

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 
 import { Reveal } from '@/components/anim/Reveal';
@@ -22,6 +22,7 @@ import {
 } from '@/sanity/lib/queries';
 import { formatDate } from '@/lib/utils';
 import { SITE_URL } from '@/lib/constants';
+import { JsonLd, ORGANIZATION_ID, breadcrumbJsonLd } from '@/lib/seo/jsonld';
 
 export async function generateStaticParams() {
   try {
@@ -81,7 +82,17 @@ export default async function PostPage({ params }) {
     tags: [`post:${slug}`],
   });
 
-  if (!post) notFound();
+  if (!post) {
+    // Slugs are case-sensitive in Sanity, but people and links are not: one
+    // post's slug had capitals, and its lowercase URL returned 404. Find the
+    // post whatever the case and send the visitor to its real address.
+    const actual = await client.fetch(
+      '*[_type == "post" && lower(slug.current) == lower($slug)][0].slug.current',
+      { slug }
+    );
+    if (actual && actual !== slug) permanentRedirect(`/blog/${actual}`);
+    notFound();
+  }
 
   const categoryIds = (post.categories || []).map((c) => c._id);
 
@@ -109,27 +120,35 @@ export default async function PostPage({ params }) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
-    headline: post.title,
+    headline: post.title?.trim(),
+    inLanguage: 'en',
     description: post.excerpt,
     datePublished: post.publishedAt,
     dateModified: post._updatedAt,
     author: post.author?.name
-      ? { '@type': 'Person', name: post.author.name }
+      ? {
+          '@type': 'Person',
+          name: post.author.name,
+          ...(post.author.slug ? { url: `${SITE_URL}/blog/author/${post.author.slug}` } : {}),
+          ...(post.author.role ? { jobTitle: post.author.role } : {}),
+        }
       : undefined,
     image: coverUrl ? [coverUrl] : undefined,
-    publisher: {
-      '@type': 'Organization',
-      name: 'Cloudwise',
-      logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo1.png` },
-    },
+    // The same organisation the root layout describes, by @id.
+    publisher: { '@id': ORGANIZATION_ID },
     mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/blog/${post.slug}` },
   };
 
   return (
     <main className="relative pt-36 pb-24 md:pt-44">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      <JsonLd
+        data={[
+          jsonLd,
+          breadcrumbJsonLd([
+            ['Blog', '/blog'],
+            [post.title?.trim() || 'Post', `/blog/${post.slug}`],
+          ]),
+        ]}
       />
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-96 bg-ember-radial opacity-50" />
 

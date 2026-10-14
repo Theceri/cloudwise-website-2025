@@ -34,7 +34,11 @@ export async function generateMetadata({ params }) {
       title: resource.title,
       description: resource.summary,
       url: `${SITE_URL}/resources/${slug}`,
+      type: 'article',
+      siteName: 'Cloudwise',
+      images: [{ url: '/og/resources.png', width: 1200, height: 630, alt: resource.title }],
     },
+    twitter: { card: 'summary_large_image', images: ['/og/resources.png'] },
   };
 }
 
