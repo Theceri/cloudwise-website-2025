@@ -8,13 +8,13 @@ import { SITE_URL } from '@/lib/constants';
 import { JsonLd, breadcrumbJsonLd, serviceJsonLd } from '@/lib/seo/jsonld';
 
 const SERVICES = [
-  { id: 'ai', icon: Brain, title: 'AI Agent Development', description: 'Leverage AI to revolutionize your business through intelligent products and seamless integrations.', longDescription: 'We deploy intelligent agents that understand, learn and make decisions. From customer-service automation to predictive analytics and personalized recommendations, we craft AI tailored to your needs using modern NLP, machine learning and automation.', features: ['Custom AI Model Development', 'Natural Language Processing', 'Machine Learning Integration', 'AI-Powered Automation'] },
-  { id: 'web', icon: Code, title: 'Web Development', description: 'Stunning, high-performance websites that captivate visitors and drive conversions.', longDescription: 'We build robust, scalable and visually striking websites following the latest standards. From front-end interfaces to powerful back-ends, we deliver seamless experiences across every device.', features: ['Custom Web Applications', 'Progressive Web Apps', 'Responsive Design', 'Performance Optimization'] },
-  { id: 'mobile', icon: Smartphone, title: 'Mobile App Development', description: 'Engaging, user-friendly mobile apps that deliver exceptional experiences on the go.', longDescription: 'We build responsive, high-performance native and cross-platform apps with intuitive interfaces, optimized functionality and reliable backends — keeping you connected to mobile users everywhere.', features: ['iOS App Development', 'Android App Development', 'Cross-Platform Solutions', 'Mobile UI/UX Design'] },
-  { id: 'ecommerce', icon: ShoppingBag, title: 'E-commerce Solutions', description: 'Comprehensive, conversion-focused e-commerce platforms that maximize online sales.', longDescription: 'We build scalable stores that make managing products, inventory and customers effortless — from seamless checkout to sales analytics and admin dashboards.', features: ['Custom E-commerce Platforms', 'Payment Gateway Integration', 'Inventory Management', 'Analytics & Reporting'] },
+  { id: 'ai', icon: Brain, title: 'AI Agent Development', description: 'AI agents that answer customers, read documents and handle routine work, built into the tools you already use.', longDescription: 'We deploy intelligent agents that understand, learn and make decisions. From customer-service automation to forecasting and personalised recommendations, we build AI around your own data and processes.', features: ['Custom AI Model Development', 'Natural Language Processing', 'Machine Learning Integration', 'AI-Powered Automation'] },
+  { id: 'web', icon: Code, title: 'Web Development', description: 'Fast websites and web apps that load quickly on a phone and turn visitors into enquiries.', longDescription: 'We build websites and web applications that are fast, secure and easy to update, from the pages your customers see to the systems behind them, on every screen size.', features: ['Custom Web Applications', 'Progressive Web Apps', 'Responsive Design', 'Performance Optimisation'] },
+  { id: 'mobile', icon: Smartphone, title: 'Mobile App Development', description: 'Engaging, user-friendly mobile apps that deliver exceptional experiences on the go.', longDescription: 'We build responsive, high-performance native and cross-platform apps with intuitive interfaces, optimized functionality and reliable backends — keeping you connected to mobile users everywhere.', features: ['iOS App Development', 'Android App Development', 'Cross-Platform Solutions', 'Mobile Interface Design'] },
+  { id: 'ecommerce', icon: ShoppingBag, title: 'E-commerce Solutions', description: 'Online shops with M-Pesa and card payments, stock control and sales reports.', longDescription: 'We build stores that make products, stock and customers easy to manage, from checkout with M-Pesa and cards to sales reports and admin dashboards.', features: ['Custom E-commerce Platforms', 'Payment Gateway Integration', 'Inventory Management', 'Analytics & Reporting'] },
   { id: 'cloud', icon: Cloud, title: 'Cloud Solutions', description: 'Deploy and scale efficiently with modern cloud infrastructure and migration.', longDescription: 'From infrastructure planning to deployment and scaling, we specialize in AWS, Azure and Google Cloud — improving performance, reliability and cost-efficiency with optimized architecture and DevOps.', features: ['Cloud Migration', 'Infrastructure Setup', 'DevOps Implementation', 'Continuous Integration'] },
   { id: 'data', icon: Database, title: 'Data Services', description: 'Transform raw data into actionable insight with analytics and visualization.', longDescription: 'We help organizations harness their data through strategic analytics and visualization — from business dashboards to large-scale processing — delivering clarity and predictive insight.', features: ['Data Analytics', 'Business Intelligence', 'Data Visualization', 'ETL Processing'] },
-  { id: 'automation', icon: Bot, title: 'Process Automation', description: 'Streamline operations with intelligent, reliable automation.', longDescription: 'We eliminate repetitive tasks and optimize workflows using RPA, custom bots and integrations — analyzing your processes and implementing automation that saves time and cuts cost.', features: ['Workflow Automation', 'RPA Implementation', 'Business Process Optimization', 'Integration Services'] },
+  { id: 'automation', icon: Bot, title: 'Process Automation', description: 'Streamline operations with intelligent, reliable automation.', longDescription: 'We eliminate repetitive tasks and optimize workflows using RPA, custom bots and integrations — analyzing your processes and implementing automation that saves time and cuts cost.', features: ['Workflow Automation', 'RPA Implementation', 'Business Process Optimisation', 'Integration Services'] },
   { id: 'consulting', icon: LineChart, title: 'Tech Consulting', description: 'Expert guidance on your digital transformation journey.', longDescription: 'We give you a clear technology roadmap aligned with your goals — from evaluating current systems to planning scalable, secure architecture — so you can innovate with confidence.', features: ['Technology Assessment', 'Digital Strategy', 'Architecture Planning', 'Security Consulting'] },
 ];
 
@@ -26,16 +26,16 @@ const FEATURE_DESC = {
   'Custom Web Applications': 'Scalable, secure and fast web apps built from the ground up.',
   'Progressive Web Apps': 'App-like experiences that work offline and load instantly.',
   'Responsive Design': 'Flawless viewing across all devices and screen sizes.',
-  'Performance Optimization': 'Faster sites with better SEO and user experience.',
+  'Performance Optimisation': 'Faster sites with better SEO and user experience.',
   'iOS App Development': 'Smooth, polished apps for Apple devices.',
-  'Android App Development': 'Robust, feature-rich apps for Android users.',
+  'Android App Development': 'Reliable apps for the phones most Kenyans use.',
   'Cross-Platform Solutions': 'Build once, deploy everywhere with unified codebases.',
-  'Mobile UI/UX Design': 'Intuitive interfaces tailored for mobile interactions.',
+  'Mobile Interface Design': 'Intuitive interfaces tailored for mobile interactions.',
   'Custom E-commerce Platforms': 'Online stores with tailored features and branding.',
   'Payment Gateway Integration': 'Secure and flexible online transactions.',
   'Inventory Management': 'Track stock and automate restocking.',
   'Analytics & Reporting': 'Real-time dashboards to monitor performance.',
-  'Cloud Migration': 'Seamlessly move infrastructure to scalable cloud platforms.',
+  'Cloud Migration': 'Move your systems to the cloud without losing data or downtime you did not plan for.',
   'Infrastructure Setup': 'High-availability, high-performance cloud environments.',
   'DevOps Implementation': 'Faster deployments with CI/CD and automation.',
   'Continuous Integration': 'Ship faster with automated testing and integration.',
@@ -45,11 +45,11 @@ const FEATURE_DESC = {
   'ETL Processing': 'Clean, transform and load data efficiently.',
   'Workflow Automation': 'Automate repeatable processes to save time.',
   'RPA Implementation': 'Bots that handle repetitive data tasks.',
-  'Business Process Optimization': 'Refine operations for speed and lower cost.',
-  'Integration Services': 'Connect tools and platforms for seamless data flow.',
+  'Business Process Optimisation': 'Refine operations for speed and lower cost.',
+  'Integration Services': 'Connect your tools so data moves between them without retyping.',
   'Technology Assessment': 'Evaluate current systems and stacks for improvement.',
   'Digital Strategy': 'Plan long-term technology adoption aligned with goals.',
-  'Architecture Planning': 'Design robust, scalable system architectures.',
+  'Architecture Planning': 'Plan systems that stay reliable as your business grows.',
   'Security Consulting': 'Find and fix vulnerabilities before they become threats.',
 };
 
@@ -125,7 +125,7 @@ export default async function ServiceDetailPage({ params }) {
       </section>
 
       <CtaBand
-        title={`Let’s build with ${service.title.toLowerCase()}.`}
+        title={`Talk to us about ${service.title.toLowerCase()}.`}
         subtitle="Ready to get started? Tell us about your project for a free consultation."
         primary={{ label: 'Contact us', href: '/contact' }}
       />

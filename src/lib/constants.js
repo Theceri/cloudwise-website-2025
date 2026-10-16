@@ -30,6 +30,12 @@ export const COMPANY_INFO = {
     countryCode: 'KE',
   },
   founded: '2019',
+  // The Google Business Profile listing (5.0 from 19 reviews, checked 16 Oct
+  // 2026). Its pin is the office: -1.2661101, 36.8013824.
+  geo: { lat: -1.2661101, lng: 36.8013824 },
+  googleMapsUrl: 'https://www.google.com/maps?cid=15434400946695365550',
+  googleReviewsUrl: 'https://www.google.com/maps?cid=15434400946695365550',
+  directionsUrl: 'https://www.google.com/maps/dir/?api=1&destination=-1.2661101,36.8013824',
   stats: {
     projectsDone: 33,
     happyCustomers: 33,

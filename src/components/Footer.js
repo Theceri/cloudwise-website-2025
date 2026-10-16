@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Phone, Mail, MapPin, ArrowUpRight } from 'lucide-react';
+import { Phone, Mail, MapPin, ArrowUpRight, Star } from 'lucide-react';
 import { NAVIGATION_LINKS, COMPANY_INFO, SOCIAL_LINKS, formatAddress, whatsappLink } from '@/lib/constants';
 import { BrandLogo } from './BrandLogo';
 
@@ -45,18 +45,21 @@ export function Footer() {
             <a href={`mailto:${COMPANY_INFO.email}`} className="flex items-center gap-3 text-white/65 transition-colors hover:text-ember">
               <Mail size={16} className="text-ember" /> {COMPANY_INFO.email}
             </a>
-            <p className="flex items-center gap-3 text-white/65">
-              <MapPin size={16} className="text-ember" /> {formatAddress()}
-            </p>
+            <a href={COMPANY_INFO.directionsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-white/65 transition-colors hover:text-ember">
+              <MapPin size={16} className="shrink-0 text-ember" /> {formatAddress()}
+            </a>
+            <a href={COMPANY_INFO.googleReviewsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-white/65 transition-colors hover:text-ember">
+              <Star size={16} className="text-ember" fill="currentColor" /> Read our Google reviews
+            </a>
           </div>
         </div>
 
         <div>
           <h3 className="eyebrow-muted mb-5">Explore</h3>
-          <ul className="space-y-3 text-sm">
+          <ul className="space-y-0 text-sm md:space-y-3">
             {NAVIGATION_LINKS.map((l) => (
               <li key={l.href}>
-                <Link href={l.href} className="text-white/60 transition-colors hover:text-white link-underline">
+                <Link href={l.href} className="inline-block py-2.5 text-white/65 transition-colors hover:text-white link-underline md:py-0">
                   {l.name}
                 </Link>
               </li>
@@ -66,7 +69,7 @@ export function Footer() {
 
         <div>
           <h3 className="eyebrow-muted mb-5">Services</h3>
-          <ul className="space-y-3 text-sm">
+          <ul className="space-y-0 text-sm md:space-y-3">
             {[
               ['AI Agent Development', '/services/ai'],
               ['Web Development', '/services/web'],
@@ -75,7 +78,7 @@ export function Footer() {
               ['AI Training', '/ai-training'],
             ].map(([label, href]) => (
               <li key={href}>
-                <Link href={href} className="text-white/60 transition-colors hover:text-white link-underline">
+                <Link href={href} className="inline-block py-2.5 text-white/65 transition-colors hover:text-white link-underline md:py-0">
                   {label}
                 </Link>
               </li>
@@ -85,14 +88,14 @@ export function Footer() {
 
         <div>
           <h3 className="eyebrow-muted mb-5">Follow</h3>
-          <ul className="space-y-3 text-sm">
+          <ul className="space-y-0 text-sm md:space-y-3">
             {SOCIAL_LINKS.map((s) => (
               <li key={s.name}>
                 <a
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-1 text-white/60 transition-colors hover:text-white"
+                  className="group inline-flex items-center gap-1 py-2.5 text-white/65 transition-colors hover:text-white md:py-0"
                 >
                   {s.name}
                   <ArrowUpRight size={13} className="text-white/30 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

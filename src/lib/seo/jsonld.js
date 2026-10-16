@@ -12,6 +12,14 @@ import { KICKSTART_END, KICKSTART_START, TRACKS, TRACK_KICKSTART } from '@/lib/t
 export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
 
+/** The trainer named on the training pages (src/components/training/TrainerCard.js). */
+const INSTRUCTOR = {
+  '@type': 'Person',
+  name: 'Paul Theceri Ng’ang’a',
+  jobTitle: 'Director, Cloudwise Limited',
+  worksFor: { '@id': `${SITE_URL}/#organization` },
+};
+
 /**
  * The company, on every page (root layout). A ProfessionalService, so search
  * engines can place it on the map, with a description that separates it from
@@ -34,7 +42,8 @@ export function organizationJsonLd() {
     telephone: COMPANY_INFO.phoneRaw,
     foundingDate: COMPANY_INFO.founded,
     address: postalAddress(),
-    geo: { '@type': 'GeoCoordinates', latitude: -1.2661, longitude: 36.8014 },
+    geo: { '@type': 'GeoCoordinates', latitude: COMPANY_INFO.geo.lat, longitude: COMPANY_INFO.geo.lng },
+    hasMap: COMPANY_INFO.googleMapsUrl,
     areaServed: { '@type': 'Country', name: 'Kenya' },
     knowsAbout: ['AI training', 'AI agents', 'Software development', 'Web development', 'Business automation'],
     contactPoint: [
@@ -47,7 +56,7 @@ export function organizationJsonLd() {
         availableLanguage: ['English'],
       },
     ],
-    sameAs: SOCIAL_LINKS.map((s) => s.href),
+    sameAs: [...SOCIAL_LINKS.map((s) => s.href), COMPANY_INFO.googleMapsUrl],
   };
 }
 
@@ -130,6 +139,7 @@ function instanceFor(trackId, date) {
     startDate: days[0],
     endDate: days[days.length - 1],
     inLanguage: 'en',
+    instructor: INSTRUCTOR,
     courseSchedule: {
       '@type': 'Schedule',
       repeatCount: days.length,

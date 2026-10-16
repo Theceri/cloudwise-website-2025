@@ -86,11 +86,13 @@ html.lenis body {
 
 @layer components {
   /* Monospace uppercase eyebrow label — straight from the flier */
+  /* 0.75rem on phones, where 0.7rem mono in ember on near-black was hard to
+     read (visual audit, 14 October 2026). */
   .eyebrow {
-    @apply font-mono text-[0.7rem] uppercase tracking-eyebrow text-ember;
+    @apply font-mono text-xs uppercase tracking-eyebrow text-ember md:text-[0.7rem];
   }
   .eyebrow-muted {
-    @apply font-mono text-[0.7rem] uppercase tracking-eyebrow text-white/40;
+    @apply font-mono text-xs uppercase tracking-eyebrow text-white/60 md:text-[0.7rem];
   }
 
   /* Glass panel on dark */
@@ -185,5 +187,29 @@ html.lenis body {
   .reveal {
     opacity: 1 !important;
     transform: none !important;
+  }
+}
+
+/*
+ * The floating WhatsApp bubble (a third-party widget) on phones: 48px instead
+ * of 60px, 16px from the edge, and lifted above the training pages' booking
+ * bar while that bar is showing (StickyBookBar sets --book-bar-offset). It
+ * covered the price card and the stats on the first screen before.
+ */
+@media (max-width: 767px) {
+  .floating-whatsapp-button {
+    width: 48px !important;
+    height: 48px !important;
+    right: 16px !important;
+    bottom: calc(16px + var(--book-bar-offset, 0px)) !important;
+    transition: bottom 300ms ease;
+  }
+  .floating-whatsapp-button svg {
+    width: 30px !important;
+    height: 30px !important;
+  }
+  .floating-whatsapp-chatbox {
+    right: 16px !important;
+    bottom: calc(76px + var(--book-bar-offset, 0px)) !important;
   }
 }

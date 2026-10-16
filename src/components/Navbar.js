@@ -205,8 +205,9 @@ export function Navbar() {
                         href={child.href}
                         onClick={() => setOpen(false)}
                         className={cn(
-                          'flex items-center gap-2 py-2 text-base',
-                          pathname === child.href ? 'text-ember' : 'text-white/55'
+                          // 48px tall: the thumb-sized minimum (visual audit, 14 October 2026).
+                          'flex min-h-12 items-center gap-2 text-base',
+                          pathname === child.href ? 'text-ember' : 'text-white/65'
                         )}
                       >
                         <span className="h-px w-4 bg-white/20" />

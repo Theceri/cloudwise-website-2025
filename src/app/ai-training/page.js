@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowUpRight, Laptop, ShieldCheck } from 'lucide-react';
+import { ArrowUpRight, Laptop, ShieldCheck, Star } from 'lucide-react';
 
 import { Reveal } from '@/components/anim/Reveal';
 import { AnimatedHeading } from '@/components/anim/AnimatedHeading';
@@ -10,7 +10,7 @@ import { Testimonials } from '@/components/Testimonials';
 import { ComparisonTable, TierLadder } from '@/components/training/TierCards';
 import { StickyBookBar } from '@/components/training/StickyBookBar';
 import { TrainerCard } from '@/components/training/TrainerCard';
-import { SITE_URL, formatAddress, whatsappLink } from '@/lib/constants';
+import { COMPANY_INFO, SITE_URL, formatAddress, whatsappLink } from '@/lib/constants';
 import { META_CURRENCY, META_EVENTS } from '@/lib/meta/events';
 import { JsonLd, breadcrumbJsonLd, courseJsonLd } from '@/lib/seo/jsonld';
 import { TEN_ASSISTANTS, TOOLS, hubFaq } from '@/lib/training-content';
@@ -303,6 +303,16 @@ export default function AiTrainingPage() {
                   <ShieldCheck size={18} className="text-ember" /> {x}
                 </li>
               ))}
+              <li>
+                <a
+                  href={COMPANY_INFO.googleReviewsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-3 text-ember hover:underline"
+                >
+                  <Star size={18} fill="currentColor" /> Read our Google reviews
+                </a>
+              </li>
             </ul>
           </Reveal>
         </div>

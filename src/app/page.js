@@ -80,7 +80,7 @@ export default function Home() {
       <section className="border-t border-white/10 bg-ink-800/30 py-16">
         <div className="container-px flex flex-col items-center justify-between gap-4 text-center md:flex-row md:text-left">
           <p className="text-lg text-white/70">Curious what else we build?</p>
-          <Link href="/portfolio" className="group inline-flex items-center gap-2 text-ember">
+          <Link href="/portfolio" className="group inline-flex items-center gap-2 py-3 text-ember">
             Explore our portfolio
             <ArrowUpRight size={18} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </Link>
