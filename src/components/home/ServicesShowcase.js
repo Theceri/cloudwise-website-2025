@@ -39,7 +39,7 @@ export function ServicesShowcase() {
             </Reveal>
           </div>
           <Reveal delay={0.1}>
-            <Link href="/services" className="group inline-flex items-center gap-2 text-sm text-white/60 transition-colors hover:text-white">
+            <Link href="/services" className="group inline-flex items-center gap-2 py-3 text-sm text-white/65 transition-colors hover:text-white">
               View all services
               <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>

@@ -9,8 +9,8 @@ import { ArrowUpRight } from 'lucide-react';
  *
  * The training pages are long on a phone, and after the hero the only booking
  * button was near the end (visual audit, 14 October 2026). The bar appears once
- * the element with id `hero` has scrolled away, and leaves room on the right
- * for the WhatsApp bubble. Phones only: wide screens keep the page as it was.
+ * the element with id `hero` has scrolled away, and lifts the WhatsApp bubble
+ * above itself. Phones only: wide screens keep the page as it was.
  */
 export function StickyBookBar({ href, label, note }) {
   const [visible, setVisible] = useState(false);
@@ -26,6 +26,13 @@ export function StickyBookBar({ href, label, note }) {
     return () => io.disconnect();
   }, []);
 
+  // Lift the WhatsApp bubble above the bar while the bar shows (globals.css).
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--book-bar-offset', visible ? '68px' : '0px');
+    return () => root.style.removeProperty('--book-bar-offset');
+  }, [visible]);
+
   return (
     <div
       aria-hidden={!visible}
@@ -33,7 +40,7 @@ export function StickyBookBar({ href, label, note }) {
         visible ? 'translate-y-0' : 'translate-y-full'
       }`}
     >
-      <div className="flex items-center gap-3 pr-16">
+      <div className="flex items-center gap-3">
         <Link href={href} tabIndex={visible ? 0 : -1} className="btn-ember flex-1 py-3 text-[15px]">
           {label} <ArrowUpRight size={16} />
         </Link>
