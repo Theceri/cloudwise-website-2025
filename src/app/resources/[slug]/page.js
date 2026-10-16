@@ -15,7 +15,21 @@ import {
   WARM_UP_PROMPTS,
   getResource,
 } from '@/lib/resources';
-import { TRACKS, TRACK_INDIVIDUAL } from '@/lib/training';
+import { TRACKS, TRACK_INDIVIDUAL, TRACK_KICKSTART, formatKes } from '@/lib/training';
+
+/**
+ * The Prompt Pack ranks around position 9 for "how to prompt someone" (55
+ * impressions, no clicks, 90 days to 12 October 2026). Its title and heading
+ * answer that search directly; the other resources keep their own names.
+ */
+const SEARCH_TITLES = {
+  'prompt-pack': {
+    title: 'How to Prompt AI: The Four-Part Method and 10 Prompts',
+    heading: 'How to prompt AI: the four-part method, and ten prompts that work.',
+    description:
+      'How to write a prompt that gets a usable answer first time: tell the AI who it is, who you are, what you want and how you want it. Then ten copy-and-paste prompts for Kenyan businesses.',
+  },
+};
 
 export function generateStaticParams() {
   return RESOURCE_INDEX.map((r) => ({ slug: r.slug }));
@@ -26,9 +40,10 @@ export async function generateMetadata({ params }) {
   const resource = getResource(slug);
   if (!resource) return {};
 
+  const search = SEARCH_TITLES[slug];
   return {
-    title: `${resource.title} — Cloudwise AI Training`,
-    description: resource.summary,
+    title: search?.title || `${resource.title} — Cloudwise AI Training`,
+    description: search?.description || resource.summary,
     alternates: { canonical: `/resources/${slug}` },
     openGraph: {
       title: resource.title,
@@ -49,7 +64,11 @@ export default async function ResourcePage({ params }) {
 
   return (
     <>
-      <PageHero eyebrow={resource.tag} title={resource.title} subtitle={resource.summary} />
+      <PageHero
+        eyebrow={resource.tag}
+        title={SEARCH_TITLES[slug]?.heading || resource.title}
+        subtitle={resource.summary}
+      />
 
       <section className="border-t border-white/10 bg-ink py-20 md:py-28">
         <div className="container-px">
@@ -64,12 +83,13 @@ export default async function ResourcePage({ params }) {
                   Want this built into your business, not just read about?
                 </h2>
                 <p className="mt-2 text-white/65">
-                  That is what the training is. Two Saturdays, entirely hands-on, working on your
-                  real tasks.
+                  That is what the training is: hands-on, on your real tasks. Start with a two-hour
+                  Kickstart for {formatKes(TRACKS[TRACK_KICKSTART].priceKes)}, or go straight to the full
+                  Programme.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <Link href="/ai-training/register" className="btn-ember text-base">
-                    Register <ArrowUpRight size={18} />
+                  <Link href="/ai-training" className="btn-ember text-base">
+                    See courses and prices <ArrowUpRight size={18} />
                   </Link>
                   <Link href="/resources" className="btn-ghost text-base">
                     Other resources
@@ -174,13 +194,44 @@ function ReadinessGuide() {
   );
 }
 
+/** "Practise this live" — the Kickstart, from inside the free resources. */
+function KickstartBanner() {
+  const kickstart = TRACKS[TRACK_KICKSTART];
+  return (
+    <div className="my-12 flex flex-col gap-4 rounded-2xl border border-ember/30 bg-ember/[0.07] p-6 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-white/80">
+        <strong className="text-white">Want to practise this live?</strong> AI Kickstart: Wednesday 7pm, two
+        hours on Google Meet, {formatKes(kickstart.priceKes)}.
+      </p>
+      <Link href={kickstart.landingPath} className="btn-ember shrink-0 text-base">
+        See the Kickstart <ArrowUpRight size={18} />
+      </Link>
+    </div>
+  );
+}
+
 function PromptPack() {
   return (
     <article>
-      <Lead>
-        Ten prompts that do real work. Copy one, change the details in brackets to your business,
-        and paste it into any AI assistant. Then never accept the first draft.
-      </Lead>
+      <p className="mb-8 font-mono text-[0.65rem] uppercase tracking-eyebrow text-white/65">
+        By Paul Theceri, Cloudwise · Updated 16 October 2026
+      </p>
+
+      <h2 className="font-display text-3xl font-bold text-white">How to prompt an AI assistant</h2>
+      <p className="mt-5 leading-relaxed text-white/75">
+        A prompt is the instruction you type into an AI assistant such as Claude, ChatGPT or Gemini. Most
+        people type one short line and get an average answer, because the assistant knows nothing about them.
+        A good prompt tells it four things: who it is (its role), who you are (your business and customers),
+        what you want (the task), and how you want it (the format, length and tone). Then you do not accept
+        the first draft: you ask for it shorter, warmer, or with three more options. That is the whole method,
+        and it works in any assistant, in English or Kiswahili. The ten prompts below already follow it. Copy
+        one, change the details in brackets to your business, and paste it in. If you want help applying it
+        to your own work, our{' '}
+        <Link href="/ai-training" className="text-ember hover:underline">
+          AI training in Nairobi
+        </Link>{' '}
+        teaches it hands-on.
+      </p>
 
       <div className="rounded-2xl border border-ember/25 bg-ember/[0.06] p-6">
         <p className="eyebrow mb-4">{PROMPT_FRAMEWORK.title}</p>
@@ -194,6 +245,8 @@ function PromptPack() {
         </ul>
         <p className="mt-5 text-sm text-white/65">{PROMPT_FRAMEWORK.safety}</p>
       </div>
+
+      <KickstartBanner />
 
       {PROMPT_LIBRARY.map((item) => (
         <section key={item.n} className="mt-14 border-t border-white/10 pt-10 first:border-0">
@@ -231,6 +284,8 @@ function PromptPack() {
           )}
         </section>
       ))}
+
+      <KickstartBanner />
     </article>
   );
 }

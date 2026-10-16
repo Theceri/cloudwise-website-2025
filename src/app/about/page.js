@@ -16,11 +16,13 @@ const VALUES = [
   { icon: Lightbulb, title: 'Creative solutions', desc: 'We think beyond the obvious to solve complex problems elegantly.' },
 ];
 
+// No photos until real ones exist: the placeholder images were not of these
+// people. Add `image: '/team/<name>.jpg'` to show a photo instead of initials.
 const TEAM = [
-  { name: 'Paul Theceri', role: 'CEO & Founder', image: '/placeholder1.jpg' },
-  { name: 'Edwin Kailikia', role: 'Technical Lead', image: '/placeholder2.jpg' },
-  { name: 'Brian Kivuti', role: 'Design Lead', image: '/placeholder3.jpg' },
-  { name: 'Joseph Mutua', role: 'Project Manager', image: '/placeholder4.jpg' },
+  { name: 'Paul Theceri', role: 'CEO & Founder' },
+  { name: 'Edwin Kailikia', role: 'Technical Lead' },
+  { name: 'Brian Kivuti', role: 'Design Lead' },
+  { name: 'Joseph Mutua', role: 'Project Manager' },
 ];
 
 const STATS = [
@@ -116,8 +118,16 @@ export default function About() {
             {TEAM.map((m, i) => (
               <Reveal key={m.name} delay={i * 0.06}>
                 <div className="group relative overflow-hidden rounded-3xl border border-white/10">
-                  <div className="relative aspect-[3/4]">
-                    <Image src={m.image} alt={m.name} fill className="object-cover grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-105" sizes="(max-width:1024px) 50vw, 25vw" />
+                  <div className="relative aspect-[3/4] bg-ink-800">
+                    {m.image ? (
+                      <Image src={m.image} alt={m.name} fill className="object-cover grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-105" sizes="(max-width:1024px) 50vw, 25vw" />
+                    ) : (
+                      <div aria-hidden="true" className="absolute inset-0 flex items-center justify-center bg-ember-radial">
+                        <span className="font-display text-6xl font-bold text-ember/80">
+                          {m.name.split(' ').map((w) => w[0]).join('')}
+                        </span>
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/20 to-transparent" />
                   </div>
                   <div className="absolute bottom-0 left-0 p-5">
@@ -128,7 +138,16 @@ export default function About() {
               </Reveal>
             ))}
           </div>
-          <Reveal delay={0.1} className="mt-10">
+          <Reveal delay={0.08} className="mt-10 max-w-2xl">
+            <p className="text-white/70">
+              We also teach what we build. Our{' '}
+              <Link href="/ai-training" className="text-ember hover:underline">
+                hands-on AI training
+              </Link>{' '}
+              runs in Westlands and online, from a two-hour Kickstart to an eight-hour programme, and for teams.
+            </p>
+          </Reveal>
+          <Reveal delay={0.1} className="mt-8">
             <Link href="/contact" className="group inline-flex items-center gap-2 text-ember">
               Work with us <ArrowUpRight size={18} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>

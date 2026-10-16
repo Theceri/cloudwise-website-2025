@@ -10,6 +10,7 @@ import { Reveal } from '@/components/anim/Reveal';
 import { CtaBand } from '@/components/CtaBand';
 import { SITE_URL } from '@/lib/constants';
 import { JsonLd, breadcrumbJsonLd } from '@/lib/seo/jsonld';
+import { TRACKS, formatKes } from '@/lib/training';
 
 const SERVICES = [
   { id: 'ai', icon: Brain, title: 'AI Agent Development', desc: 'Intelligent agents, NLP and automation that learn, adapt and act on real business tasks.', img: '/Agent-Development.png', features: ['Custom AI models', 'Natural language processing', 'AI-powered automation'] },
@@ -44,7 +45,7 @@ export default function Services() {
       <PageHero
         eyebrow="What we do"
         title="Services built to move your business forward."
-        subtitle="From AI development to cloud infrastructure, we offer a comprehensive suite of digital solutions — and we sweat the details on every one."
+        subtitle="From AI agents to cloud infrastructure, we build the systems Kenyan businesses run on, and we teach teams to use AI at work."
       />
 
       <section className="border-t border-white/10 bg-ink py-20 md:py-28">
@@ -79,6 +80,23 @@ export default function Services() {
               </Link>
             </Reveal>
           ))}
+          {/* AI training is a service too, and the one most visitors come for. */}
+          <Reveal delay={0.06} className="md:col-span-2">
+            <Link href="/ai-training" className="card-dark group flex h-full flex-col gap-6 border-ember/40 bg-ember/[0.05] p-8 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="eyebrow mb-3">AI training</p>
+                <h3 className="font-display text-2xl font-semibold text-white">Hands-on AI training for you or your team</h3>
+                <p className="mt-2 max-w-2xl text-white/65">
+                  Build your own AI assistant on Claude, in Westlands or online. From a two-hour Kickstart for{' '}
+                  {formatKes(TRACKS.kickstart.priceKes)} to team programmes built on your own work.
+                </p>
+              </div>
+              <span className="inline-flex shrink-0 items-center gap-2 text-sm text-ember">
+                See courses and prices
+                <ArrowUpRight size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </span>
+            </Link>
+          </Reveal>
         </div>
       </section>
 
