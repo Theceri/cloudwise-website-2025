@@ -24,6 +24,23 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 13 100% 55%;
     --radius: 0.9rem;
+
+    /* Theme colours as RGB triplets (tailwind.config.js). Dark is the default
+       and the brand; light is an option the visitor chooses (ThemeToggle). */
+    --fg: 255 255 255;
+    --ink: 10 10 11;
+    --ink-800: 17 17 20;
+    --ink-700: 24 24 28;
+    --ink-600: 34 34 39;
+  }
+
+  [data-theme='light'] {
+    --fg: 14 14 16;
+    --ink: 250 249 247;
+    --ink-800: 242 240 236;
+    --ink-700: 233 231 226;
+    --ink-600: 222 219 213;
+    color-scheme: light;
   }
 }
 
@@ -73,12 +90,12 @@ html.lenis body {
   height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #0a0a0b;
+  background: rgb(var(--ink));
 }
 ::-webkit-scrollbar-thumb {
-  background: #2a2a30;
+  background: rgb(var(--ink-600));
   border-radius: 999px;
-  border: 2px solid #0a0a0b;
+  border: 2px solid rgb(var(--ink));
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #ff3f1a;
@@ -114,7 +131,7 @@ html.lenis body {
   /* The primary ember button */
   .btn-ember {
     @apply relative inline-flex items-center justify-center gap-2 rounded-full bg-ember px-7 py-3.5
-      font-medium text-white shadow-ember-sm transition-all duration-300
+      font-medium text-snow shadow-ember-sm transition-all duration-300
       hover:bg-ember-light hover:shadow-ember focus-visible:outline-none
       focus-visible:ring-2 focus-visible:ring-ember/60 focus-visible:ring-offset-2 focus-visible:ring-offset-ink;
   }
@@ -212,4 +229,35 @@ html.lenis body {
     right: 16px !important;
     bottom: calc(76px + var(--book-bar-offset, 0px)) !important;
   }
+}
+
+/* The contact map is darkened to match the dark theme; the light theme shows
+   Google's own colours. */
+.map-dark {
+  filter: invert(0.92) hue-rotate(180deg) contrast(0.9);
+}
+[data-theme='light'] .map-dark {
+  filter: none;
+}
+
+/* On the light background the bright ember and ice are too pale for small
+   text (under 4.5:1), so text uses darker shades of the same colours.
+   Ember backgrounds and buttons keep the brand colour. */
+[data-theme='light'] .text-ember,
+[data-theme='light'] .eyebrow {
+  color: #c42d0e;
+}
+[data-theme='light'] .text-ice {
+  color: #2e565b;
+}
+
+/* BrandLogo renders both wordmarks; show the one that suits the theme. */
+.logo-on-light {
+  display: none;
+}
+[data-theme='light'] .logo-on-dark {
+  display: none;
+}
+[data-theme='light'] .logo-on-light {
+  display: block;
 }

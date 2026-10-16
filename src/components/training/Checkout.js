@@ -381,7 +381,7 @@ function MethodTab({ active, onClick, icon: Icon, label }) {
       onClick={onClick}
       className={cn(
         'flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium transition-colors',
-        active ? 'bg-ember text-white' : 'text-white/60 hover:bg-white/[0.05] hover:text-white'
+        active ? 'bg-ember text-snow' : 'text-white/60 hover:bg-white/[0.05] hover:text-white'
       )}
     >
       <Icon size={17} />

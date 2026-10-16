@@ -7,6 +7,7 @@ import { sendGa4Purchase } from '@/lib/analytics/ga4-server';
 import { sendEvent } from '@/lib/meta/capi';
 import { META_CURRENCY, META_EVENTS, metaEventId } from '@/lib/meta/events';
 import { issueCreditFor, redeemCredit } from '@/lib/credits';
+import { onBookingCreated, onBookingPaid } from '@/lib/hubspot';
 import { appendReceipt, claimOnce, listRegistrations, patchRegistration, releaseClaim } from '@/lib/store';
 import { maybeSettle } from '@/lib/settlement';
 import { TRACKS, reportedValue } from '@/lib/training';
@@ -71,6 +72,8 @@ export async function onRegistrationCreated(registration) {
     registration,
     customData: metaCustomData(registration),
   }).catch((err) => ({ sent: false, reason: err?.message }));
+  // The CRM deal, started now so it overlaps the emails. Never throws.
+  const hubspotDeal = onBookingCreated(registration);
 
   results.customer = await sendOnce({
     reference: registration.reference,
@@ -91,6 +94,12 @@ export async function onRegistrationCreated(registration) {
   );
 
   results.metaLead = await metaLead;
+
+  // Kept on the booking so the payment can move the deal along.
+  results.hubspot = await hubspotDeal;
+  if (results.hubspot?.dealId) {
+    await patchRegistration(registration.reference, { hubspotDealId: results.hubspot.dealId }).catch(() => {});
+  }
 
   return results;
 }
@@ -154,6 +163,7 @@ export async function onPaymentConfirmed({ registration, payment }) {
 
   results.metaPurchase = await metaPurchase;
   results.ga4Purchase = await ga4Purchase;
+  results.hubspot = await onBookingPaid(registration);
 
   // Sweep the collection to the bank. Runs last so a settlement problem cannot
   // delay the customer's confirmation.

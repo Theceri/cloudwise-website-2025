@@ -40,12 +40,18 @@ export default async function sitemap() {
   // core site's sitemap — it just falls back to the static routes.
   let posts = [];
   let categories = [];
+  let reviewCount = 0;
   try {
     const { client } = await import('@/sanity/lib/client');
     const { sitemapPostsQuery, sitemapCategoriesQuery } = await import('@/sanity/lib/queries');
     // Not from the CDN: the sitemap was served days stale after new posts.
     const fresh = client.withConfig({ useCdn: false });
-    [posts, categories] = await Promise.all([fresh.fetch(sitemapPostsQuery), fresh.fetch(sitemapCategoriesQuery)]);
+    const { REVIEWS_QUERY } = await import('@/lib/reviews');
+    [posts, categories, reviewCount] = await Promise.all([
+      fresh.fetch(sitemapPostsQuery),
+      fresh.fetch(sitemapCategoriesQuery),
+      fresh.fetch(`count(${REVIEWS_QUERY.split('|')[0].trim()})`),
+    ]);
   } catch (err) {
     console.error('[sitemap] Sanity fetch failed:', err?.message);
     // At runtime, throwing keeps the last good sitemap in Vercel's cache
@@ -81,5 +87,10 @@ export default async function sitemap() {
     lastModified: new Date(c.lastUpdated),
   }));
 
-  return [...staticRoutes, ...serviceRoutes, ...projectRoutes, ...postRoutes, ...categoryRoutes];
+  // The reviews page exists only once there are enough named reviews.
+  const { MIN_REVIEWS } = await import('@/lib/reviews');
+  const reviewRoutes =
+    reviewCount >= MIN_REVIEWS ? [{ url: `${SITE_URL}/ai-training/reviews`, lastModified: new Date() }] : [];
+
+  return [...staticRoutes, ...reviewRoutes, ...serviceRoutes, ...projectRoutes, ...postRoutes, ...categoryRoutes];
 }

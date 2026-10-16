@@ -81,7 +81,7 @@ export default function About() {
             {VALUES.map((v, i) => (
               <Reveal key={v.title} delay={i * 0.06}>
                 <div className="card-dark group h-full p-7">
-                  <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-ember/10 text-ember transition-colors group-hover:bg-ember group-hover:text-white">
+                  <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-ember/10 text-ember transition-colors group-hover:bg-ember group-hover:text-snow">
                     <v.icon size={22} />
                   </div>
                   <h3 className="mb-2 font-display text-xl font-semibold text-white">{v.title}</h3>

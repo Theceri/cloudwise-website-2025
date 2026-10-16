@@ -14,7 +14,7 @@ export function Pagination({ currentPage, totalPages, basePath = '/blog' }) {
 
   const link = 'flex h-10 min-w-10 items-center justify-center rounded-full border px-3 text-sm transition-colors';
   const inactive = 'border-white/15 text-white/60 hover:border-white/40 hover:text-white';
-  const active = 'border-ember bg-ember text-white';
+  const active = 'border-ember bg-ember text-snow';
   const disabled = 'pointer-events-none border-white/5 text-white/20';
 
   return (

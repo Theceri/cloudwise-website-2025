@@ -61,7 +61,7 @@ export default function Services() {
                   <div className="absolute inset-0 bg-gradient-to-bl from-transparent to-ink-800" />
                 </div>
 
-                <div className="relative mb-6 flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-ember/10 text-ember transition-colors group-hover:bg-ember group-hover:text-white">
+                <div className="relative mb-6 flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-ember/10 text-ember transition-colors group-hover:bg-ember group-hover:text-snow">
                   <s.icon size={22} />
                 </div>
                 <h3 className="relative mb-2 font-display text-2xl font-semibold text-white">{s.title}</h3>

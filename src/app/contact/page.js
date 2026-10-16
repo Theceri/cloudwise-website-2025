@@ -64,7 +64,7 @@ export default function Contact() {
           ].map((c, i) => (
             <Reveal key={c.label} delay={i * 0.06}>
               <a href={c.href} target={c.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" className="card-dark group flex h-full items-center gap-4 p-6">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-ember/10 text-ember transition-colors group-hover:bg-ember group-hover:text-white">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-ember/10 text-ember transition-colors group-hover:bg-ember group-hover:text-snow">
                   <c.icon size={20} />
                 </div>
                 <div>
@@ -114,7 +114,8 @@ export default function Contact() {
                 src={`https://www.google.com/maps?q=${COMPANY_INFO.geo.lat},${COMPANY_INFO.geo.lng}&z=17&output=embed`}
                 width="100%"
                 height="380"
-                style={{ border: 0, filter: 'invert(0.92) hue-rotate(180deg) contrast(0.9)' }}
+                className="map-dark"
+                style={{ border: 0 }}
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"

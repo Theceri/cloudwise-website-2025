@@ -17,7 +17,7 @@ export function TierCard({ trackId, delay = 0 }) {
         className={`card-dark relative flex h-full flex-col p-7 ${featured ? 'border-ember/50 bg-ember/[0.05]' : ''}`}
       >
         {featured && (
-          <span className="absolute -top-3 left-7 rounded-full bg-ember px-3 py-1 font-mono text-[0.6rem] font-bold uppercase tracking-eyebrow text-white">
+          <span className="absolute -top-3 left-7 rounded-full bg-ember px-3 py-1 font-mono text-[0.6rem] font-bold uppercase tracking-eyebrow text-snow">
             Most complete
           </span>
         )}

@@ -32,7 +32,7 @@ export default function Portfolio() {
               onClick={() => setActive(c)}
               className={`rounded-full border px-5 py-2 text-sm transition-all ${
                 active === c
-                  ? 'border-ember bg-ember text-white'
+                  ? 'border-ember bg-ember text-snow'
                   : 'border-white/15 text-white/60 hover:border-white/40 hover:text-white'
               }`}
             >
