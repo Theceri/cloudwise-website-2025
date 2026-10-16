@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { WHATSAPP_NUMBER_RAW } from '@/lib/constants';
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -24,7 +25,7 @@ export default function ContactForm() {
     
     // Open WhatsApp with the pre-filled message
     window.open(
-      `https://wa.me/254712658775?text=${whatsappMessage}`,
+      `https://wa.me/${WHATSAPP_NUMBER_RAW}?text=${whatsappMessage}`,
       "_blank"
     );
     

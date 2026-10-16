@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Mail, MapPin, Send, MessageCircle } from 'lucide-react';
+import { Phone, Mail, MapPin, Send, MessageCircle, Star, Loader2 } from 'lucide-react';
 import { PageHero } from '@/components/PageHero';
 import { Reveal } from '@/components/anim/Reveal';
 import { COMPANY_INFO, SOCIAL_LINKS, WHATSAPP_NUMBER_RAW, formatAddress } from '@/lib/constants';
@@ -9,13 +9,41 @@ import { toast } from 'sonner';
 
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', message: '' });
+  const [sending, setSending] = useState(false);
   const set = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
 
   const send = (e) => {
     e?.preventDefault();
-    const msg = `New enquiry from the website%0A%0AName: ${form.name}%0AEmail: ${form.email}%0APhone: ${form.phone}%0ACompany: ${form.company}%0A%0A${form.message}`;
+    const msg = encodeURIComponent(
+      `New enquiry from the website\n\nName: ${form.name}\nEmail: ${form.email}\nPhone: ${form.phone}\nCompany: ${form.company}\n\n${form.message}`
+    );
     window.open(`https://wa.me/${WHATSAPP_NUMBER_RAW}?text=${msg}`, '_blank');
     toast.success('Opening WhatsApp to send your message…');
+  };
+
+  // Not everyone uses WhatsApp for work, and the WhatsApp route leaves us no
+  // copy if the visitor closes it unsent. This sends the same message by email.
+  const sendEmail = async () => {
+    if (!form.name || !form.email || !form.message) {
+      toast.error('Please add your name, email and message.');
+      return;
+    }
+    setSending(true);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not send.');
+      toast.success('Thank you. Your message is with us, and we reply within 24 hours.');
+      setForm({ name: '', email: '', phone: '', company: '', message: '' });
+    } catch (err) {
+      toast.error(err.message || 'Could not send. Please try WhatsApp.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -32,7 +60,7 @@ export default function Contact() {
           {[
             { icon: Phone, label: 'Call us', value: COMPANY_INFO.phone, href: `tel:${COMPANY_INFO.phoneRaw}` },
             { icon: Mail, label: 'Email us', value: COMPANY_INFO.email, href: `mailto:${COMPANY_INFO.email}` },
-            { icon: MapPin, label: 'Visit us', value: formatAddress(), href: 'https://maps.google.com/?q=Cloudwise+Technologies+Nairobi' },
+            { icon: MapPin, label: 'Visit us', value: formatAddress(), href: COMPANY_INFO.directionsUrl },
           ].map((c, i) => (
             <Reveal key={c.label} delay={i * 0.06}>
               <a href={c.href} target={c.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" className="card-dark group flex h-full items-center gap-4 p-6">
@@ -66,9 +94,14 @@ export default function Contact() {
                   <input name="company" value={form.company} onChange={set} placeholder="Company" className="h-11 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white placeholder:text-white/35 focus:border-ember/60 focus:outline-none focus:ring-2 focus:ring-ember/30" />
                 </div>
                 <textarea name="message" value={form.message} onChange={set} required rows={5} placeholder="Tell us about your project…" className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-white/35 focus:border-ember/60 focus:outline-none focus:ring-2 focus:ring-ember/30" />
-                <button type="submit" className="btn-ember w-full">
-                  Send via WhatsApp <Send size={16} />
-                </button>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <button type="submit" className="btn-ember w-full">
+                    Send via WhatsApp <Send size={16} />
+                  </button>
+                  <button type="button" onClick={sendEmail} disabled={sending} className="btn-ghost w-full disabled:opacity-60">
+                    {sending ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />} Send by email
+                  </button>
+                </div>
               </div>
             </form>
           </Reveal>
@@ -76,15 +109,32 @@ export default function Contact() {
           <Reveal delay={0.1} className="flex flex-col gap-6">
             <div className="overflow-hidden rounded-3xl border border-white/10">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.8149482568783!2d36.821452873727544!3d-1.2849942356221171!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f11e00adb9341%3A0xd63201e2d4bae3ae!2sCloudwise%20Technologies!5e0!3m2!1sen!2ske!4v1748416706423!5m2!1sen!2ske"
+                /* A pin on the Google Business Profile location at Delta Annex,
+                   Westlands. The old embed was centred on the CBD, about 3 km away. */
+                src={`https://www.google.com/maps?q=${COMPANY_INFO.geo.lat},${COMPANY_INFO.geo.lng}&z=17&output=embed`}
                 width="100%"
                 height="380"
                 style={{ border: 0, filter: 'invert(0.92) hue-rotate(180deg) contrast(0.9)' }}
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="Cloudwise Technologies location"
+                title="Cloudwise Limited, Delta Annex, Westlands, Nairobi"
               />
+            </div>
+            <div className="card-dark space-y-3 p-6 text-sm text-white/70">
+              <p>
+                <strong className="text-white">Finding us.</strong> Delta Annex is next to Delta Corner Towers on
+                Waiyaki Way, Westlands. Take the lift to the 4th floor. Training days run in the 4th-floor training
+                room.
+              </p>
+              <div className="flex flex-wrap gap-x-6 gap-y-2">
+                <a href={COMPANY_INFO.directionsUrl} target="_blank" rel="noopener noreferrer" className="text-ember hover:underline">
+                  Get directions
+                </a>
+                <a href={COMPANY_INFO.googleReviewsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-ember hover:underline">
+                  <Star size={14} fill="currentColor" /> Read our Google reviews
+                </a>
+              </div>
             </div>
             <a href={`https://wa.me/${WHATSAPP_NUMBER_RAW}`} target="_blank" rel="noopener noreferrer" className="card-dark group flex items-center justify-between p-6">
               <div className="flex items-center gap-4">
