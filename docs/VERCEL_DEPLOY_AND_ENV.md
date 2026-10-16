@@ -156,6 +156,32 @@ This is how the site came back within minutes. Worth practising once while nothi
 | Price charged | **Ksh 2** — `TEST_PAYMENT_AMOUNT_KES=2` as last recorded. **Check and remove it** (plan step 0.1). |
 | Price displayed | Kickstart Ksh 500, Essentials Ksh 5,500, Programme Ksh 13,500, each paid in full (`src/lib/training.js`) |
 | Bank settlement | Off — `SETTLEMENT_ADAPTER=none`, so no money moves automatically. When on, `SETTLEMENT_SCHEDULE` picks a sweep after each payment (`immediate`) or one sweep a day (`daily`). |
+| Meta Conversions API | Off until `META_CAPI_ACCESS_TOKEN` is set. Without it, Meta gets no Lead or Purchase events. |
+| GA4 server events | Off until `GA4_API_SECRET` is set. Without it, GA4 gets no `generate_lead` or `purchase` events. |
+| HubSpot deals | Off until `HUBSPOT_PRIVATE_APP_TOKEN` and the pipeline and stage ids are set. See "Follow-up settings" below. |
+| Meet links in emails | Off until `KICKSTART_MEET_URL` and `COHORT_MEET_URL` are set. Without them, emails say that the link follows. |
+| Certificates | On. Issue them in the Studio: open a paid Essentials or Programme booking and click **Issue certificate** or **Issue certificates for this class**. |
+| Reviews page | Hidden until three reviews with permission are published (Studio → ⭐ Reviews). |
+
+### Follow-up settings (phase 13)
+
+All of these are optional. Each feature stays off until its settings exist, and a failure never blocks a booking or a payment.
+
+| Variable | What it does | Where to get it |
+|---|---|---|
+| `HUBSPOT_PRIVATE_APP_TOKEN` | Lets the site create contacts and deals | HubSpot → Settings → Integrations → Private apps. Scopes: `crm.objects.contacts.read`, `crm.objects.contacts.write`, `crm.objects.deals.read`, `crm.objects.deals.write` |
+| `HUBSPOT_TRAINING_PIPELINE_ID` | The pipeline for individual bookings | HubSpot → Settings → Objects → Deals → Pipelines |
+| `HUBSPOT_STAGE_BOOKED` | Stage for a new booking | Same page, stage id |
+| `HUBSPOT_STAGE_KICKSTART_PAID` | Stage when a Kickstart booking is paid | Same page, stage id |
+| `HUBSPOT_STAGE_ESSENTIALS_PAID` | Stage when an Essentials booking is paid | Same page, stage id |
+| `HUBSPOT_STAGE_PROGRAMME_PAID` | Stage when a Programme booking is paid | Same page, stage id |
+| `HUBSPOT_TEAM_PIPELINE_ID` | The pipeline for team leads and team enquiries | Same page |
+| `HUBSPOT_TEAM_STAGE_NEW` | First stage of the team pipeline | Same page, stage id |
+| `KICKSTART_MEET_URL` | The Google Meet link in Kickstart emails | Google Meet |
+| `COHORT_MEET_URL` | The Google Meet link for online seats in Essentials and the Programme | Google Meet |
+| `KICKSTART_SKIP_DATES` | Wednesdays with no Kickstart, for example `2026-12-23,2026-12-30` | You choose |
+
+After you add or change any of these, redeploy (Step 2).
 
 ### One variable worth understanding: `PUBLIC_BASE_URL`
 

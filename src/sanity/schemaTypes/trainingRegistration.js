@@ -300,6 +300,13 @@ export const trainingRegistration = defineType({
     }),
     defineField({ name: 'hubspotDealId', title: 'HubSpot deal id', type: 'string', readOnly: true }),
     defineField({
+      name: 'certificateRequestedAt',
+      title: 'Certificate requested',
+      type: 'datetime',
+      readOnly: true,
+      description: 'Set by the "Issue certificate" button. The certificate itself is under Training → Certificates.',
+    }),
+    defineField({
       name: 'utm',
       title: 'Ad source (UTM)',
       type: 'object',

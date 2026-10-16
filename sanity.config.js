@@ -11,6 +11,7 @@ import { visionTool } from '@sanity/vision';
 import { apiVersion, dataset, projectId } from './src/sanity/env';
 import { schema } from './src/sanity/schemaTypes';
 import { structure } from './src/sanity/structure';
+import { IssueCertificateAction, IssueClassCertificatesAction } from './src/sanity/actions/issueCertificates';
 
 export default defineConfig({
   name: 'cloudwise-blog',
@@ -23,4 +24,11 @@ export default defineConfig({
     structureTool({ structure }),
     visionTool({ defaultApiVersion: apiVersion }),
   ],
+  document: {
+    // Certificate buttons on paid Essentials and Programme bookings.
+    actions: (prev, context) =>
+      context.schemaType === 'trainingRegistration'
+        ? [...prev, IssueCertificateAction, IssueClassCertificatesAction]
+        : prev,
+  },
 });

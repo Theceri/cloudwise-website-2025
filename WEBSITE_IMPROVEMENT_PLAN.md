@@ -1122,14 +1122,14 @@ Check every page at 375 px, 768 px and 1280 px.
 
 ### 13.1 HubSpot pipeline
 
-**Your action first:** create a HubSpot pipeline "AI training ladder" with stages "Kickstart booked", "Kickstart attended", "Essentials paid", "Programme paid", and a "Team training" pipeline. Create a private app with the CRM scopes for contacts and deals, and add `HUBSPOT_PRIVATE_APP_TOKEN` to Vercel.
+**Your action first:** create a HubSpot pipeline "AI training ladder" with stages "Booked", "Kickstart paid", "Essentials paid" and "Programme paid", and a "Team training" pipeline with a first stage "New". The site cannot know who attended, so there is no "attended" stage. Copy the ids into the variables listed in `docs/VERCEL_DEPLOY_AND_ENV.md`. Create a private app with the CRM scopes for contacts and deals, and add `HUBSPOT_PRIVATE_APP_TOKEN` to Vercel.
 
 Build `src/lib/hubspot.js` (server-only, fails soft): on registration created, upsert the contact by email and create a deal in the right stage with properties tier, cohort or session, amount, `utm_campaign`, `utm_content`; on payment, move the deal to the paid stage; team leads and team enquiries go to the team pipeline. Call it from `onRegistrationCreated` and `onPaymentConfirmed`.
 
 ### 13.2 Certificates with a verification code
 
 1. Sanity type `trainingCertificate`: code (`CW-` plus 8 characters), name, tier, date, issued at, revoked.
-2. An admin issues certificates from the Studio after a session (a document action "Issue certificates" on a cohort roster, or one by one).
+2. An admin issues certificates from the Studio after a session. Open a paid Essentials or Programme booking and click **Issue certificate** (this person) or **Issue certificates for this class** (every paid booking on the same class). `POST /api/certificates/issue` with the `CRON_SECRET` does the same from a script.
 3. `src/app/verify/[code]/page.js`: shows name, course, date and "Valid" or "Not found". `noindex`.
 4. The certificate PDF itself is produced from the existing training templates outside the site. Its footer carries the code and `cloudwise.co.ke/verify/<code>`.
 5. The completion email adds a LinkedIn "Add to profile" link (`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=…&organizationName=Cloudwise%20Limited&issueYear=…&issueMonth=…&certId=<code>&certUrl=…`) and the Google review link.

@@ -244,8 +244,27 @@ html.lenis body {
    text (under 4.5:1), so text uses darker shades of the same colours.
    Ember backgrounds and buttons keep the brand colour. */
 [data-theme='light'] .text-ember,
+[data-theme='light'] .text-ember\/80,
+[data-theme='light'] .text-ember\/90,
 [data-theme='light'] .eyebrow {
   color: #c42d0e;
+}
+
+/* Faded text (text-white/30 to /60) reads well on the dark background but
+   falls to about 2.6:1 on the light one. In the light theme it is raised to
+   64% strength, which keeps it secondary and passes 4.5:1. */
+[data-theme='light'] .text-white\/30,
+[data-theme='light'] .text-white\/35,
+[data-theme='light'] .text-white\/40,
+[data-theme='light'] .text-white\/45,
+[data-theme='light'] .text-white\/50,
+[data-theme='light'] .text-white\/55,
+[data-theme='light'] .text-white\/60,
+[data-theme='light'] .eyebrow-muted {
+  color: rgb(var(--fg) / 0.64);
+}
+[data-theme='light'] .placeholder\:text-white\/35::placeholder {
+  color: rgb(var(--fg) / 0.5);
 }
 [data-theme='light'] .text-ice {
   color: #2e565b;
@@ -260,4 +279,13 @@ html.lenis body {
 }
 [data-theme='light'] .logo-on-light {
   display: block;
+}
+
+/* Gradient headings and figures: the same colours, one step darker, so they
+   stay readable on the light background. */
+[data-theme='light'] .text-gradient-ember {
+  background-image: linear-gradient(to right, #d63a17, #c42d0e, #a8250b);
+}
+[data-theme='light'] .text-gradient-cool {
+  background-image: linear-gradient(to right, #447980, #3a6a70, #2e565b);
 }
