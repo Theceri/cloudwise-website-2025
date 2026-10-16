@@ -1,5 +1,7 @@
 import { SITE_URL } from '@/lib/constants';
 
+// No `host` line: Google ignores it (technical audit, 14 October 2026).
+
 export default function robots() {
   return {
     rules: [
@@ -12,6 +14,5 @@ export default function robots() {
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
   };
 }

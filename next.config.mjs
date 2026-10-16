@@ -1,5 +1,26 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Do not advertise the framework in every response.
+  poweredByHeader: false,
+
+  // Security headers on every route. Only HSTS was sent before (technical
+  // audit, 14 October 2026), on a site whose checkout takes payments.
+  // frame-ancestors 'self' stops other sites framing the checkout
+  // (clickjacking) while still letting the embedded Studio preview the site.
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+        ],
+      },
+    ];
+  },
+
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'cdn.sanity.io' },

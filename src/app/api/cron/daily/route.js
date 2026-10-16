@@ -10,9 +10,10 @@ import {
 import { sendEmail, sendOnce } from '@/lib/email/send';
 import { completionPack, creditExpiring, reminder } from '@/lib/email/templates';
 import { isAuthorisedJob } from '@/lib/security';
-import { maybeSettle } from '@/lib/settlement';
+import { maybeSettle, settleBatch, settlementConfig } from '@/lib/settlement';
 import { claimOnce, listRegistrations, listUnsettledPayments } from '@/lib/store';
-import { TRACK_KICKSTART, daysUntil, endDateFor } from '@/lib/training';
+import { pingIndexNow } from '@/lib/indexnow';
+import { TRACK_KICKSTART, daysUntil, endDateFor, listKickstartSessions, listOpenCohorts } from '@/lib/training';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,7 +31,8 @@ export const maxDuration = 60;
  *      a Kickstart or Essentials booking earned.
  *   3. Credits — give back credits held by bookings abandoned for 48 hours,
  *      expire old ones, and remind holders 3 days before a credit ends.
- *   4. Settlement retries — any sweep to the bank that failed or stalled.
+ *   4. Settlement — on SETTLEMENT_SCHEDULE=daily, one sweep of everything
+ *      unsettled; otherwise retries of any per-payment sweep that failed.
  *
  * Every send is claimed through `sendOnce`, so a manual trigger, a retry, or an
  * overlapping run cannot double-send.
@@ -126,16 +128,41 @@ export async function GET(request) {
     summary.errors.push(`credit reminders: ${err?.message}`);
   }
 
-  // Retry money that never made it to the bank. The query only returns sweeps
-  // that failed or have been stuck long enough to be certainly abandoned, so
-  // forcing past the state guard here cannot cut in front of a live request.
+  // Money to the bank. On the daily schedule, one transfer for everything
+  // unsettled. Otherwise, retry the per-payment sweeps that failed or stalled:
+  // the query only returns sweeps that failed or have been stuck long enough
+  // to be certainly abandoned, so forcing past the state guard here cannot cut
+  // in front of a live request.
   try {
-    for (const payment of await listUnsettledPayments({ limit: 50 })) {
-      const result = await maybeSettle(payment, { force: true });
-      if (result.settled) summary.settlementsRetried += 1;
+    if (settlementConfig().schedule === 'daily') {
+      summary.dailySweep = await settleBatch({ now });
+    } else {
+      for (const payment of await listUnsettledPayments({ limit: 50 })) {
+        const result = await maybeSettle(payment, { force: true });
+        if (result.settled) summary.settlementsRetried += 1;
+      }
     }
   } catch (err) {
     summary.errors.push(`settlement: ${err?.message}`);
+  }
+
+  // The training pages list the next dates. When a Kickstart session or a
+  // cohort closed since yesterday, the dates on them changed: tell Bing.
+  try {
+    const yesterday = new Date(now.getTime() - 24 * 3600 * 1000);
+    const changed =
+      listKickstartSessions({ now, count: 1 })[0]?.id !== listKickstartSessions({ now: yesterday, count: 1 })[0]?.id ||
+      listOpenCohorts({ now, count: 1 })[0]?.id !== listOpenCohorts({ now: yesterday, count: 1 })[0]?.id;
+    if (changed) {
+      summary.indexNow = await pingIndexNow([
+        '/ai-training',
+        '/ai-training/kickstart',
+        '/ai-training/essentials',
+        '/ai-training/programme',
+      ]);
+    }
+  } catch (err) {
+    summary.errors.push(`indexnow: ${err?.message}`);
   }
 
   return NextResponse.json({ ok: true, ranAt: now.toISOString(), ...summary });

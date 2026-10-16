@@ -5,6 +5,7 @@ import { Brain, Code, Smartphone, ShoppingBag, Cloud, Database, Bot, LineChart }
 import { Reveal } from '@/components/anim/Reveal';
 import { CtaBand } from '@/components/CtaBand';
 import { SITE_URL } from '@/lib/constants';
+import { JsonLd, breadcrumbJsonLd, serviceJsonLd } from '@/lib/seo/jsonld';
 
 const SERVICES = [
   { id: 'ai', icon: Brain, title: 'AI Agent Development', description: 'Leverage AI to revolutionize your business through intelligent products and seamless integrations.', longDescription: 'We deploy intelligent agents that understand, learn and make decisions. From customer-service automation to predictive analytics and personalized recommendations, we craft AI tailored to your needs using modern NLP, machine learning and automation.', features: ['Custom AI Model Development', 'Natural Language Processing', 'Machine Learning Integration', 'AI-Powered Automation'] },
@@ -75,6 +76,15 @@ export default async function ServiceDetailPage({ params }) {
 
   return (
     <>
+      <JsonLd
+        data={[
+          serviceJsonLd({ id: service.id, title: service.title, description: service.longDescription }),
+          breadcrumbJsonLd([
+            ['Services', '/services'],
+            [service.title, `/services/${service.id}`],
+          ]),
+        ]}
+      />
       <section className="relative overflow-hidden pt-36 pb-16 md:pt-44 md:pb-20">
         <div className="pointer-events-none absolute inset-0 bg-ember-radial opacity-70" />
         <div className="pointer-events-none absolute inset-0 bg-grid-faint bg-grid-lg opacity-25" />

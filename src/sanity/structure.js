@@ -191,6 +191,11 @@ export const structure = (S) =>
                 .child(S.documentTypeList('teamEnquiry').title('Team enquiries').defaultOrdering(byNewest)),
 
               S.listItem()
+                .title('🏦 Daily bank sweeps')
+                .icon(CreditCardIcon)
+                .child(S.documentTypeList('settlementBatch').title('Daily bank sweeps').defaultOrdering(byNewest)),
+
+              S.listItem()
                 .title('🏦 Awaiting bank settlement')
                 .icon(CreditCardIcon)
                 .child(

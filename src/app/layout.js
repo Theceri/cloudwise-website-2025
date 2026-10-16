@@ -4,7 +4,8 @@ import { SiteChrome } from '@/components/SiteChrome';
 import { MetaPixel } from '@/components/MetaPixel';
 import { GoogleTag } from '@/components/GoogleTag';
 import { MicrosoftClarity } from '@/components/MicrosoftClarity';
-import { SITE_URL, COMPANY_INFO, SOCIAL_LINKS } from '@/lib/constants';
+import { SITE_URL } from '@/lib/constants';
+import { JsonLd, organizationJsonLd, websiteJsonLd } from '@/lib/seo/jsonld';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -68,34 +69,15 @@ export const viewport = {
   initialScale: 1,
 };
 
-const orgJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: COMPANY_INFO.legalName,
-  alternateName: 'Cloudwise',
-  url: SITE_URL,
-  logo: `${SITE_URL}/logo1.png`,
-  email: COMPANY_INFO.email,
-  telephone: COMPANY_INFO.phoneRaw,
-  foundingDate: COMPANY_INFO.founded,
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: COMPANY_INFO.address.line1,
-    addressLocality: `${COMPANY_INFO.address.area}, ${COMPANY_INFO.address.city}`,
-    addressRegion: COMPANY_INFO.address.region,
-    addressCountry: 'KE',
-  },
-  sameAs: SOCIAL_LINKS.map((s) => s.href),
-};
+// The company and the site, on every page. Built in src/lib/seo/jsonld.js so
+// every page's markup points at the same @id.
+const siteJsonLd = [organizationJsonLd(), websiteJsonLd()];
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${grotesk.variable} ${mono.variable}`} suppressHydrationWarning>
       <body className="bg-ink text-white/90 antialiased">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
-        />
+        <JsonLd data={siteJsonLd} />
         <MetaPixel />
         <GoogleTag />
         <MicrosoftClarity />

@@ -1,4 +1,8 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ArrowUpRight } from 'lucide-react';
+
+import { TRACKS, formatKes } from '@/lib/training';
 
 import { PageHero } from '@/components/PageHero';
 import { CtaBand } from '@/components/CtaBand';
@@ -66,6 +70,23 @@ export default async function CategoryPage({ params }) {
 
       <section className="bg-ink pb-24 md:pb-32">
         <div className="container-px">
+          {category.slug === 'ai-training' && (
+            // Google already shows this page for "ai training" (Search Console,
+            // 90 days to 12 October 2026), so it points straight at the course.
+            <Reveal className="mb-10">
+              <div className="flex flex-col gap-4 rounded-3xl border border-ember/30 bg-ember/[0.07] p-7 sm:flex-row sm:items-center sm:justify-between">
+                <p className="max-w-2xl text-white/80">
+                  <strong className="text-white">Looking for AI training in Nairobi?</strong> Cloudwise runs
+                  hands-on courses on Claude: a two-hour Kickstart for {formatKes(TRACKS.kickstart.priceKes)}, a
+                  Saturday Essentials class for {formatKes(TRACKS.essentials.priceKes)} and the full eight-hour
+                  Programme. These articles come from the same work.
+                </p>
+                <Link href="/ai-training" className="btn-ember shrink-0 text-base">
+                  See the AI training <ArrowUpRight size={18} />
+                </Link>
+              </div>
+            </Reveal>
+          )}
           {posts.length === 0 ? (
             <div className="py-24 text-center text-white/50">No posts in this category yet.</div>
           ) : (

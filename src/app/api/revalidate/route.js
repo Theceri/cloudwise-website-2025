@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 
+import { pingIndexNow } from '@/lib/indexnow';
+
 /**
  * On-demand ISR webhook target for Sanity.
  *
@@ -37,5 +39,10 @@ export async function POST(request) {
     revalidateTag(`comments:${body.postId}`);
   }
 
-  return NextResponse.json({ revalidated: true, now: Date.now() });
+  // A published or updated post: tell Bing straight away. Comments do not change
+  // what a search engine should index, so they are not pinged.
+  const indexNow =
+    body?._type === 'post' && body?.slug ? await pingIndexNow([`/blog/${body.slug}`, '/blog']) : null;
+
+  return NextResponse.json({ revalidated: true, now: Date.now(), indexNow });
 }

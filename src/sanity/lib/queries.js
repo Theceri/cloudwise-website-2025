@@ -147,10 +147,20 @@ export const siteSettingsQuery = groq`
 
 // ---- Sitemap / RSS feeds --------------------------------------------------
 
+// Posts marked noindex in the Studio stay out of the sitemap.
 export const sitemapPostsQuery = groq`
-  *[_type == "post" && defined(slug.current) && publishedAt <= now()]{
+  *[_type == "post" && defined(slug.current) && publishedAt <= now() && seo.noindex != true]{
     "slug": slug.current, _updatedAt, publishedAt
   }
+`;
+
+// Categories that have at least one published post, dated by the newest one.
+export const sitemapCategoriesQuery = groq`
+  *[_type == "category" && defined(slug.current)]{
+    "slug": slug.current,
+    "lastUpdated": *[_type == "post" && references(^._id) && publishedAt <= now() && seo.noindex != true]
+      | order(_updatedAt desc)[0]._updatedAt
+  }[defined(lastUpdated)]
 `;
 
 export const feedPostsQuery = groq`

@@ -153,9 +153,9 @@ This is how the site came back within minutes. Worth practising once while nothi
 | Payment methods | **M-Pesa STK prompt only** |
 | Card payments | Off — `CARD_PAYMENTS_ENABLED=false` |
 | Paybill fallback | Off — `PAYBILL_FALLBACK_ENABLED=false` |
-| Price charged | **Ksh 2** — `TEST_PAYMENT_AMOUNT_KES=2` |
-| Price displayed | Ksh 13,500 / Ksh 7,500, unchanged |
-| Bank settlement | Off — `SETTLEMENT_ADAPTER=none`, so no money moves automatically |
+| Price charged | **Ksh 2** — `TEST_PAYMENT_AMOUNT_KES=2` as last recorded. **Check and remove it** (plan step 0.1). |
+| Price displayed | Kickstart Ksh 500, Essentials Ksh 5,500, Programme Ksh 13,500, each paid in full (`src/lib/training.js`) |
+| Bank settlement | Off — `SETTLEMENT_ADAPTER=none`, so no money moves automatically. When on, `SETTLEMENT_SCHEDULE` picks a sweep after each payment (`immediate`) or one sweep a day (`daily`). |
 
 ### One variable worth understanding: `PUBLIC_BASE_URL`
 

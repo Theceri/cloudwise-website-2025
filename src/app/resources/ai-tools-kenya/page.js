@@ -18,7 +18,7 @@ export const metadata = {
     title: 'The AI tools worth learning in Kenya',
     description: 'What each tool is for, which free account to open, and what never to paste.',
     url: `${SITE_URL}/resources/ai-tools-kenya`,
-    images: [{ url: '/dt-banner-5.png', width: 1200, height: 630, alt: 'AI tools for Kenyan professionals' }],
+    images: [{ url: '/og/resources.png', width: 1200, height: 630, alt: 'AI tools for Kenyan professionals' }],
   },
 };
 

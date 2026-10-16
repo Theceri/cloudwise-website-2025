@@ -28,9 +28,9 @@ export const metadata = {
     title: 'AI Kickstart — two hours, three tasks done, Ksh 500',
     description: details.pitch,
     url: `${SITE_URL}/ai-training/kickstart`,
-    images: [{ url: '/dt-banner-5.png', width: 1200, height: 630, alt: 'Cloudwise AI Kickstart' }],
+    images: [{ url: '/og/kickstart.png', width: 1200, height: 630, alt: 'Cloudwise AI Kickstart' }],
   },
-  twitter: { card: 'summary_large_image', images: ['/dt-banner-5.png'] },
+  twitter: { card: 'summary_large_image', images: ['/og/kickstart.png'] },
 };
 
 export default function KickstartPage() {
