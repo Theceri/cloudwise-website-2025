@@ -10,7 +10,7 @@ export function CategoryPills({ categories = [], activeSlug = null }) {
     'rounded-full border px-5 py-2 text-sm transition-all';
   const inactive =
     'border-white/15 text-white/60 hover:border-white/40 hover:text-white';
-  const active = 'border-ember bg-ember text-white';
+  const active = 'border-ember bg-ember text-snow';
 
   return (
     <div className="flex flex-wrap gap-2">

@@ -43,7 +43,7 @@ export function PostCard({ post, featured = false, priority = false }) {
           <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/50 to-transparent" />
         </div>
         <div className="absolute bottom-0 left-0 p-5 md:p-8">
-          <span className="rounded-full bg-ember px-3 py-1 font-mono text-[0.6rem] uppercase tracking-eyebrow text-white">
+          <span className="rounded-full bg-ember px-3 py-1 font-mono text-[0.6rem] uppercase tracking-eyebrow text-snow">
             Featured{category ? ` · ${category.title}` : ''}
           </span>
           <h2 className="mt-4 max-w-2xl font-display text-2xl font-bold text-white sm:text-3xl md:text-4xl">

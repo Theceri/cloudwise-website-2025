@@ -9,7 +9,7 @@ export function ClientsMarquee() {
       <p className="container-px mb-8 text-center font-mono text-[0.7rem] uppercase tracking-eyebrow text-white/35">
         Trusted by teams &amp; organisations across East Africa
       </p>
-      <Marquee speed={36} pauseOnHover gradient gradientColor="#0A0A0B" gradientWidth={120}>
+      <Marquee speed={36} pauseOnHover gradient gradientColor="rgb(var(--ink))" gradientWidth={120}>
         {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
           <div
             key={n}

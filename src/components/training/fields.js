@@ -109,7 +109,7 @@ export function RadioCards({ name, options, value, onChange, error }) {
             <span
               className={cn(
                 'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border',
-                selected ? 'border-ember bg-ember text-white' : 'border-white/25'
+                selected ? 'border-ember bg-ember text-snow' : 'border-white/25'
               )}
             >
               {selected && <Check size={12} strokeWidth={3} />}
@@ -153,7 +153,7 @@ export function CheckboxGroup({ options, value = [], onChange, columns = 2 }) {
             <span
               className={cn(
                 'flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border',
-                selected ? 'border-ember bg-ember text-white' : 'border-white/25'
+                selected ? 'border-ember bg-ember text-snow' : 'border-white/25'
               )}
             >
               {selected && <Check size={11} strokeWidth={3} />}
@@ -186,7 +186,7 @@ export function Checkbox({ checked, onChange, children, error, id }) {
         <span
           className={cn(
             'mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border',
-            checked ? 'border-ember bg-ember text-white' : 'border-white/25'
+            checked ? 'border-ember bg-ember text-snow' : 'border-white/25'
           )}
         >
           {checked && <Check size={11} strokeWidth={3} />}

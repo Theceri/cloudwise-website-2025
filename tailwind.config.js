@@ -18,14 +18,21 @@ module.exports = {
     },
     extend: {
       colors: {
-        // Core canvas — near-black inks from the brand flier
+        // Core canvas — near-black inks from the brand flier. Read from CSS
+        // variables so the optional light theme can swap them (globals.css);
+        // in the default dark theme they are exactly the old values.
         ink: {
-          DEFAULT: '#0A0A0B',
-          900: '#0A0A0B',
-          800: '#111114',
-          700: '#18181C',
-          600: '#222227',
+          DEFAULT: 'rgb(var(--ink) / <alpha-value>)',
+          900: 'rgb(var(--ink) / <alpha-value>)',
+          800: 'rgb(var(--ink-800) / <alpha-value>)',
+          700: 'rgb(var(--ink-700) / <alpha-value>)',
+          600: 'rgb(var(--ink-600) / <alpha-value>)',
         },
+        // "white" is the foreground colour: white on the dark theme, near-black
+        // on the light one. Every text-white/xx and border-white/xx follows it.
+        white: 'rgb(var(--fg) / <alpha-value>)',
+        // Always white: text on ember buttons and badges, in both themes.
+        snow: '#FFFFFF',
         // Ember — the signature orange-red
         ember: {
           DEFAULT: '#FF3F1A',

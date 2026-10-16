@@ -8,6 +8,7 @@ import { NAVIGATION_LINKS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { BrandLogo } from './BrandLogo';
 import QuoteForm from './QuoteForm';
+import { ThemeToggle } from './ThemeToggle';
 import { Magnetic } from './anim/Magnetic';
 
 /** A nav item is "active" for its own page and, for a group, any child page. */
@@ -142,7 +143,8 @@ export function Navbar() {
             })}
           </div>
 
-          <div className="hidden lg:block">
+          <div className="hidden items-center gap-3 lg:flex">
+            <ThemeToggle />
             <Magnetic>
               <QuoteForm
                 trigger={
@@ -155,13 +157,16 @@ export function Navbar() {
             </Magnetic>
           </div>
 
-          <button
-            onClick={() => setOpen((v) => !v)}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-white lg:hidden"
-            aria-label={open ? 'Close menu' : 'Open menu'}
-          >
-            {open ? <X size={20} /> : <Menu size={20} />}
-          </button>
+          <div className="flex items-center gap-2 lg:hidden">
+            <ThemeToggle />
+            <button
+              onClick={() => setOpen((v) => !v)}
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-white"
+              aria-label={open ? 'Close menu' : 'Open menu'}
+            >
+              {open ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </nav>
       </header>
 

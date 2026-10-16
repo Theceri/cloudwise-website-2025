@@ -4,6 +4,7 @@ import { SiteChrome } from '@/components/SiteChrome';
 import { MetaPixel } from '@/components/MetaPixel';
 import { GoogleTag } from '@/components/GoogleTag';
 import { MicrosoftClarity } from '@/components/MicrosoftClarity';
+import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import { SITE_URL } from '@/lib/constants';
 import { JsonLd, organizationJsonLd, websiteJsonLd } from '@/lib/seo/jsonld';
 
@@ -76,6 +77,10 @@ const siteJsonLd = [organizationJsonLd(), websiteJsonLd()];
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${grotesk.variable} ${mono.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Applies a saved light-theme choice before the first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="bg-ink text-white/90 antialiased">
         <JsonLd data={siteJsonLd} />
         <MetaPixel />
