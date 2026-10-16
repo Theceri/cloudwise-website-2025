@@ -11,10 +11,20 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
+// A Studio request counts only for bookings marked this recently.
+const STUDIO_REQUEST_WINDOW_MS = 30 * 60 * 1000;
+
 /**
  * Issue certificates after a class, and email each one.
  *
- * Admin only: send the CRON_SECRET as `Authorization: Bearer …`. Body, one of:
+ * Two callers:
+ *   - The Studio buttons (src/sanity/actions/issueCertificates.js). No secret:
+ *     the Studio first sets certificateRequestedAt on each booking, and only
+ *     bookings marked in the last 30 minutes are issued. Only Studio editors
+ *     can mark a booking.
+ *   - An admin script with the CRON_SECRET as `Authorization: Bearer …`.
+ *
+ * Body, one of:
  *
  *   { "references": ["A7F3K2", "E9K2M4"] }        named bookings
  *   { "cohortId": "2026-11", "track": "individual" } every paid booking on
@@ -25,9 +35,7 @@ export const maxDuration = 60;
  * given in error in the Studio (Training → Certificates).
  */
 export async function POST(request) {
-  if (!isAuthorisedJob(request)) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-  }
+  const admin = isAuthorisedJob(request);
 
   let body;
   try {
@@ -43,6 +51,15 @@ export async function POST(request) {
       const reg = ref ? await getRegistration(ref) : null;
       if (reg) registrations.push(reg);
     }
+    if (!admin) {
+      const cutoff = Date.now() - STUDIO_REQUEST_WINDOW_MS;
+      registrations = registrations.filter((r) => Date.parse(r.certificateRequestedAt || '') > cutoff);
+      if (!registrations.length) {
+        return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+      }
+    }
+  } else if (!admin) {
+    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   } else if (body?.cohortId && body?.track) {
     registrations = await listRegistrations({ cohortId: body.cohortId, track: body.track, status: 'paid' });
     // The roster query returns a summary; fetch the full documents.
