@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { sendToAdmins } from '@/lib/email/send';
+import { onTeamEnquiry } from '@/lib/hubspot';
 import { escapeHtml } from '@/lib/email/layout';
 import { readAttribution, sendEvent } from '@/lib/meta/capi';
 import { META_CURRENCY, META_EVENTS, metaEventId } from '@/lib/meta/events';
@@ -91,6 +92,7 @@ export async function POST(request) {
   ];
 
   await Promise.allSettled([
+    onTeamEnquiry({ ...value, utm }),
     sendToAdmins({
       subject: `🏢 Team training enquiry: ${value.organization} (${value.teamSize} people)`,
       html: `<p><strong>${escapeHtml(value.name)}</strong> asked about ${escapeHtml(value.format)} training for <strong>${escapeHtml(

@@ -10,6 +10,8 @@ import { systemLock } from './systemLock';
 import { trainingCredit } from './trainingCredit';
 import { teamEnquiry } from './teamEnquiry';
 import { settlementBatch } from './settlementBatch';
+import { trainingCertificate } from './trainingCertificate';
+import { trainingReview } from './trainingReview';
 
 export const schema = {
   types: [
@@ -24,6 +26,8 @@ export const schema = {
     trainingCredit,
     teamEnquiry,
     settlementBatch,
+    trainingCertificate,
+    trainingReview,
     systemLock,
     // Objects
     blockContent,

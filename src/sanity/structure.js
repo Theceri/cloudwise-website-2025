@@ -186,6 +186,16 @@ export const structure = (S) =>
                 .child(S.documentTypeList('trainingCredit').title('Credits').defaultOrdering(byNewest)),
 
               S.listItem()
+                .title('🎓 Certificates')
+                .icon(UsersIcon)
+                .child(S.documentTypeList('trainingCertificate').title('Certificates')),
+
+              S.listItem()
+                .title('⭐ Reviews')
+                .icon(UsersIcon)
+                .child(S.documentTypeList('trainingReview').title('Reviews')),
+
+              S.listItem()
                 .title('🏢 Team enquiries')
                 .icon(UsersIcon)
                 .child(S.documentTypeList('teamEnquiry').title('Team enquiries').defaultOrdering(byNewest)),

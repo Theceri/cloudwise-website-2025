@@ -298,6 +298,7 @@ export const trainingRegistration = defineType({
         defineField({ name: 'capturedAt', title: 'Captured at', type: 'datetime', readOnly: true }),
       ],
     }),
+    defineField({ name: 'hubspotDealId', title: 'HubSpot deal id', type: 'string', readOnly: true }),
     defineField({
       name: 'utm',
       title: 'Ad source (UTM)',

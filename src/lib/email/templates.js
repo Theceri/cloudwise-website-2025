@@ -20,6 +20,8 @@ import {
   whatToBring,
 } from '@/lib/resources';
 
+import { linkedInAddUrl, verifyUrl } from '@/lib/certificates';
+
 import { rosterAttachment } from './roster-csv';
 import {
   button,
@@ -499,6 +501,38 @@ export function completionPack({ registration: reg, credit }) {
     subject: 'Your toolkit, prompts and community 🎁',
     title: 'After your training',
     preheader: 'Everything from the session, plus the one thing to do this week.',
+    kicker: kickerFor(reg.track),
+    bodyHtml,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// 7. Certificate
+// ---------------------------------------------------------------------------
+
+export function certificateIssued({ registration: reg, certificate }) {
+  const kind = certificate.kind === 'completion' ? 'certificate of completion' : 'certificate of attendance';
+  const bodyHtml = `
+    ${heading(`Your certificate, ${escapeHtml(firstName(reg))}`, 1)}
+    ${paragraph(
+      `Congratulations. Your ${kind} for <strong>${escapeHtml(certificate.courseName)}</strong> is issued. Anyone can check it at the address below.`
+    )}
+    ${detailTable([
+      ['Awarded to', escapeHtml(certificate.name)],
+      ['Course', escapeHtml(certificate.courseName)],
+      ['Certificate code', `<code>${escapeHtml(certificate.code)}</code>`],
+      ['Check it at', `<a href="${verifyUrl(certificate.code)}" style="color:#FF3F1A;">${escapeHtml(verifyUrl(certificate.code))}</a>`],
+    ])}
+    ${button('Add it to your LinkedIn profile', linkedInAddUrl(certificate))}
+    ${paragraph(
+      `If the training was useful, a short Google review helps other people find it: <a href="${COMPANY_INFO.googleReviewsUrl}" style="color:#FF3F1A;">review Cloudwise on Google</a>. Thank you.`
+    )}
+  `;
+
+  return finish({
+    subject: `Your ${kind}: ${certificate.courseName}`,
+    title: 'Your certificate',
+    preheader: `Code ${certificate.code}. Add it to LinkedIn in one click.`,
     kicker: kickerFor(reg.track),
     bodyHtml,
   });
