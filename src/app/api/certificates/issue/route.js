@@ -78,6 +78,9 @@ export async function POST(request) {
           reference: registration.reference,
           key: 'certificate-issued',
           to: registration.email,
+          // A copy for Cloudwise: Resend sends outside Zoho, so without this
+          // no mailbox keeps a record of what the student received.
+          bcc: ['training@cloudwise.co.ke'],
           ...certificateIssued({ registration, certificate: outcome.certificate }),
         });
         emailed = Boolean(sent?.ok);
