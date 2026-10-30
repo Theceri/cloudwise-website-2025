@@ -53,6 +53,22 @@ export function formatAddress({ withCountry = false } = {}) {
   return [a.line1, a.area, a.city, withCountry ? a.country : null].filter(Boolean).join(', ')
 }
 
+/**
+ * Who issues the training certificates.
+ *
+ * On LinkedIn the company page is called "Cloudwise Technologies", so that is
+ * the issuer name a certificate carries there. LinkedIn shows the company logo
+ * beside a certificate only when the certificate names the page by its id, not
+ * just by its name, so the "Add to profile" link passes both.
+ */
+export const CERTIFICATE_ISSUER = {
+  name: 'Cloudwise Technologies',
+  legalName: 'Cloudwise Limited',
+  linkedInOrganizationId: '90601227',
+  signatory: 'Paul Theceri Ng’ang’a',
+  signatoryTitle: 'Lead Trainer and Director',
+}
+
 export const SOCIAL_LINKS = [
   { name: 'Instagram', href: 'https://www.instagram.com/cloudwise.co.ke/', handle: '@cloudwise.co.ke' },
   { name: 'TikTok', href: 'https://www.tiktok.com/@cloudwisehq_', handle: '@cloudwisehq_' },

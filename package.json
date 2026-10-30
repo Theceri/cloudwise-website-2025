@@ -29,6 +29,7 @@
     "next": "^16.2.9",
     "next-auth": "^4.24.11",
     "next-sanity": "^13.1.1",
+    "qrcode": "^1.5.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-fast-marquee": "^1.6.5",

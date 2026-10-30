@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { sendToAdmins } from '@/lib/email/send';
 import { confirmPayment } from '@/lib/lifecycle';
 import { parseC2bConfirmation } from '@/lib/payments/daraja';
+import { approveLink, findBookingForPayment } from '@/lib/payments/paybill-match';
 import {
   createPayment,
   findPaymentByReceipt,
@@ -49,9 +50,29 @@ export async function POST(request) {
     // delivery finds the record already there and stops.
     if (await getPayment('mpesa-c2b', payment.transactionId)) return accepted;
 
-    const registration = isValidReference(payment.reference)
+    let registration = isValidReference(payment.reference)
       ? await getRegistration(payment.reference)
       : null;
+
+    // No booking reference: most often a name typed as the account number,
+    // as the WhatsApp team asks people to do. Find the booking another way.
+    let matchedHow = null;
+    let candidates = [];
+    if (!registration) {
+      const match = await findBookingForPayment({
+        receipt: payment.transactionId,
+        typedReference: payment.typedReference,
+        payerName: payment.payerName,
+        phone: payment.phone,
+        amount: payment.amount,
+      }).catch((err) => {
+        console.error('[paybill/c2b] matching failed:', err?.message);
+        return { registration: null, candidates: [] };
+      });
+      registration = match.registration;
+      matchedHow = match.how || null;
+      candidates = match.candidates || [];
+    }
 
     if (!registration) {
       // Money we cannot attribute. Never silently swallowed — an admin needs to
@@ -77,7 +98,7 @@ export async function POST(request) {
         settlementState: 'na',
       });
 
-      await unattributed(payment);
+      await unattributed(payment, candidates);
       return accepted;
     }
 
@@ -107,7 +128,8 @@ export async function POST(request) {
           `${alreadyRecorded.provider} — not settled twice`
         : isPartial
           ? `Part payment by ${payment.payerName || 'customer'} — ${formatKes(shortfall)} still owing`
-          : `Paid directly to the paybill by ${payment.payerName || 'customer'}`,
+          : `Paid directly to the paybill by ${payment.payerName || 'customer'}` +
+            (matchedHow ? `, account "${payment.typedReference || '(blank)'}", matched by ${matchedHow}` : ''),
       rawCallback: JSON.stringify(body, null, 2),
       completedAt: new Date().toISOString(),
       // Nothing is swept to the bank until the booking is actually paid in
@@ -121,6 +143,8 @@ export async function POST(request) {
     }
 
     if (registration.status === 'paid') return accepted;
+
+    if (matchedHow) await autoMatched({ registration, payment, matchedHow });
 
     await confirmPayment({
       registration,
@@ -142,23 +166,58 @@ export async function POST(request) {
   return accepted;
 }
 
-async function unattributed(payment) {
+async function unattributed(payment, candidates = []) {
   console.warn('[paybill/c2b] unattributed payment:', payment.transactionId, payment.reference);
 
+  const rows = candidates
+    .map(({ registration: r, why }) => {
+      const link = approveLink({ reference: r.reference, receipt: payment.transactionId, amount: payment.amount });
+      return `<li><strong>${esc(r.firstName)} ${esc(r.lastName)}</strong> · ${esc(r.reference)} ·
+        ${formatKes(r.amount)} · ${esc(r.phone || '')}<br/><small>Matches on ${esc(why.join(' and ') || 'amount only')}</small><br/>
+        <a href="${link}">This payment is theirs: confirm their seat</a></li>`;
+    })
+    .join('');
+
   await sendToAdmins({
-    subject: `⚠️ Unmatched M-Pesa payment — ${formatKes(payment.amount)} from ${payment.payerName || payment.phone}`,
+    subject: `⚠️ Paybill payment to match: ${formatKes(payment.amount)} from ${payment.payerName || payment.typedReference || 'unknown'}`,
     html: `
-      <p>An M-Pesa payment arrived at the paybill that does not match any booking.</p>
+      <p>A payment arrived at the paybill that we could not match to a booking with certainty.</p>
       <ul>
         <li><strong>Amount:</strong> ${formatKes(payment.amount)}</li>
-        <li><strong>M-Pesa code:</strong> ${payment.transactionId}</li>
-        <li><strong>Account number typed:</strong> ${payment.typedReference || '(blank)'}</li>
-        <li><strong>From:</strong> ${payment.payerName || 'unknown'} (${payment.phone || 'no number'})</li>
+        <li><strong>M-Pesa code:</strong> ${esc(payment.transactionId)}</li>
+        <li><strong>Account number typed:</strong> ${esc(payment.typedReference || '(blank)')}</li>
+        <li><strong>M-Pesa name:</strong> ${esc(payment.payerName || 'unknown')}</li>
       </ul>
-      <p>They have most likely mistyped their booking reference. Call or message
-      them, find their registration, and confirm it by hand.</p>
+      ${
+        rows
+          ? `<p><strong>Likely bookings.</strong> Pick the right one. The link opens a page that asks you to confirm before anything happens.</p><ol>${rows}</ol>`
+          : '<p>No unpaid booking is a likely match. The payer may not have booked on the website. Ask them on WhatsApp to book at cloudwise.co.ke/ai-training, then use the "I have already paid" box at checkout with this M-Pesa code.</p>'
+      }
+      <p>The payment is in the Studio under <em>Training payments</em> with the status <strong>Unmatched</strong>, and stays in the daily round-up until it is matched.</p>
     `,
   }).catch(() => {});
+}
+
+/** A payment matched without its booking reference: tell the admins, so a wrong match is caught early. */
+async function autoMatched({ registration, payment, matchedHow }) {
+  await sendToAdmins({
+    subject: `💰 Paybill payment matched: ${registration.firstName} ${registration.lastName}, ${formatKes(payment.amount)}`,
+    html: `
+      <p>A paybill payment without a booking reference was matched to
+      <strong>${esc(registration.firstName)} ${esc(registration.lastName)}</strong> (${esc(registration.reference)})
+      by ${esc(matchedHow)}. Their seat is confirmed and their emails are on the way.</p>
+      <ul>
+        <li><strong>M-Pesa code:</strong> ${esc(payment.transactionId)}</li>
+        <li><strong>Account number typed:</strong> ${esc(payment.typedReference || '(blank)')}</li>
+        <li><strong>M-Pesa name:</strong> ${esc(payment.payerName || 'unknown')}</li>
+      </ul>
+      <p>If this is the wrong person, reply to this email or open the payment in the Studio.</p>
+    `,
+  }).catch(() => {});
+}
+
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
 
 async function underpaid({ registration, payment }) {

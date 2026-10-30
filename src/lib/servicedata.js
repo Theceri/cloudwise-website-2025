@@ -10,7 +10,7 @@ export const services = [
     id: 'ai',
     icon: Brain,
     title: 'AI Agent Development',
-    description: 'Leverage the power of AI to revolutionize your business through intelligent products and seamless AI integrations.',
+    description: 'AI assistants and agents built into the way your business already works, connected to the tools you use every day.',
     features: [
       'Custom AI Model Development',
       'Natural Language Processing',
@@ -64,7 +64,7 @@ export const services = [
     id: 'mobile',
     icon: Smartphone,
     title: 'Mobile App Development',
-    description: 'Deliver seamless mobile experiences across iOS and Android devices with robust and intuitive applications.',
+    description: 'Mobile apps for iOS and Android that your customers find easy to use and that keep working as you grow.',
     features: [
       'Cross-Platform Development',
       'Native App Features',
@@ -102,7 +102,7 @@ export const services = [
     benefits: [
       'Increased sales',
       'Improved UX/UI',
-      'Seamless integration with tools',
+      'Connected to the tools you already use',
     ],
     useCases: [
       'Online retail stores',
@@ -145,14 +145,14 @@ export const services = [
     id: 'data',
     icon: Database,
     title: 'Data Engineering',
-    description: 'Organize, clean, and leverage your data for actionable insights and business intelligence.',
+    description: 'Organise and clean your data, then turn it into reports your team can act on.',
     features: [
       'Data Pipeline Design',
       'ETL Processes',
       'Data Warehousing',
       'Analytics Dashboards',
     ],
-    longDescription: 'We turn raw data into valuable insights through robust pipelines and analytics tools, helping you drive decisions with confidence.',
+    longDescription: 'We turn raw data into clear reports through reliable data pipelines and analytics tools, so decisions rest on real numbers.',
     benefits: [
       'Data-driven strategies',
       'Improved operational efficiency',
@@ -164,7 +164,7 @@ export const services = [
       'Data-backed marketing strategies',
     ],
     cta: {
-      label: 'Unlock Your Data',
+      label: 'Put your data to work',
       link: '/services/data'
     }
   },

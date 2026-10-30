@@ -17,7 +17,8 @@ const STATIC_ROUTES = [
   ['/', '2026-10-15'],
   ['/ai-training', '2026-10-15'],
   // The register page is a form and is noindexed; the tier pages carry the content.
-  ['/ai-training/kickstart', '2026-10-15'],
+  ['/ai-training/kickstart', '2026-10-30'],
+  ['/ai-training/certificate', '2026-10-30'],
   ['/ai-training/essentials', '2026-10-15'],
   ['/ai-training/programme', '2026-10-15'],
   ['/ai-training/teams', '2026-10-15'],

@@ -31,9 +31,10 @@ export const TIER_DETAILS = {
     format: 'Live on Google Meet',
     pitch:
       'Set up Claude, learn the one prompt method that works, and finish three real tasks before the session ends: a week of social posts, a reply to a difficult customer and the summary of a long document.',
-    leaveWith: ['Claude set up on your phone or laptop', 'The R.C.T.F. prompt method', 'Three real tasks done'],
+    leaveWith: ['A Cloudwise certificate of completion', 'Claude set up on your phone or laptop', 'Three real tasks done'],
     includes: [
       'The live 2-hour session',
+      'A certificate of completion you can add to LinkedIn',
       'The Starter Prompt Pack (10 prompts)',
       'Every class prompt in writing afterwards',
       `A ${formatKes(k.credit.amountKes)} credit toward your next course`,
@@ -54,7 +55,7 @@ export const TIER_DETAILS = {
       'Quick Start, Cheatsheets and Safe and Legal AI Use',
       'Practice files and the class-prompts recap',
       'WhatsApp support community, with no end date',
-      'Certificate of attendance',
+      'Certificate of completion (4 hours)',
     ],
     support: 'WhatsApp community, with no end date',
     credit: `${formatKes(e.credit.amountKes)} off the Programme for ${e.credit.days} days, so Day Two costs ${formatKes(
@@ -74,7 +75,7 @@ export const TIER_DETAILS = {
       'The AI Toolkit and Resource Pack',
       'Your 30-Day Plan',
       'WhatsApp support community, with no end date',
-      'Certificate of completion',
+      'Certificate of completion (8 hours)',
     ],
     support: 'WhatsApp community, with no end date',
     credit: null,
@@ -92,7 +93,7 @@ export const COMPARISON_ROWS = [
   ['Live connected workflow (CRM, invoices, calendar)', '—', '—', 'Yes'],
   ['Prompts', 'Starter pack (10)', 'Prompt Pack (72)', 'Prompt Pack (72)'],
   ['Support', 'Broadcast list', 'WhatsApp community, no end date', 'WhatsApp community, no end date'],
-  ['Certificate', '—', 'Attendance', 'Completion'],
+  ['Certificate of completion', 'Yes, 2 hours', 'Yes, 4 hours', 'Yes, 8 hours'],
   ['Counts toward the next course', `${formatKes(k.credit.amountKes)} for ${k.credit.days} days`, `${formatKes(e.credit.amountKes)} for ${e.credit.days} days`, '—'],
 ];
 
@@ -154,7 +155,7 @@ export const TOOLS = [
 export const POLICIES = [
   ['Payment', 'Every class is paid in full when you book.'],
   ['Recordings', 'Sessions are not recorded. You receive every prompt we type in class, in writing, the same week.'],
-  ['Certificates', 'A certificate of completion for both Programme Saturdays, and a certificate of attendance for Essentials.'],
+  ['Certificates', 'Every course ends with a certificate of completion for everyone who attends the full session. It has its own verification page and code, and adds to LinkedIn in one click.'],
   ['Missed date', 'You can move your seat once to a later date: Kickstart any time before the session, Essentials with 3 days’ notice, the Programme with 5 days’ notice.'],
   ['Refunds', 'We do not give refunds. Moving your seat is the option instead.'],
   ['Joining online', 'The Google Meet link arrives the day before.'],
@@ -184,10 +185,24 @@ export function hubFaq({ nextKickstart, nextEssentials } = {}) {
         .filter(Boolean)
         .join(' ') || 'Dates for every option are listed on the registration page.',
     },
-    { q: 'How do I pay?', a: 'By M-Pesa when you book: we send a prompt to your phone. Every class is paid in full at booking.' },
+    {
+      q: 'Is this a job, or data-labelling work? Will you pay me?',
+      a: `No. These are courses you pay for, from ${formatKes(k.priceKes)}, that teach you to use AI tools such as Claude and ChatGPT in your own work. They are not a job, not "AI training" work such as data labelling, and nobody is paid to attend. Cloudwise never asks anyone to pay for a job.`,
+    },
+    {
+      q: 'How do I pay?',
+      a: 'By M-Pesa. When you book on this website you get an M-Pesa prompt on your phone, or you pay to our paybill yourself with the account number shown at checkout. Every class is paid in full at booking.',
+    },
     { q: 'Is this a ChatGPT course?', a: 'It is taught on Claude, on free accounts. ChatGPT, Gemini and Copilot are run against the same task so you see the real differences.' },
     { q: 'Are the sessions recorded?', a: 'No. You receive every prompt we type in class, in writing, the same week. The WhatsApp community answers the questions that come up later.' },
-    { q: 'Do I get a certificate?', a: 'Yes. A certificate of completion for both Programme Saturdays, and a certificate of attendance for Essentials.' },
+    {
+      q: 'Do I get a certificate?',
+      a: 'Yes, from every course, the Ksh 500 Kickstart included. Everyone who attends the full session gets a Cloudwise certificate of completion by email, with the course, its hours and a certificate code. It has its own page on our website, so an employer can check it is genuine, and it adds to your LinkedIn profile in one click under Cloudwise Technologies, with our logo.',
+    },
+    {
+      q: 'Is the certificate accredited?',
+      a: 'It is a Cloudwise certificate, issued by Cloudwise Limited, an ICT company in Westlands, Nairobi. It is not a university or government qualification. Its value is that it is real and checkable: every certificate has a code and a verification page that shows the name, the course, the hours and the date.',
+    },
     {
       q: 'What if I miss my date?',
       a: 'You can move your seat once to a later date: Kickstart any time before the session, Essentials with 3 days’ notice, the Programme with 5 days’ notice. We do not give refunds.',
@@ -215,6 +230,35 @@ export const TEAM_INCLUDES = [
   'The WhatsApp support group',
   'A follow-up clinic three to four weeks later',
   'An AI use policy template',
+];
+
+/**
+ * Said plainly wherever the offer is made. In Kenya "AI training" is also the
+ * common name for paid data-labelling work, and in October 2026 many people who
+ * answered the Kickstart ads expected to be paid (Kickstart conversion review,
+ * 28 October 2026). This removes that reading before anyone books.
+ */
+export const NOT_A_JOB = {
+  short: 'This is a course you pay for. It is not a job, and nobody is paid to attend.',
+  long: `This is a course you pay for, to learn to use AI in your own work. It is not a job, not data-labelling or "AI training" work, and nobody is paid to attend. Cloudwise never asks anyone to pay for a job.`,
+  checkbox: `I understand this is a course I pay ${formatKes(k.priceKes)} for. It is not a job, and I will not be paid to attend.`,
+};
+
+/**
+ * The Kickstart promise (decided 30 October 2026, $100M Offers review). It
+ * keeps the no-refund policy: the remedy is a free seat, not money back.
+ */
+export const KICKSTART_PROMISE = {
+  title: 'The finish-it promise',
+  text: 'Attend the full two hours and do the exercises with us. If you leave without the three tasks finished, join the next Kickstart free, as often as it takes.',
+};
+
+/** What the certificate does for the holder, in the order buyers care about. */
+export const CERTIFICATE_POINTS = [
+  ['Proof you can show', 'Your name, the course and its hours, signed and sealed, as a PDF you can print or send.'],
+  ['Checkable by employers', 'Every certificate has its own code, QR code and page on cloudwise.co.ke that confirms it is genuine.'],
+  ['On LinkedIn in one click', 'It adds itself to your profile under Cloudwise Technologies, with our logo and the verification link.'],
+  ['Ready for your CV', 'You get a line to paste under Certifications, with the credential ID.'],
 ];
 
 export const TRAINED_ORGANISATIONS = ['Bamburi Cement', 'FEKAN Howell LLP', 'TechCamp', 'Stratostaff'];

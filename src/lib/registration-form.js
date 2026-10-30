@@ -227,6 +227,17 @@ export function validateRegistration(input = {}) {
   value.deviceReady = input.deviceReady !== false;
   value.whatsappOptIn = Boolean(input.whatsappOptIn);
 
+  // The Kickstart is sold to a young audience that often reads "AI training"
+  // as a paid job (Kickstart conversion review, 28 October 2026). Saying it
+  // once more, as something they tick, stops a booking that would only end in
+  // a cancelled M-Pesa prompt.
+  if (shape.kickstart) {
+    value.understandsPaid = Boolean(input.understandsPaid);
+    if (!value.understandsPaid) {
+      errors.understandsPaid = 'Please confirm that you understand this is a course you pay for, not a job.';
+    }
+  }
+
   value.consent = Boolean(input.consent);
   if (!value.consent) {
     errors.consent = 'We need your consent to hold your details and contact you.';

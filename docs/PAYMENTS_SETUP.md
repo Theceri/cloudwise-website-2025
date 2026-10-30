@@ -644,6 +644,20 @@ matches no booking, so the Studio is a complete ledger rather than a list of
 successes. Only payments with the status **Completed ✅** are swept to the bank —
 part payments and unmatched money are held back until a human decides.
 
+### 6.5b Payments with a name as the account number
+
+Since October 2026 the WhatsApp team asks people to pay paybill 4131947 themselves, with their name as the account number. The site catches these payments in three ways.
+
+1. **The webhook matches them.** When the account number is not a booking reference, `src/lib/payments/paybill-match.js` looks for an unpaid booking from the last 21 days, for the same amount or less. It matches on the M-Pesa code the buyer gave at checkout, the paying phone (plain, masked or SHA-256 hashed, as Safaricom sends it), or the name. A clear match confirms the seat and emails the admins "Paybill payment matched". An unclear one stays **Unmatched** and emails the admins the likely bookings, each with a confirm link.
+2. **The buyer tells us.** Checkout has an "Already paid to our paybill?" box. The buyer types the M-Pesa code. If Safaricom already reported that code, the seat confirms at once. If not, the admins get an email with a confirm link.
+3. **An admin confirms.** A confirm link opens `/payments/approve`. Opening it changes nothing. You check the code on the M-Pesa Business app or the Org portal statement, then press the button. The buyer then gets the receipt and joining emails. Links are signed with `CRON_SECRET` and expire after 14 days.
+
+The 5 pm round-up lists every unmatched payment from the last 14 days.
+
+**Payer with no website booking.** If someone paid through WhatsApp and never booked, book for them at `/ai-training/register?tier=kickstart` with their details. Then type their M-Pesa code in the "Already paid" box on the checkout page.
+
+**Until Safaricom repoints the C2B URLs (step 6.5),** no webhook arrives, so routes 1 and the automatic part of route 2 cannot happen. The "Already paid" box and the confirm link still work, because they rely on a person checking the statement.
+
 ### 6.6 Going to production
 
 Do this only once sandbox works end to end.

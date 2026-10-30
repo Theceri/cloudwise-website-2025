@@ -188,6 +188,24 @@ export const trainingRegistration = defineType({
       description: 'Required. Kenya Data Protection Act basis for follow-up.',
     }),
     defineField({
+      name: 'paybillClaim',
+      title: 'Says they paid the paybill',
+      type: 'object',
+      readOnly: true,
+      description: 'The M-Pesa code the buyer typed at checkout. The paybill confirmation matches it when it arrives.',
+      fields: [
+        { name: 'receipt', title: 'M-Pesa code', type: 'string' },
+        { name: 'at', title: 'Entered at', type: 'datetime' },
+      ],
+    }),
+    defineField({
+      name: 'understandsPaid',
+      title: 'Confirmed it is a paid course, not a job',
+      type: 'boolean',
+      readOnly: true,
+      description: 'Kickstart only. Ticked on the booking form.',
+    }),
+    defineField({
       name: 'whatsappOptIn',
       title: 'WhatsApp updates opt-in',
       type: 'boolean',

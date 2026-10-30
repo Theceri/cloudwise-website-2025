@@ -5,9 +5,10 @@ import { DocumentTextIcon } from '@sanity/icons';
  * A certificate, checkable by anyone at cloudwise.co.ke/verify/<code>.
  *
  * Issued by POST /api/certificates/issue after a class (src/lib/certificates.js):
- * a certificate of completion for the Programme, and of attendance for
- * Essentials. Kickstart has no certificate. The PDF itself is made outside the
- * site; its footer carries the code and the verification address.
+ * a certificate of completion for every course, the Kickstart included (since
+ * 30 October 2026). Older Essentials certificates say "attendance". The
+ * certificate page at /verify/<code> is the certificate itself: the holder
+ * downloads it there as a PDF.
  *
  * Read-only apart from revocation: a certificate given to someone who did not
  * attend is revoked here, and the verification page then says so.

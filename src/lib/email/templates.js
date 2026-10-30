@@ -20,7 +20,7 @@ import {
   whatToBring,
 } from '@/lib/resources';
 
-import { linkedInAddUrl, verifyUrl } from '@/lib/certificates';
+import { certificateKindLabel, cvLine, linkedInAddUrl, verifyUrl } from '@/lib/certificate-shared';
 
 import { rosterAttachment } from './roster-csv';
 import {
@@ -323,6 +323,9 @@ function kickstartWelcome({ registration: reg }) {
       { ordered: true }
     )}
     ${detailTable(scheduleRows(reg))}
+    ${paragraph(
+      'Your certificate: stay for the full two hours and do the three tasks with us. We then email your Cloudwise certificate of completion, with its own verification page and a one-click button to add it to LinkedIn. Your name appears exactly as you typed it when you booked; reply to this email if it needs a correction.'
+    )}
     ${paragraph('Want a head start? The four-part prompt method we use on the night is on our free Prompt Pack page.')}
     ${button('Open the Prompt Pack', url('/resources/prompt-pack'))}
   `;
@@ -511,19 +514,27 @@ export function completionPack({ registration: reg, credit }) {
 // ---------------------------------------------------------------------------
 
 export function certificateIssued({ registration: reg, certificate }) {
-  const kind = certificate.kind === 'completion' ? 'certificate of completion' : 'certificate of attendance';
+  const kind = certificateKindLabel(certificate.kind).toLowerCase();
   const bodyHtml = `
     ${heading(`Your certificate, ${escapeHtml(firstName(reg))}`, 1)}
     ${paragraph(
-      `Congratulations. Your ${kind} for <strong>${escapeHtml(certificate.courseName)}</strong> is issued. Anyone can check it at the address below.`
+      `Congratulations. Your ${kind} for <strong>${escapeHtml(certificate.courseName)}</strong> is issued. It has its own page on our website, and anyone you show it to, an employer for example, can check that it is real.`
     )}
     ${detailTable([
       ['Awarded to', escapeHtml(certificate.name)],
       ['Course', escapeHtml(certificate.courseName)],
       ['Certificate code', `<code>${escapeHtml(certificate.code)}</code>`],
-      ['Check it at', `<a href="${verifyUrl(certificate.code)}" style="color:#FF3F1A;">${escapeHtml(verifyUrl(certificate.code))}</a>`],
+      ['Your certificate', `<a href="${verifyUrl(certificate.code)}" style="color:#FF3F1A;">${escapeHtml(verifyUrl(certificate.code))}</a>`],
     ])}
+    ${button('View and download your certificate', verifyUrl(certificate.code))}
+    ${heading('Add it to LinkedIn', 2)}
+    ${paragraph(
+      'One click fills in every field for you: the course, the issuer (Cloudwise Technologies, with our logo), the date, the credential ID and the link employers use to check it. Press Save on LinkedIn to finish.'
+    )}
     ${button('Add it to your LinkedIn profile', linkedInAddUrl(certificate))}
+    ${heading('Add it to your CV', 2)}
+    ${paragraph('Paste this line under "Certifications":')}
+    ${codeBlock(cvLine(certificate))}
     ${paragraph(
       `If the training was useful, a short Google review helps other people find it: <a href="${COMPANY_INFO.googleReviewsUrl}" style="color:#FF3F1A;">review Cloudwise on Google</a>. Thank you.`
     )}
@@ -723,7 +734,7 @@ export function adminSignupAlert({ registration: reg, roster, event, credit }) {
 }
 
 /** The 5pm East Africa Time round-up. */
-export function adminDailyDigest({ roster, todaysSignups, dateLabel }) {
+export function adminDailyDigest({ roster, todaysSignups, dateLabel, unmatched = [] }) {
   const paidToday = todaysSignups.filter((r) => r.status === 'paid');
   const revenueToday = paidToday.reduce((sum, r) => sum + Number(r.amount || 0), 0);
   const totalPaid = roster.filter((r) => r.status === 'paid');
@@ -740,6 +751,19 @@ export function adminDailyDigest({ roster, todaysSignups, dateLabel }) {
       ['Awaiting payment', `${awaiting.length}`],
       ['Paid, all time', `${totalPaid.length} · ${escapeHtml(formatKes(totalRevenue))}`],
     ])}
+
+    ${
+      unmatched.length
+        ? `${heading('Paybill payments to match')}${paragraph(
+            `${unmatched.length} paybill ${unmatched.length === 1 ? 'payment has' : 'payments have'} no booking yet. Each one had its own email with the likely bookings. Match them before the class.`
+          )}${list(
+            unmatched.map(
+              (p) =>
+                `<strong>${escapeHtml(formatKes(p.amount))}</strong> · code ${escapeHtml(p.externalId)} · account "${escapeHtml(p.registrationRef || '')}" · ${escapeHtml((p.createdAt || '').slice(0, 10))}`
+            )
+          )}`
+        : ''
+    }
 
     ${
       todaysSignups.length

@@ -14,6 +14,7 @@ import {
 
 import { trackCheckoutStart, trackPurchase } from '@/lib/analytics/funnel';
 import { formatKes } from '@/lib/training';
+import { AlreadyPaid } from '@/components/training/AlreadyPaid';
 import { whatsappLink } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
@@ -330,6 +331,8 @@ export function Checkout({ booking, fallback, cardEnabled }) {
           {fallback && (
             <PaybillPanel fallback={fallback} amount={booking.amount} reference={booking.reference} />
           )}
+
+          <AlreadyPaid reference={booking.reference} />
         </div>
       ) : (
         <div className="card-dark space-y-4 p-6">

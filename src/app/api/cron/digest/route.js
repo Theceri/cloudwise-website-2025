@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { sendToAdmins } from '@/lib/email/send';
 import { adminDailyDigest } from '@/lib/email/templates';
 import { isAuthorisedJob } from '@/lib/security';
+import { listUnmatchedPayments } from '@/lib/payments/paybill-match';
 import { listRegistrations } from '@/lib/store';
 
 export const runtime = 'nodejs';
@@ -51,7 +52,12 @@ export async function GET(request) {
   const since = startOfDayUtc.toISOString();
   const todaysSignups = roster.filter((r) => (r.createdAt || '') >= since);
 
-  const result = await sendToAdmins(adminDailyDigest({ roster, todaysSignups, dateLabel }));
+  const unmatched = await listUnmatchedPayments().catch((err) => {
+    console.error('[cron/digest] unmatched payments lookup failed:', err?.message);
+    return [];
+  });
+
+  const result = await sendToAdmins(adminDailyDigest({ roster, todaysSignups, dateLabel, unmatched }));
 
   return NextResponse.json({
     ok: result.ok,
@@ -59,5 +65,6 @@ export async function GET(request) {
     dateLabel,
     total: roster.length,
     todaysSignups: todaysSignups.length,
+    unmatchedPayments: unmatched.length,
   });
 }
