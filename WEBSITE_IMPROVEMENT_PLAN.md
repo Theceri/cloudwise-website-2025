@@ -64,7 +64,7 @@ This plan is the single list of changes to www.cloudwise.co.ke. Hand it back one
 2. **Never run `npm run build` while `next dev` is running.** It corrupts `.next`. Stop the dev server first, or let Vercel build.
 3. **British English** in all copy: programme, organisation, enrol, centre, licence (noun), practise (verb).
 4. **The site names only the tools the course teaches**: Claude (assistants, Projects, connectors, web search, Claude Design shown on Day Two), NotebookLM, ChatGPT, Gemini and Copilot compared on one task, Meta AI in WhatsApp (Kickstart toolbox), voice input and the phone camera, and HeyGen shown on Day Two. Never Zapier, Make, n8n, Midjourney, DALL·E or Perplexity, except in the registration question "Which AI tools have you used before?", which asks about the buyer's past.
-5. **No recordings, no NITA, no "Worth" labels, no struck-through Ksh 30,000.** See section 3.
+5. **No recordings, no NITA, no struck-through Ksh 30,000.** See section 3. "Worth" labels came back on 31 October 2026 for the Kickstart value stack only, and each value must come from a real Cloudwise price (`KICKSTART_STACK` in `src/lib/training-content.js`).
 6. **One source of truth.** Prices, dates, tiers and the address each live in one module (`src/lib/training.js` and `src/lib/constants.js`). Pages, emails, JSON-LD and Meta events read from there. Never type a price or an address into a page.
 7. **Money paths fail safe.** Every change to registration, payment, credit or settlement code keeps the existing guarantees: the price is resolved on the server, webhooks are idempotent through `claimOnce`, and a settlement failure never rolls back a confirmed payment.
 8. **Each step is one commit**, with a message in the repo's style and the attribution lines.

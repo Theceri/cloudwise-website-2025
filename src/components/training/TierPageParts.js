@@ -125,3 +125,40 @@ export function FactTable({ rows, caption }) {
     </div>
   );
 }
+
+/**
+ * A value stack: each part of the offer with its value, the total, and the
+ * price. Values come from KICKSTART_STACK, which ties each one to a real price.
+ */
+export function ValueStack({ rows, total, price, basis, formatKes }) {
+  return (
+    <div className="card-dark overflow-hidden">
+      <table className="w-full text-left text-sm">
+        <caption className="sr-only">What the course includes, and what each part is worth</caption>
+        <tbody>
+          {rows.map(([item, value]) => (
+            <tr key={item} className="border-t border-white/10 first:border-t-0">
+              <td className="p-4 text-white/80">
+                <span className="flex items-start gap-3">
+                  <Check size={18} className="mt-0.5 shrink-0 text-ember" /> {item}
+                </span>
+              </td>
+              <td className="w-36 p-4 text-right align-top font-medium text-white">
+                {value ? `Worth ${formatKes(value)}` : <span className="text-white/60">Included</span>}
+              </td>
+            </tr>
+          ))}
+          <tr className="border-t border-white/20 bg-white/[0.04]">
+            <th scope="row" className="p-4 font-display text-base font-semibold text-white">Total value</th>
+            <td className="p-4 text-right font-display text-base font-semibold text-white">{formatKes(total)}</td>
+          </tr>
+          <tr className="bg-ember/10">
+            <th scope="row" className="p-4 font-display text-lg font-bold text-white">You pay</th>
+            <td className="p-4 text-right font-display text-lg font-bold text-ember">{formatKes(price)}</td>
+          </tr>
+        </tbody>
+      </table>
+      {basis && <p className="border-t border-white/10 p-4 text-xs text-white/55">{basis}</p>}
+    </div>
+  );
+}

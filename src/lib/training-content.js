@@ -253,6 +253,34 @@ export const KICKSTART_PROMISE = {
   text: 'Attend the full two hours and do the exercises with us. If you leave without the three tasks finished, join the next Kickstart free, as often as it takes.',
 };
 
+/**
+ * The Kickstart value stack, with a value on each part (brought back on 31
+ * October 2026, reversing the 14 October "no Worth labels" rule, after the
+ * $100M Offers review). Every value is tied to a real Cloudwise price, never
+ * to an invented one: the class at the Programme's hourly rate, the credit at
+ * its face value. Parts with no price of their own say "Included".
+ */
+const programmeHourly = p.priceKes / 8;
+const kickstartHours = 2;
+
+export const KICKSTART_STACK = {
+  rows: [
+    ['The live 2-hour class with a Cloudwise trainer', programmeHourly * kickstartHours],
+    ['A Cloudwise certificate of completion, checkable online', null],
+    ['A week of social posts, a reply to a difficult customer and a long document summarised, finished in class', null],
+    ['Claude set up on your phone or laptop, free', null],
+    ['The Starter Prompt Pack (10 prompts) and every class prompt in writing', null],
+    ['A line for your CV and one-click LinkedIn', null],
+    [`A ${formatKes(k.credit.amountKes)} credit toward Essentials or the Programme, for ${k.credit.days} days`, k.credit.amountKes],
+  ],
+  get total() {
+    return this.rows.reduce((sum, [, value]) => sum + (value || 0), 0);
+  },
+  basis: `How we value it: the class at the Programme's own price per hour (${formatKes(p.priceKes)} for 8 hours, so ${formatKes(
+    programmeHourly * kickstartHours
+  )} for 2), and the credit at its face value. The rest is included at no extra cost.`,
+};
+
 /** What the certificate does for the holder, in the order buyers care about. */
 export const CERTIFICATE_POINTS = [
   ['Proof you can show', 'Your name, the course and its hours, signed and sealed, as a PDF you can print or send.'],

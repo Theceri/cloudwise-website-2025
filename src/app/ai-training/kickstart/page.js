@@ -6,11 +6,11 @@ import { CertificateShowcase } from '@/components/certificate/CertificateShowcas
 import { Faq } from '@/components/Faq';
 import { PixelEvent } from '@/components/PixelEvent';
 import { StickyBookBar } from '@/components/training/StickyBookBar';
-import { CheckList, RunningOrder, Section, TierHero } from '@/components/training/TierPageParts';
+import { RunningOrder, Section, TierHero, ValueStack } from '@/components/training/TierPageParts';
 import { SITE_URL } from '@/lib/constants';
 import { META_CURRENCY, META_EVENTS } from '@/lib/meta/events';
 import { JsonLd, breadcrumbJsonLd, courseJsonLd } from '@/lib/seo/jsonld';
-import { KICKSTART_PROMISE, KICKSTART_RUNNING_ORDER, NOT_A_JOB, TIER_DETAILS, hubFaq } from '@/lib/training-content';
+import { KICKSTART_PROMISE, KICKSTART_RUNNING_ORDER, KICKSTART_STACK, NOT_A_JOB, TIER_DETAILS, hubFaq } from '@/lib/training-content';
 import { TRACKS, TRACK_KICKSTART, formatKes, openDatesFor } from '@/lib/training';
 
 // Sessions roll forward weekly; rebuilt hourly. The API refuses a closed one.
@@ -81,18 +81,12 @@ export default function KickstartPage() {
       />
 
       <Section eyebrow={`Everything you get for ${formatKes(track.priceKes)}`} title="Real work done, and proof that you did it." tone="soft">
-        <CheckList
-          items={[
-            'The live 2-hour class with a Cloudwise trainer',
-            'A Cloudwise certificate of completion, checkable online',
-            'A week of social posts drafted, with your own business',
-            'A reply to a difficult customer that keeps the customer',
-            'A long document summarised on one page',
-            'Claude set up on your phone or laptop, free',
-            'The Starter Prompt Pack (10 prompts) and every class prompt in writing',
-            'A line for your CV and one-click LinkedIn',
-            `A ${formatKes(track.credit.amountKes)} credit toward Essentials or the Programme, for ${track.credit.days} days`,
-          ]}
+        <ValueStack
+          rows={KICKSTART_STACK.rows}
+          total={KICKSTART_STACK.total}
+          price={track.priceKes}
+          basis={KICKSTART_STACK.basis}
+          formatKes={formatKes}
         />
         <Reveal delay={0.1} className="mt-8">
           <div className="flex flex-col gap-4 rounded-3xl border border-ember/30 bg-ember/[0.07] p-6 sm:flex-row sm:items-start">
