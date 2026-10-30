@@ -289,3 +289,33 @@ html.lenis body {
 [data-theme='light'] .text-gradient-cool {
   background-image: linear-gradient(to right, #447980, #3a6a70, #2e565b);
 }
+
+/*
+ * Printing a certificate (/verify/<code>): only the certificate, on one A4
+ * landscape page, in its own colours. Everything else on the page is hidden.
+ */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  [data-certificate],
+  [data-certificate] * {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  [data-certificate] {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 297mm !important;
+    max-width: none !important;
+  }
+}

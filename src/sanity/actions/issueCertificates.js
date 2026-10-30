@@ -17,7 +17,7 @@ import { apiVersion } from '../env';
  * already has a certificate is skipped.
  */
 
-const CERTIFICATE_TRACKS = ['essentials', 'individual'];
+const CERTIFICATE_TRACKS = ['kickstart', 'essentials', 'individual'];
 
 function useIssue({ doc, onComplete, wholeClass }) {
   const client = useClient({ apiVersion });

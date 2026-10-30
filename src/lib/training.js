@@ -68,6 +68,12 @@ export const TRACKS = {
     hasCohorts: false,
     hasSessions: true,
     capacity: 100,
+    // What the certificate says about the course. See src/lib/certificates.js.
+    certificate: {
+      hours: 2,
+      summary:
+        'a two-hour live course in practical AI for work: the R.C.T.F. prompt method, writing, replying to customers and summarising documents with Claude',
+    },
     // What a paid booking earns toward a bigger course. See src/lib/credits.js.
     credit: { amountKes: 500, days: 14, appliesTo: ['essentials', 'individual'] },
   },
@@ -90,6 +96,11 @@ export const TRACKS = {
     supportsOnline: true,
     hasCohorts: true,
     days: ['day-one'],
+    certificate: {
+      hours: 4,
+      summary:
+        'a four-hour practical course in AI for work, including building and testing a personal AI assistant on real work, research with sources and safe use under the Kenya Data Protection Act, 2019',
+    },
     credit: { amountKes: 5500, days: 60, appliesTo: ['individual'] },
   },
   [TRACK_INDIVIDUAL]: {
@@ -116,6 +127,11 @@ export const TRACKS = {
     supportsOnline: true,
     hasCohorts: true,
     days: ['day-one', 'day-two'],
+    certificate: {
+      hours: 8,
+      summary:
+        'an eight-hour practical programme in AI for work: prompting, writing, research, data, a personal AI assistant and connected workflows that stop for human approval',
+    },
   },
   // Retired — read-only. See the module comment above.
   [TRACK_WBH]: {

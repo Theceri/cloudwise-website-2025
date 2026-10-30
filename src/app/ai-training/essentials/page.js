@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 
 import { Reveal } from '@/components/anim/Reveal';
+import { CertificateShowcase } from '@/components/certificate/CertificateShowcase';
 import { PixelEvent } from '@/components/PixelEvent';
 import { StickyBookBar } from '@/components/training/StickyBookBar';
 import { TrainerCard } from '@/components/training/TrainerCard';
@@ -110,6 +111,8 @@ export default function EssentialsPage() {
           </p>
         </Reveal>
       </Section>
+
+      <CertificateShowcase track={TRACK_ESSENTIALS} title="A four-hour certificate employers can check." tone="ink" />
 
       <Section eyebrow="Your trainer" tone="soft">
         <TrainerCard />

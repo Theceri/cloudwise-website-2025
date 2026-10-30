@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 
 import { Reveal } from '@/components/anim/Reveal';
+import { CertificateShowcase } from '@/components/certificate/CertificateShowcase';
 import { PixelEvent } from '@/components/PixelEvent';
 import { Testimonials } from '@/components/Testimonials';
 import { StickyBookBar } from '@/components/training/StickyBookBar';
@@ -126,6 +127,8 @@ export default function ProgrammePage() {
           </p>
         </Reveal>
       </Section>
+
+      <CertificateShowcase track={TRACK_PROGRAMME} title="An eight-hour certificate employers can check." tone="ink" />
 
       <Section eyebrow="Your trainer">
         <TrainerCard />

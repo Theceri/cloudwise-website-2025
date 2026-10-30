@@ -1,19 +1,24 @@
 import 'server-only';
 
-import { SITE_URL } from '@/lib/constants';
-import { claimOnce, releaseClaim } from '@/lib/store';
-import { TRACKS, TRACK_ESSENTIALS, TRACK_PROGRAMME, endDateFor } from '@/lib/training';
 import { writeClient } from '@/sanity/lib/writeClient';
+import { claimOnce, releaseClaim } from '@/lib/store';
+import { TRACKS, endDateFor } from '@/lib/training';
+
+import { certificateKindFor } from './certificate-shared';
+
+export { CERTIFICATE_TRACKS, certificateKindFor, certificateKindLabel, linkedInAddUrl, verifyUrl } from './certificate-shared';
 
 /**
- * Certificates with a verification code (tiered plan rev5, §7).
+ * Certificates with a verification code.
  *
- *   Programme   certificate of completion (both Saturdays)
- *   Essentials  certificate of attendance
- *   Kickstart   none
+ * Every paid course earns a certificate of completion, issued from the Studio
+ * after the class to the people who attended (decided 30 October 2026, when
+ * the offer moved to selling the certificate): the Kickstart for its two
+ * hours, Essentials for its four, the Programme for its eight. Certificates
+ * issued before that date keep the kind they were issued with.
  *
  * A Programme booking paid with an Essentials credit (Day Two only) completes
- * the Programme, so it gets a certificate of completion too.
+ * the Programme, so it gets the Programme certificate.
  */
 
 const CODE_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -24,29 +29,6 @@ function newCode() {
   const bytes = new Uint8Array(8);
   globalThis.crypto.getRandomValues(bytes);
   return `CW-${Array.from(bytes, (b) => CODE_ALPHABET[b % CODE_ALPHABET.length]).join('')}`;
-}
-
-export function certificateKindFor(track) {
-  if (track === TRACK_PROGRAMME) return 'completion';
-  if (track === TRACK_ESSENTIALS) return 'attendance';
-  return null;
-}
-
-export const verifyUrl = (code) => `${SITE_URL}/verify/${code}`;
-
-/** LinkedIn's "Add to profile" link, prefilled with this certificate. */
-export function linkedInAddUrl(certificate) {
-  const date = new Date(`${certificate.classDate || certificate.issuedAt?.slice(0, 10)}T00:00:00Z`);
-  const params = new URLSearchParams({
-    startTask: 'CERTIFICATION_NAME',
-    name: certificate.courseName,
-    organizationName: 'Cloudwise Limited',
-    issueYear: String(date.getUTCFullYear()),
-    issueMonth: String(date.getUTCMonth() + 1),
-    certId: certificate.code,
-    certUrl: verifyUrl(certificate.code),
-  });
-  return `https://www.linkedin.com/profile/add?${params.toString()}`;
 }
 
 export async function getCertificate(code) {

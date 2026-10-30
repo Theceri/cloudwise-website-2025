@@ -19,7 +19,8 @@ import {
 } from '@/lib/registration-form';
 import { readStoredAttribution } from '@/components/UtmCapture';
 import { trackLead } from '@/lib/analytics/funnel';
-import { TRACKS, TRACK_ESSENTIALS, TRACK_PROGRAMME, formatKes } from '@/lib/training';
+import { TRACKS, TRACK_ESSENTIALS, TRACK_KICKSTART, TRACK_PROGRAMME, formatKes } from '@/lib/training';
+import { NOT_A_JOB } from '@/lib/training-content';
 
 import {
   Checkbox,
@@ -75,6 +76,7 @@ export function RegistrationForm({ track, dates = [], price, initialCreditCode =
     deviceReady: true,
     whatsappOptIn: true,
     consent: false,
+    understandsPaid: false,
     creditCode: initialCreditCode,
   });
 
@@ -225,7 +227,13 @@ export function RegistrationForm({ track, dates = [], price, initialCreditCode =
       >
         <div className="grid gap-5 sm:grid-cols-2">
           <div id="field-firstName">
-            <Field label="First name" required error={errors.firstName} htmlFor="firstName">
+            <Field
+              label="First name"
+              required
+              error={errors.firstName}
+              htmlFor="firstName"
+              hint="As on your ID. Your certificate shows it exactly as typed."
+            >
               <TextInput
                 id="firstName"
                 name="firstName"
@@ -602,6 +610,19 @@ export function RegistrationForm({ track, dates = [], price, initialCreditCode =
           Send me reminders and joining details on WhatsApp too.{' '}
           <span className="text-white/65">Most people read these; email sometimes hides.</span>
         </Checkbox>
+
+        {track === TRACK_KICKSTART && (
+          <div id="field-understandsPaid">
+            <Checkbox
+              id="understandsPaid"
+              checked={form.understandsPaid}
+              onChange={set('understandsPaid')}
+              error={errors.understandsPaid}
+            >
+              {NOT_A_JOB.checkbox}
+            </Checkbox>
+          </div>
+        )}
 
         <div id="field-consent">
           <Checkbox id="consent" checked={form.consent} onChange={set('consent')} error={errors.consent}>

@@ -10,7 +10,7 @@ import { Check, Copy } from 'lucide-react';
  * else, so copying has to be one tap — selecting eight lines of pre-formatted
  * text on a phone is exactly where people give up.
  */
-export function CopyBlock({ text, label = 'Copy prompt' }) {
+export function CopyBlock({ text, label = 'Copy prompt', kicker = 'Prompt' }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -27,7 +27,7 @@ export function CopyBlock({ text, label = 'Copy prompt' }) {
     <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-ink-800/60">
       <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
         <span className="font-mono text-[0.6rem] uppercase tracking-eyebrow text-white/40">
-          Prompt
+          {kicker}
         </span>
         <button
           type="button"

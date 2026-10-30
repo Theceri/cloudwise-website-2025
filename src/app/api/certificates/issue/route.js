@@ -30,7 +30,7 @@ const STUDIO_REQUEST_WINDOW_MS = 30 * 60 * 1000;
  *   { "cohortId": "2026-11", "track": "individual" } every paid booking on
  *                                                     that cohort and course
  *
- * Only paid Essentials and Programme bookings get one. Safe to run twice: a
+ * Only paid Kickstart, Essentials and Programme bookings get one. Safe to run twice: a
  * booking that already has a certificate is skipped. Revoke a certificate
  * given in error in the Studio (Training → Certificates).
  */

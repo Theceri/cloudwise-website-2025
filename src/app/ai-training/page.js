@@ -7,13 +7,14 @@ import { Gauge } from '@/components/anim/Gauge';
 import { Faq } from '@/components/Faq';
 import { PixelEvent } from '@/components/PixelEvent';
 import { Testimonials } from '@/components/Testimonials';
+import { CertificateShowcase } from '@/components/certificate/CertificateShowcase';
 import { ComparisonTable, TierLadder } from '@/components/training/TierCards';
 import { StickyBookBar } from '@/components/training/StickyBookBar';
 import { TrainerCard } from '@/components/training/TrainerCard';
 import { COMPANY_INFO, SITE_URL, formatAddress, whatsappLink } from '@/lib/constants';
 import { META_CURRENCY, META_EVENTS } from '@/lib/meta/events';
 import { JsonLd, breadcrumbJsonLd, courseJsonLd } from '@/lib/seo/jsonld';
-import { TEN_ASSISTANTS, TOOLS, hubFaq } from '@/lib/training-content';
+import { NOT_A_JOB, TEN_ASSISTANTS, TOOLS, hubFaq } from '@/lib/training-content';
 import {
   PRIVATE_PRICE_KES,
   PUBLIC_TIERS,
@@ -40,7 +41,7 @@ const programme = TRACKS[TRACK_PROGRAMME];
 export const metadata = {
   title: { absolute: 'AI Training in Nairobi, Kenya: Courses from Ksh 500 · Cloudwise' },
   description:
-    'Hands-on AI training on Claude in Nairobi and online. A 2-hour Kickstart for Ksh 500, a 4-hour Essentials for Ksh 5,500, or the full 8-hour Programme. Build your own AI assistant.',
+    'Hands-on AI courses on Claude in Nairobi and online, each with a certificate employers can check. A 2-hour Kickstart for Ksh 500, a 4-hour Essentials for Ksh 5,500, or the full 8-hour Programme.',
   alternates: { canonical: '/ai-training' },
   openGraph: {
     type: 'website',
@@ -115,13 +116,16 @@ export default function AiTrainingPage() {
           <Reveal as="p" className="eyebrow mb-5">AI Productivity Training · Nairobi and online</Reveal>
           <AnimatedHeading
             as="h1"
-            text="AI training in Nairobi: build your own AI assistant."
+            text="AI training in Nairobi, with a certificate you can show employers."
             className="max-w-4xl text-balance font-display text-5xl font-bold leading-[1.0] text-white md:text-7xl"
           />
           <Reveal as="p" delay={0.1} className="mt-7 max-w-xl text-lg leading-relaxed text-white/65">
-            Three ways in, from a two-hour online session for {formatKes(kickstart.priceKes)} to the full
-            eight-hour programme. Every session is hands-on, on your own work, taught on Claude. No tech
-            background needed.
+            Three courses, from a two-hour online class for {formatKes(kickstart.priceKes)} to the full
+            eight-hour programme. Every one is hands-on, on your own work, taught on Claude, and ends with a
+            certificate of completion you can add to LinkedIn. No tech background needed.
+          </Reveal>
+          <Reveal as="p" delay={0.11} className="mt-4 max-w-xl text-sm text-white/60">
+            {NOT_A_JOB.short}
           </Reveal>
 
           {(nextKickstart || nextEssentials) && (
@@ -163,8 +167,9 @@ export default function AiTrainingPage() {
             for {formatKes(programme.priceKes)}. It is taught on Claude, on free accounts, with ChatGPT, Gemini and
             Copilot compared on the same task. In Essentials and the Programme, every participant builds their own
             AI assistant for the job that takes most of their week, and keeps it. Every class is paid in full when
-            you book. Sessions are not recorded; you receive every prompt in writing, a certificate, and a WhatsApp
-            support community with no end date.
+            you book. Sessions are not recorded; you receive every prompt in writing and a WhatsApp support community
+            with no end date. Every course ends with a certificate of completion that has its own verification page,
+            so an employer can check it. These are courses you pay for, not jobs or paid data-labelling work.
           </Reveal>
         </div>
       </section>
@@ -184,6 +189,8 @@ export default function AiTrainingPage() {
           </Reveal>
         </div>
       </section>
+
+      <CertificateShowcase track={TRACK_PROGRAMME} />
 
       {/* WHAT YOU BUILD */}
       <section className="border-t border-white/10 bg-ink-800/30 py-16 md:py-32">

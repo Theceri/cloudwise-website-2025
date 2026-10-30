@@ -188,6 +188,13 @@ export const trainingRegistration = defineType({
       description: 'Required. Kenya Data Protection Act basis for follow-up.',
     }),
     defineField({
+      name: 'understandsPaid',
+      title: 'Confirmed it is a paid course, not a job',
+      type: 'boolean',
+      readOnly: true,
+      description: 'Kickstart only. Ticked on the booking form.',
+    }),
+    defineField({
       name: 'whatsappOptIn',
       title: 'WhatsApp updates opt-in',
       type: 'boolean',
