@@ -734,7 +734,7 @@ export function adminSignupAlert({ registration: reg, roster, event, credit }) {
 }
 
 /** The 5pm East Africa Time round-up. */
-export function adminDailyDigest({ roster, todaysSignups, dateLabel }) {
+export function adminDailyDigest({ roster, todaysSignups, dateLabel, unmatched = [] }) {
   const paidToday = todaysSignups.filter((r) => r.status === 'paid');
   const revenueToday = paidToday.reduce((sum, r) => sum + Number(r.amount || 0), 0);
   const totalPaid = roster.filter((r) => r.status === 'paid');
@@ -751,6 +751,19 @@ export function adminDailyDigest({ roster, todaysSignups, dateLabel }) {
       ['Awaiting payment', `${awaiting.length}`],
       ['Paid, all time', `${totalPaid.length} · ${escapeHtml(formatKes(totalRevenue))}`],
     ])}
+
+    ${
+      unmatched.length
+        ? `${heading('Paybill payments to match')}${paragraph(
+            `${unmatched.length} paybill ${unmatched.length === 1 ? 'payment has' : 'payments have'} no booking yet. Each one had its own email with the likely bookings. Match them before the class.`
+          )}${list(
+            unmatched.map(
+              (p) =>
+                `<strong>${escapeHtml(formatKes(p.amount))}</strong> · code ${escapeHtml(p.externalId)} · account "${escapeHtml(p.registrationRef || '')}" · ${escapeHtml((p.createdAt || '').slice(0, 10))}`
+            )
+          )}`
+        : ''
+    }
 
     ${
       todaysSignups.length

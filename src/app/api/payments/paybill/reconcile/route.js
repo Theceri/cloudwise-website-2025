@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { confirmPayment } from '@/lib/lifecycle';
+import { applyPaybillPayment } from '@/lib/payments/paybill-match';
 import { isAuthorisedJob } from '@/lib/security';
 import {
   createPayment,
@@ -90,7 +91,21 @@ export async function POST(request) {
 
   // Already handled — by the webhook arriving late, or by someone running this
   // twice. Say so plainly rather than writing a second record.
-  if (await getPayment('mpesa-c2b', receipt)) {
+  const existing = await getPayment('mpesa-c2b', receipt);
+
+  // Safaricom reported it, but nobody could match it to a booking: attach it.
+  if (existing?.status === 'unmatched') {
+    const result = await applyPaybillPayment({
+      registration,
+      receipt,
+      amount,
+      phone: body?.phone,
+      note: body?.note ? `reconciled by hand: ${body.note}` : 'reconciled by hand',
+    });
+    return NextResponse.json({ reference, receipt, matchedUnmatched: true, ...result }, { status: result.ok ? 200 : 409 });
+  }
+
+  if (existing) {
     return NextResponse.json({
       ok: true,
       alreadyRecorded: true,
