@@ -159,8 +159,9 @@ function Seal({ className, year }) {
       <defs>
         <path id="seal-ring" d="M60 60 m-32 0 a32 32 0 1 1 64 0 a32 32 0 1 1 -64 0" />
       </defs>
-      <text fill="#FBF7EE" fontSize="7.4" letterSpacing="1.6" fontFamily="var(--cert-title), serif" fontWeight="700">
-        <textPath href="#seal-ring" startOffset="0">
+      <text fill="#FBF7EE" fontSize="6.4" fontFamily="var(--cert-title), serif" fontWeight="700">
+        {/* textLength spreads the words evenly round the whole ring, so the end never runs into the start. */}
+        <textPath href="#seal-ring" startOffset="0" textLength="196" lengthAdjust="spacing">
           CLOUDWISE TECHNOLOGIES ★ NAIROBI ★ VERIFIED ★
         </textPath>
       </text>
