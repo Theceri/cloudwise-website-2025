@@ -1,4 +1,11 @@
-import { describeSchedule, formatDay, getTrack } from '@/lib/training';
+import {
+  TRACK_INDIVIDUAL,
+  TRACK_KICKSTART,
+  TRACK_WBH,
+  describeSchedule,
+  formatDay,
+  getTrack,
+} from '@/lib/training';
 
 /**
  * The roster as a spreadsheet, attached to every admin email.
@@ -93,11 +100,43 @@ function cell(value) {
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
+/**
+ * The day a booking's training starts, taken from its cohort or session id.
+ *
+ * The id wins over the stored `startDate` so that every row in one cohort sorts
+ * together, including a Programme Day-Two-only booking and a record typed into
+ * the Studio by hand.
+ */
+export function trainingDateOf(r) {
+  const track = r.track === TRACK_KICKSTART || r.track === TRACK_WBH ? r.track : TRACK_INDIVIDUAL;
+  return describeSchedule({ track, cohortId: r.cohortId }).days[0] || r.startDate || '';
+}
+
+/** When the booking was made. A record created in the Studio has no `createdAt`. */
+function registeredAt(r) {
+  return r.createdAt || r.paidAt || r._createdAt || '';
+}
+
+const descending = (a, b) => (a < b ? 1 : a > b ? -1 : 0);
+
+/**
+ * The order of every admin listing: the latest training at the top, and the
+ * newest registration first within each training.
+ */
+export function latestFirst(registrations = []) {
+  return [...registrations].sort(
+    (a, b) =>
+      descending(trainingDateOf(a), trainingDateOf(b)) ||
+      descending(a.cohortId || a.track || '', b.cohortId || b.track || '') ||
+      descending(registeredAt(a), registeredAt(b))
+  );
+}
+
 /** The roster as CSV text, header row first. */
 export function rosterCsv(registrations = []) {
   const rows = [COLUMNS.map(([label]) => cell(label)).join(',')];
 
-  for (const r of registrations) {
+  for (const r of latestFirst(registrations)) {
     rows.push(COLUMNS.map(([, get]) => cell(get(r))).join(','));
   }
 

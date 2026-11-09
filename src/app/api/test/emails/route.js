@@ -5,10 +5,13 @@ import * as templates from '@/lib/email/templates';
 import { paybillInstructions } from '@/lib/payments/daraja';
 import { isAuthorisedJob } from '@/lib/security';
 import {
+  TRACK_ESSENTIALS,
   TRACK_INDIVIDUAL,
+  TRACK_KICKSTART,
   TRACK_WBH,
   TRACKS,
   describeSchedule,
+  listKickstartSessions,
   listOpenCohorts,
   startDateFor,
 } from '@/lib/training';
@@ -81,11 +84,61 @@ function sampleRegistration(track = TRACK_INDIVIDUAL) {
   };
 }
 
+/**
+ * Several trainings with several people each, listed out of order on purpose,
+ * so a test admin email shows the real sort: the latest training at the top and
+ * the newest registration first within each training.
+ */
+function sampleRoster(individual, masterclass) {
+  const laterCohort = listOpenCohorts({ count: 2 })[1];
+  const session = listKickstartSessions({ count: 1 })[0];
+  const hoursAgo = (h) => new Date(Date.now() - h * 60 * 60 * 1000).toISOString();
+
+  const rows = [
+    masterclass,
+    { ...individual, reference: 'A9K2M4', status: 'pending', firstName: 'Grace', lastName: 'Achieng', createdAt: hoursAgo(50) },
+    individual,
+    { ...individual, reference: 'A7QW3E', firstName: 'Brian', lastName: 'Otieno', createdAt: hoursAgo(5) },
+  ];
+
+  if (session) {
+    rows.push({
+      ...individual,
+      reference: 'KM3R8D',
+      track: TRACK_KICKSTART,
+      cohortId: session.id,
+      cohortLabel: session.label,
+      startDate: session.date,
+      amount: TRACKS[TRACK_KICKSTART].priceKes,
+      firstName: 'Kevin',
+      lastName: 'Mutua',
+      createdAt: hoursAgo(2),
+    });
+  }
+
+  if (laterCohort) {
+    rows.push({
+      ...individual,
+      reference: 'EX4T7P',
+      track: TRACK_ESSENTIALS,
+      cohortId: laterCohort.id,
+      cohortLabel: describeSchedule({ track: TRACK_ESSENTIALS, cohortId: laterCohort.id }).headline,
+      startDate: laterCohort.dayOne,
+      amount: TRACKS[TRACK_ESSENTIALS].priceKes,
+      firstName: 'Wanjiku',
+      lastName: 'Kamau',
+      createdAt: hoursAgo(30),
+    });
+  }
+
+  return rows;
+}
+
 function build(templateKey) {
   const individual = sampleRegistration(TRACK_INDIVIDUAL);
   const masterclass = sampleRegistration(TRACK_WBH);
   const paybill = paybillInstructions(individual.reference);
-  const roster = [individual, masterclass, { ...individual, reference: 'CWI-9K2M4T', status: 'pending', firstName: 'Grace', lastName: 'Achieng' }];
+  const roster = sampleRoster(individual, masterclass);
 
   switch (templateKey) {
     case 'registration-received':
