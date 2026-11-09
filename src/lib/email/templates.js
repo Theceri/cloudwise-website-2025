@@ -2,6 +2,7 @@ import { COMPANY_INFO, SITE_URL, formatAddress, whatsappLink } from '@/lib/const
 import { isCardPaymentEnabled } from '@/lib/payments/paystack';
 import {
   TRACK_ESSENTIALS,
+  TRACK_INDIVIDUAL,
   TRACK_KICKSTART,
   TRACK_WBH,
   TRACKS,
@@ -22,7 +23,7 @@ import {
 
 import { certificateKindLabel, cvLine, linkedInAddUrl, verifyUrl } from '@/lib/certificate-shared';
 
-import { rosterAttachment } from './roster-csv';
+import { latestFirst, rosterAttachment } from './roster-csv';
 import {
   button,
   codeBlock,
@@ -613,38 +614,34 @@ function profileBlock(reg) {
 }
 
 /**
- * Group a roster the way the admins think about it: the masterclass on its own,
- * then the individual track split by cohort.
+ * Group a roster the way the admins think about it: one group per training,
+ * the latest training at the top, the newest registration first in each.
  */
 export function groupRoster(registrations) {
-  const groups = [];
+  const groups = new Map();
 
-  const wbh = registrations.filter((r) => r.track === TRACK_WBH);
-  if (wbh.length) {
-    groups.push({
-      key: TRACK_WBH,
-      title: `${TRACKS[TRACK_WBH].name} · ${formatDay(TRACKS[TRACK_WBH].eventDate)}`,
-      rows: wbh,
-    });
+  // latestFirst already puts the trainings in order, so groups are created in
+  // that order too.
+  for (const r of latestFirst(registrations)) {
+    const key = r.track === TRACK_WBH ? TRACK_WBH : r.cohortId || 'unassigned';
+    if (!groups.has(key)) groups.set(key, { key, title: groupTitle(r), rows: [] });
+    groups.get(key).rows.push(r);
   }
 
-  const byCohort = new Map();
-  for (const r of registrations) {
-    if (r.track === TRACK_WBH) continue;
-    const key = r.cohortId || 'unassigned';
-    if (!byCohort.has(key)) byCohort.set(key, []);
-    byCohort.get(key).push(r);
-  }
+  return [...groups.values()];
+}
 
-  for (const [cohortId, rows] of [...byCohort.entries()].sort()) {
-    groups.push({
-      key: cohortId,
-      title: `AI Productivity Training · ${rows[0]?.cohortLabel || cohortId}`,
-      rows,
-    });
+/**
+ * The heading for a training's group. It names the whole cohort, not the first
+ * row's booking, because an Essentials booking only covers Day One.
+ */
+function groupTitle(r) {
+  if (r.track === TRACK_WBH) {
+    return `${TRACKS[TRACK_WBH].name} · ${formatDay(TRACKS[TRACK_WBH].eventDate)}`;
   }
-
-  return groups;
+  const track = r.track === TRACK_KICKSTART ? TRACK_KICKSTART : TRACK_INDIVIDUAL;
+  const schedule = describeSchedule({ track, cohortId: r.cohortId });
+  return `AI Productivity Training · ${schedule.days.length ? schedule.headline : r.cohortLabel || r.cohortId || 'no date'}`;
 }
 
 function rosterSection(groups) {
@@ -767,7 +764,7 @@ export function adminDailyDigest({ roster, todaysSignups, dateLabel, unmatched =
 
     ${
       todaysSignups.length
-        ? `${heading('Today’s signups')}${rosterTable(todaysSignups)}`
+        ? `${heading('Today’s signups')}${rosterTable(latestFirst(todaysSignups))}`
         : paragraph('No new signups today.')
     }
 
