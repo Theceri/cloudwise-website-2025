@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { claimOnce, releaseClaim, recordEmailSent } from '@/lib/store';
+import { sendWhatsAppToAdmins } from '@/lib/whatsapp/send';
 
 /**
  * Email delivery via Resend.
@@ -109,12 +110,32 @@ export async function sendOnce({ reference, key, ...message }) {
   return result;
 }
 
-/** Notify every admin address. */
-export async function sendToAdmins(message) {
+/**
+ * WhatsApp text for a message that did not bring its own: the subject in bold,
+ * then the plain-text body. Every admin alert should pass `whatsapp`, because the
+ * plain text of an email with a roster table in it is far too long for a chat.
+ */
+function fallbackWhatsApp({ subject, text }) {
+  return [subject && `*${subject}*`, text].filter(Boolean).join('\n\n');
+}
+
+/**
+ * Notify every admin, by email (ADMIN_EMAILS) and on WhatsApp (ADMIN_WHATSAPP),
+ * side by side. Pass `whatsapp` with the short chat version of the alert.
+ *
+ * Resolves to the email result with the WhatsApp result under `whatsapp`, so
+ * the callers that only look at the email keep working.
+ */
+export async function sendToAdmins({ whatsapp, ...message }) {
   const { admins } = emailConfig();
-  if (!admins.length) {
-    console.warn('[email] ADMIN_EMAILS not set — admin notification skipped.');
-    return { ok: false, skipped: true, reason: 'no admin addresses' };
-  }
-  return sendEmail({ ...message, to: admins });
+  if (!admins.length) console.warn('[email] ADMIN_EMAILS not set — admin notification skipped.');
+
+  const [email, chat] = await Promise.all([
+    admins.length
+      ? sendEmail({ ...message, to: admins })
+      : { ok: false, skipped: true, reason: 'no admin addresses' },
+    sendWhatsAppToAdmins(whatsapp || fallbackWhatsApp(message)),
+  ]);
+
+  return { ...email, whatsapp: chat };
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { sendToAdmins } from '@/lib/email/send';
+import { paybillAutoMatched, paybillUnmatched, partPayment } from '@/lib/whatsapp/alerts';
 import { confirmPayment } from '@/lib/lifecycle';
 import { parseC2bConfirmation } from '@/lib/payments/daraja';
 import { approveLink, findBookingForPayment } from '@/lib/payments/paybill-match';
@@ -169,9 +170,14 @@ export async function POST(request) {
 async function unattributed(payment, candidates = []) {
   console.warn('[paybill/c2b] unattributed payment:', payment.transactionId, payment.reference);
 
-  const rows = candidates
-    .map(({ registration: r, why }) => {
-      const link = approveLink({ reference: r.reference, receipt: payment.transactionId, amount: payment.amount });
+  const linked = candidates.map(({ registration, why }) => ({
+    registration,
+    why,
+    link: approveLink({ reference: registration.reference, receipt: payment.transactionId, amount: payment.amount }),
+  }));
+
+  const rows = linked
+    .map(({ registration: r, why, link }) => {
       return `<li><strong>${esc(r.firstName)} ${esc(r.lastName)}</strong> · ${esc(r.reference)} ·
         ${formatKes(r.amount)} · ${esc(r.phone || '')}<br/><small>Matches on ${esc(why.join(' and ') || 'amount only')}</small><br/>
         <a href="${link}">This payment is theirs: confirm their seat</a></li>`;
@@ -195,6 +201,7 @@ async function unattributed(payment, candidates = []) {
       }
       <p>The payment is in the Studio under <em>Training payments</em> with the status <strong>Unmatched</strong>, and stays in the daily round-up until it is matched.</p>
     `,
+    whatsapp: paybillUnmatched({ payment, candidates: linked }),
   }).catch(() => {});
 }
 
@@ -213,6 +220,7 @@ async function autoMatched({ registration, payment, matchedHow }) {
       </ul>
       <p>If this is the wrong person, reply to this email or open the payment in the Studio.</p>
     `,
+    whatsapp: paybillAutoMatched({ registration, payment, matchedHow }),
   }).catch(() => {});
 }
 
@@ -242,5 +250,6 @@ async function underpaid({ registration, payment }) {
       <p>The payment is recorded in the Studio under <em>Training payments</em>
       with the status <strong>Part payment</strong>.</p>
     `,
+    whatsapp: partPayment({ registration, payment }),
   }).catch(() => {});
 }

@@ -104,7 +104,13 @@ and the expiry trap behind most `Invalid Initiator Information` errors), see
 - **Roster:** `/studio` → **Training**. Split by track, by cohort, and by paid
   vs awaiting payment. Payments carry the full provider request/response.
 - **Alerts:** every signup and every payment emails `ADMIN_EMAILS` with the full
-  roster attached.
+  roster attached. The same alerts, and every other admin alert about the
+  courses, also go to `ADMIN_WHATSAPP` on WhatsApp in a short form, through the
+  WAHA gateway at `WAHA_URL` (see `src/lib/whatsapp/`).
+- **WhatsApp tests:** `/api/test/whatsapp?secret=$CRON_SECRET` lists every alert
+  and shows whether the WAHA session is `WORKING`. Add `&alert=<key>` to read one,
+  POST `{}` to send them all, or POST `{"viaAdmins":true}` to send one through
+  the real path, as one email and one WhatsApp message.
 - **Daily round-up:** 5:00pm East Africa Time, via `vercel.json` cron.
 - **Email previews:** `/api/test/emails?secret=$CRON_SECRET` lists every
   lifecycle email; add `&template=<key>` to render one in the browser, or POST

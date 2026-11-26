@@ -3,6 +3,7 @@ import 'server-only';
 import { paybillInstructions } from '@/lib/payments/daraja';
 import { sendOnce, sendToAdmins } from '@/lib/email/send';
 import * as templates from '@/lib/email/templates';
+import * as whatsappAlerts from '@/lib/whatsapp/alerts';
 import { sendGa4Purchase } from '@/lib/analytics/ga4-server';
 import { sendEvent } from '@/lib/meta/capi';
 import { META_CURRENCY, META_EVENTS, metaEventId } from '@/lib/meta/events';
@@ -85,13 +86,11 @@ export async function onRegistrationCreated(registration) {
     }),
   });
 
-  results.admin = await sendToAdmins(
-    templates.adminSignupAlert({
-      registration,
-      roster: await fullRoster(),
-      event: 'registered',
-    })
-  );
+  const signupRoster = await fullRoster();
+  results.admin = await sendToAdmins({
+    ...templates.adminSignupAlert({ registration, roster: signupRoster, event: 'registered' }),
+    whatsapp: whatsappAlerts.signupAlert({ registration, roster: signupRoster, event: 'registered' }),
+  });
 
   results.metaLead = await metaLead;
 
@@ -152,14 +151,11 @@ export async function onPaymentConfirmed({ registration, payment }) {
     results.credit = { issued: false, reason: err?.message };
   }
 
-  results.admin = await sendToAdmins(
-    templates.adminSignupAlert({
-      registration,
-      roster: await fullRoster(),
-      event: 'paid',
-      credit,
-    })
-  );
+  const paidRoster = await fullRoster();
+  results.admin = await sendToAdmins({
+    ...templates.adminSignupAlert({ registration, roster: paidRoster, event: 'paid', credit }),
+    whatsapp: whatsappAlerts.signupAlert({ registration, roster: paidRoster, event: 'paid', credit }),
+  });
 
   results.metaPurchase = await metaPurchase;
   results.ga4Purchase = await ga4Purchase;

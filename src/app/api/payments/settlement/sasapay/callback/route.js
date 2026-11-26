@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { sendToAdmins } from '@/lib/email/send';
 import { adminSettlementFailed } from '@/lib/email/templates';
+import { settlementFailed } from '@/lib/whatsapp/alerts';
 import { recordSettlementResult } from '@/lib/settlement';
 
 export const runtime = 'nodejs';
@@ -40,7 +41,8 @@ export async function POST(request) {
     const outcome = await recordSettlementResult({ settlementRef, succeeded, message });
 
     if (outcome.matched && !succeeded) {
-      await sendToAdmins(adminSettlementFailed({ payment: outcome.payment, message }));
+      const failure = { payment: outcome.payment, message };
+      await sendToAdmins({ ...adminSettlementFailed(failure), whatsapp: settlementFailed(failure) });
     }
   } catch (err) {
     console.error('[settlement/sasapay] processing failed:', err?.message);

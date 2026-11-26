@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { sendToAdmins } from '@/lib/email/send';
+import { paybillClaim } from '@/lib/whatsapp/alerts';
 import { applyPaybillPayment, approveLink, normaliseReceipt } from '@/lib/payments/paybill-match';
 import { claimOnce, getPayment, getRegistration, patchRegistration } from '@/lib/store';
 import { formatKes, normaliseReference } from '@/lib/training';
@@ -72,6 +73,7 @@ export async function POST(request) {
         <p>If Safaricom's confirmation reaches the website first, the seat confirms by itself and this link
         just shows "Payment confirmed".</p>
       `,
+      whatsapp: paybillClaim({ registration, receipt, link }),
     }).catch(() => {});
   }
 
