@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { sendToAdmins } from '@/lib/email/send';
 import { onTeamEnquiry } from '@/lib/hubspot';
 import { escapeHtml } from '@/lib/email/layout';
+import { teamEnquiry } from '@/lib/whatsapp/alerts';
 import { readAttribution, sendEvent } from '@/lib/meta/capi';
 import { META_CURRENCY, META_EVENTS, metaEventId } from '@/lib/meta/events';
 import { normalisePhone } from '@/lib/payments/daraja';
@@ -101,6 +102,7 @@ export async function POST(request) {
         .map(([k, v]) => `<tr><td style="padding:2px 12px 2px 0;color:#666;">${escapeHtml(k)}</td><td>${escapeHtml(v)}</td></tr>`)
         .join('')}</table>${value.message ? `<p>${escapeHtml(value.message)}</p>` : ''}`,
       text: rows.map(([k, v]) => `${k}: ${v}`).join('\n') + (value.message ? `\n\n${value.message}` : ''),
+      whatsapp: teamEnquiry({ enquiry: value, utm }),
     }),
     sendEvent({
       eventName: META_EVENTS.lead,

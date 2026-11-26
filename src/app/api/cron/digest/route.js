@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { sendToAdmins } from '@/lib/email/send';
 import { adminDailyDigest } from '@/lib/email/templates';
+import { dailyDigest } from '@/lib/whatsapp/alerts';
 import { isAuthorisedJob } from '@/lib/security';
 import { listUnmatchedPayments } from '@/lib/payments/paybill-match';
 import { listRegistrations } from '@/lib/store';
@@ -57,11 +58,13 @@ export async function GET(request) {
     return [];
   });
 
-  const result = await sendToAdmins(adminDailyDigest({ roster, todaysSignups, dateLabel, unmatched }));
+  const digest = { roster, todaysSignups, dateLabel, unmatched };
+  const result = await sendToAdmins({ ...adminDailyDigest(digest), whatsapp: dailyDigest(digest) });
 
   return NextResponse.json({
     ok: result.ok,
     skipped: result.skipped || false,
+    whatsapp: result.whatsapp?.ok || false,
     dateLabel,
     total: roster.length,
     todaysSignups: todaysSignups.length,

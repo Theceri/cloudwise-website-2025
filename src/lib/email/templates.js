@@ -659,15 +659,27 @@ function rosterSection(groups) {
     .join('');
 }
 
+/**
+ * The message an admin sends a buyer with their credit code, and the one-tap
+ * WhatsApp link that opens it ready to send. Null when no credit was issued.
+ */
+export function creditHandoff(reg, credit) {
+  if (!credit) return null;
+  const track = getTrack(reg.track);
+  const message = `Thank you for joining the ${track?.name || 'training'}. Your ${formatKes(credit.amountKes)} credit code is ${credit.code}. It counts toward ${
+    credit.appliesTo?.includes('essentials') ? 'AI Essentials or the full Programme' : 'the full Programme'
+  } until ${formatDay(credit.expiresAt.slice(0, 10), { long: true })}: ${creditUrl(credit)}`;
+  return {
+    message,
+    link: `https://wa.me/${String(reg.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(message)}`,
+  };
+}
+
 /** Fires on every signup and every payment, with the full roster attached. */
 export function adminSignupAlert({ registration: reg, roster, event, credit }) {
   const track = getTrack(reg.track);
   const isPayment = event === 'paid';
-  const creditMessage = credit
-    ? `Thank you for joining the ${track?.name || 'training'}. Your ${formatKes(credit.amountKes)} credit code is ${credit.code}. It counts toward ${
-        credit.appliesTo?.includes('essentials') ? 'AI Essentials or the full Programme' : 'the full Programme'
-      } until ${formatDay(credit.expiresAt.slice(0, 10), { long: true })}: ${creditUrl(credit)}`
-    : null;
+  const handoff = creditHandoff(reg, credit);
   const where =
     reg.track === TRACK_WBH
       ? formatDay(TRACKS[TRACK_WBH].eventDate)
@@ -705,10 +717,10 @@ export function adminSignupAlert({ registration: reg, roster, event, credit }) {
       reg.teamLead && ['Team lead', `${escapeHtml(String(reg.headcount || ''))} people · follow up today`],
     ])}
     ${
-      creditMessage
+      handoff
         ? highlight(
             `Credit issued: ${escapeHtml(credit.code)}`,
-            `<a href="https://wa.me/${String(reg.phone || '').replace(/\D/g, '')}?text=${encodeURIComponent(creditMessage)}" style="color:#FF3F1A;font-weight:600;">Send it to ${escapeHtml(firstName(reg))} on WhatsApp</a> (one tap, message ready).`
+            `<a href="${escapeHtml(handoff.link)}" style="color:#FF3F1A;font-weight:600;">Send it to ${escapeHtml(firstName(reg))} on WhatsApp</a> (one tap, message ready).`
           )
         : ''
     }
